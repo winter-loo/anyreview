@@ -1,4 +1,5 @@
 <script lang="ts">
+ import { createLiveFeedback } from '$lib/feedback/client.svelte';
 	import { onMount, tick } from 'svelte';
  import { reviewViewport, reviewWidth } from '$lib/review/visualViewport';
  import './mobile-review.css';
@@ -118,6 +119,8 @@
 
 	const storageKey = $derived(`reviewloop:live-image:${data.token}`);
 
+ const feedback = createLiveFeedback<ImageAnnotation>({token:()=>data.token,kind:'image',read:()=>annotations,replace:next=>annotations=next});
+
 	onMount(() => {
   showListModal = window.matchMedia('(min-width: 1100px)').matches;
 		try {
@@ -129,6 +132,7 @@
 		} catch {
 			annotations = [];
 		}
+  const stopFeedback = feedback.start(annotations);
 
 		// Preload other images for instantaneous switching
 		data.images.forEach((img) => {
@@ -154,6 +158,7 @@
 		window.addEventListener('mouseup', handleStageMouseUp);
 
 		return () => {
+   stopFeedback();
 			window.removeEventListener('resize', handleResize);
 			window.removeEventListener('mousemove', handleStageMouseMove);
 			window.removeEventListener('mouseup', handleStageMouseUp);
@@ -170,13 +175,8 @@
 	});
 
 	function persistAnnotations(next: ImageAnnotation[]) {
-		annotations = next;
-		try {
-			localStorage.setItem(storageKey, JSON.stringify(next));
-		} catch {
-			showNotice('设备存储不足，标注仅临时保留');
-		}
-	}
+  feedback.persist(next);
+ }
 
 	function showNotice(msg: string) {
 		notice = msg;

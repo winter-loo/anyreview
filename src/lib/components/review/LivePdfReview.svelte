@@ -1,4 +1,5 @@
 <script lang="ts">
+ import { createLiveFeedback } from '$lib/feedback/client.svelte';
  import nextIcon from '$lib/assets/review-icons/next.svg?url';
  import prevIcon from '$lib/assets/review-icons/prev.svg?url';
 	import { onMount, tick } from 'svelte';
@@ -115,6 +116,8 @@
 	let currentRenderTask: any = null;
 	const storageKey = $derived(`reviewloop:live-pdf:${data.token}`);
 
+ const feedback = createLiveFeedback<PdfAnnotation>({token:()=>data.token,kind:'pdf',read:()=>annotations,replace:next=>annotations=next});
+
 	onMount(() => {
 		showListModal = window.matchMedia('(min-width: 1100px)').matches;
 		try {
@@ -126,6 +129,7 @@
 		} catch {
 			annotations = [];
 		}
+  const stopFeedback = feedback.start(annotations);
 
 		loadPdfDocument();
 
@@ -146,6 +150,7 @@
 		window.addEventListener('mouseup', handleStageMouseUp);
 
 		return () => {
+   stopFeedback();
 			if (currentRenderTask) {
 				try {
 					currentRenderTask.cancel();
@@ -274,13 +279,8 @@
 	}
 
 	function persistAnnotations(next: PdfAnnotation[]) {
-		annotations = next;
-		try {
-			localStorage.setItem(storageKey, JSON.stringify(next));
-		} catch {
-			showNotice('设备存储不足，标注仅临时保留');
-		}
-	}
+  feedback.persist(next);
+ }
 
 	function showNotice(msg: string) {
 		notice = msg;

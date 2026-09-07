@@ -1,4 +1,5 @@
 <script lang="ts">
+ import { createLiveFeedback } from '$lib/feedback/client.svelte';
 	import { onMount, tick } from 'svelte';
 	import { reviewViewport } from '$lib/review/visualViewport';
 	import './mobile-review.css';
@@ -41,6 +42,7 @@
 		minC: number;
 		maxC: number;
 		cellValue: string;
+  formula?: string;
 		body: string;
 		createdAt: string;
 	};
@@ -226,6 +228,8 @@
 	let contentHeight = $state(800);
 	let gridTable = $state<HTMLTableElement | null>(null);
 
+ const feedback = createLiveFeedback<ExcelAnnotation>({token:()=>data.token,kind:'excel',read:()=>annotations,replace:next=>annotations=next});
+
 	onMount(() => {
 		showListModal = window.matchMedia('(min-width: 1100px)').matches;
 		try {
@@ -237,6 +241,7 @@
 		} catch {
 			annotations = [];
 		}
+  const stopFeedback = feedback.start(annotations);
 
 		loadWorkbook();
 
@@ -244,6 +249,7 @@
 		window.addEventListener('pointerup', handleWindowPointerUp);
 
 		return () => {
+   stopFeedback();
 			window.removeEventListener('resize', handleResize);
 			window.removeEventListener('pointerup', handleWindowPointerUp);
 		};
@@ -463,13 +469,8 @@
 	}
 
 	function persistAnnotations(next: ExcelAnnotation[]) {
-		annotations = next;
-		try {
-			localStorage.setItem(storageKey, JSON.stringify(next));
-		} catch (err) {
-			console.warn('Failed to save Excel annotations to localStorage:', err);
-		}
-	}
+  feedback.persist(next);
+ }
 
 	function deleteAnnotation(id: string) {
 		const next = annotations.filter((ann) => ann.id !== id);
@@ -539,6 +540,7 @@
 			minC: selectedRange.minC,
 			maxC: selectedRange.maxC,
 			cellValue: cellValueStr,
+   formula: activeCell.formula || undefined,
 			body: cellDraftBody.trim(),
 			createdAt: new Date().toISOString()
 		};

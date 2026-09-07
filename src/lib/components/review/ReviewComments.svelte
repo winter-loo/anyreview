@@ -1,7 +1,9 @@
 <script lang="ts">
  import closeIcon from '$lib/assets/review-icons/close.svg?url';
  import commentsIcon from '$lib/assets/review-icons/comments.svg?url';
- import type { Snippet } from 'svelte';
+ import { getContext, type Snippet } from 'svelte';
+ import { FEEDBACK_CONTEXT, type FeedbackContext } from '$lib/feedback/types';
+ const feedback=getContext<FeedbackContext | undefined>(FEEDBACK_CONTEXT);
  let { entries, onclose, ondelete, onlocate, children }: { entries: { id:string; anchor:string; body:string; createdAt:string; quote?:string }[]; onclose:()=>void; ondelete:(id:string)=>void; onlocate:(id:string)=>void; children?:Snippet }=$props();
 </script>
 <aside class="review-comments" aria-label="批注列表">
@@ -13,4 +15,11 @@
    <article class="review-comment-card"><div class="review-comment-anchor">{entry.anchor}</div>{#if entry.quote}<blockquote>{entry.quote}</blockquote>{/if}<p>{entry.body || '画笔标注 · 未添加文字意见'}</p><time datetime={entry.createdAt}>{new Date(entry.createdAt).toLocaleString()}</time><div class="review-comment-actions"><button type="button" onclick={() => onlocate(entry.id)}>定位到标注 →</button><button class="review-comment-delete" type="button" aria-label={`删除 ${entry.anchor} 批注`} onclick={() => ondelete(entry.id)}>删除</button></div></article>
   {/each}
  </div>
+ {#if feedback}<div class="review-feedback-submit">
+  <p role="status">{feedback.error || (feedback.pendingCount ? `${feedback.pendingCount} 条待提交 · ${feedback.status}` : `${feedback.submittedCount} 条已提交 · ${feedback.status}`)}</p>
+  {#if feedback.legacyCount}<p>已导入旧批注，请核对其位置是否对应当前文档。</p>{/if}
+  {#if feedback.missingPreviewCount}<p>{feedback.missingPreviewCount} 条批注暂无截图；提交时仍包含位置数据和原文件。</p>{/if}
+  {#if feedback.error}<button class="review-button" onclick={() => feedback.retry()}>重试同步</button>{/if}
+  <button class="review-button primary" disabled={feedback.busy || !feedback.pendingCount || !!feedback.error} onclick={() => feedback.submit()}>{feedback.busy ? '正在提交…' : `提交给 AI${feedback.pendingCount ? `（${feedback.pendingCount}）` : ''}`}</button>
+ </div>{/if}
 </aside>

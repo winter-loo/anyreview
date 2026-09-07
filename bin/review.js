@@ -5,6 +5,7 @@ import { mkdirSync, readdirSync, readFileSync, realpathSync, statSync } from 'no
 import { homedir } from 'node:os';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
+import { digest, freezeReview } from './live-snapshot.js';
 
 const BASE_URL = process.env.ONLINE_REVIEW_BASE_URL || 'https://deeloo.cn/live';
 const MAX_MARKDOWN_BYTES = 5 * 1024 * 1024;
@@ -167,6 +168,7 @@ function main() {
 	const encrypted = Buffer.concat([cipher.update(payload, 'utf8'), cipher.final()]);
 	const token = Buffer.concat([iv, cipher.getAuthTag(), encrypted]).toString('base64url');
 
+	freezeReview(digest(token), files);
 	const isLong = process.argv.slice(2).includes('--long');
 	if (isLong) {
 		console.log(`${BASE_URL}/${token}`);
@@ -177,7 +179,12 @@ function main() {
 }
 
 try {
-	main();
+ if (['--help','-h'].includes(process.argv[2])) {
+  console.log('Usage: review <file-or-directory> [--long]\n       review feedback <url-or-id> [--json] [--wait] [--after <cursor>] [--timeout <seconds>] [--out <new-directory>]');
+ } else if (process.argv[2] === 'feedback') {
+  const { runFeedback } = await import('./feedback.js');
+  await runFeedback(process.argv.slice(3));
+ } else { main(); }
 } catch (error) {
 	console.error(error instanceof Error ? error.message : String(error));
 	process.exitCode = 1;

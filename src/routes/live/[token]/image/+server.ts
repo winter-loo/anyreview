@@ -1,9 +1,10 @@
+import { feedbackHome } from '$lib/server/live/snapshots';
 import { readFileSync, realpathSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
 import { error } from '@sveltejs/kit';
 import { documentImageMediaType } from '$lib/server/publishers/document';
-import { _pathsFromToken } from '../+page.server';
+import { _snapshotPaths } from '../+page.server';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = ({ params, url }) => {
@@ -12,7 +13,7 @@ export const GET: RequestHandler = ({ params, url }) => {
 
 	let filePaths: string[];
 	try {
-		filePaths = _pathsFromToken(params.token, secret);
+		filePaths = _snapshotPaths(params.token, secret);
 	} catch {
 		throw error(404, 'Review not found');
 	}
@@ -32,7 +33,7 @@ export const GET: RequestHandler = ({ params, url }) => {
 	}
 
 	const home = realpathSync(process.env.HOME || homedir());
-	if (!(resolved.startsWith(`${home}${path.sep}`) || resolved.startsWith(`/tmp${path.sep}`))) {
+	if (!(resolved.startsWith(`${home}${path.sep}`) || resolved.startsWith(`/tmp${path.sep}`) || resolved.startsWith(`${realpathSync(feedbackHome())}${path.sep}`))) {
 		throw error(403, 'File is not publishable');
 	}
 

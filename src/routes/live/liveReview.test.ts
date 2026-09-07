@@ -1,7 +1,8 @@
+import { liveSnapshot } from '$lib/server/live/snapshots';
 import { execFileSync } from 'node:child_process';
-import { realpathSync, writeFileSync, unlinkSync } from 'node:fs';
+import { realpathSync, writeFileSync, unlinkSync, mkdtempSync, rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, beforeEach, afterEach } from 'vitest';
 import { _pathFromToken, _pathsFromToken, load } from './[token]/+page.server';
 import { GET as getImage } from './[token]/image/+server';
 import { GET as getPdf } from './[token]/pdf/+server';
@@ -10,6 +11,11 @@ import { GET as getPpt } from './[token]/ppt/+server';
 import { GET as getExcel } from './[token]/excel/+server';
 import JSZip from 'jszip';
 import * as XLSX from 'xlsx';
+
+let feedbackDirectory = '';
+const originalFeedbackHome = process.env.ONLINE_REVIEW_FEEDBACK_HOME;
+beforeEach(() => { feedbackDirectory = mkdtempSync('/tmp/live-review-test-'); process.env.ONLINE_REVIEW_FEEDBACK_HOME = feedbackDirectory; });
+afterEach(() => { if(originalFeedbackHome===undefined)delete process.env.ONLINE_REVIEW_FEEDBACK_HOME;else process.env.ONLINE_REVIEW_FEEDBACK_HOME=originalFeedbackHome;rmSync(feedbackDirectory,{recursive:true,force:true}); });
 
 const cli = fileURLToPath(new URL('../../../bin/review.js', import.meta.url));
 const fixture = fileURLToPath(new URL('../../../README.md', import.meta.url));
@@ -96,7 +102,7 @@ describe('standalone live review URL', () => {
 			});
 			expect((pageData as any).images).toHaveLength(1);
 			expect((pageData as any).images[0].filename).toBe('live-test-img-single.png');
-			expect((pageData as any).images[0].src).toBe(`/live/${token}/image?index=0`);
+			expect((pageData as any).images[0].src).toBe(`/live/${token}/image?index=0&v=${liveSnapshot(token).version}`);
 		} finally {
 			process.env.ONLINE_REVIEW_URL_SECRET = originalSecret;
 			try { unlinkSync(imgPath); } catch {}
@@ -136,8 +142,8 @@ describe('standalone live review URL', () => {
 			expect(images).toHaveLength(2);
 			expect(images[0].filename).toBe('live-test-multi-1.png');
 			expect(images[1].filename).toBe('live-test-multi-2.png');
-			expect(images[0].src).toBe(`/live/${token}/image?index=0`);
-			expect(images[1].src).toBe(`/live/${token}/image?index=1`);
+			expect(images[0].src).toBe(`/live/${token}/image?index=0&v=${liveSnapshot(token).version}`);
+			expect(images[1].src).toBe(`/live/${token}/image?index=1&v=${liveSnapshot(token).version}`);
 
 			// Test image server route GET
 			const res0 = await getImage({
@@ -238,7 +244,7 @@ describe('standalone live review URL', () => {
 				kind: 'pdf',
 				token,
 				filename: 'live-test-doc.pdf',
-				src: `/live/${token}/pdf`
+				src: `/live/${token}/pdf?v=${liveSnapshot(token).version}`
 			});
 
 			// Test pdf server route GET
@@ -290,7 +296,7 @@ describe('standalone live review URL', () => {
 				kind: 'word',
 				token,
 				filename: 'live-test-doc.docx',
-				src: `/live/${token}/word`
+				src: `/live/${token}/word?v=${liveSnapshot(token).version}`
 			});
 
 			// Test word server route GET
@@ -365,7 +371,7 @@ describe('standalone live review URL', () => {
 				kind: 'ppt',
 				token,
 				filename: 'live-test-deck.pptx',
-				src: `/live/${token}/ppt`
+				src: `/live/${token}/ppt?v=${liveSnapshot(token).version}`
 			});
 
 			// Test ppt server route GET
@@ -420,7 +426,7 @@ describe('standalone live review URL', () => {
 				kind: 'excel',
 				token,
 				filename: 'live-test-sheet.xlsx',
-				src: `/live/${token}/excel`
+				src: `/live/${token}/excel?v=${liveSnapshot(token).version}`
 			});
 
 			// Test excel server route GET
@@ -468,7 +474,7 @@ describe('standalone live review URL', () => {
 				kind: 'excel',
 				token,
 				filename: 'live-test-sheet.csv',
-				src: `/live/${token}/excel`
+				src: `/live/${token}/excel?v=${liveSnapshot(token).version}`
 			});
 
 			// Test excel server route GET

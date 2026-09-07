@@ -238,6 +238,7 @@
 	<meta name="robots" content="noindex,nofollow" />
 </svelte:head>
 
+{#key data.token}
 {#if data.kind === 'image'}
 	<LiveImageReview {data} />
 {:else if data.kind === 'pdf'}
@@ -313,6 +314,8 @@
 	</div>
 {/if}
 {/if}
+
+{/key}
 
 <style>
 	:global(*) { box-sizing: border-box; }

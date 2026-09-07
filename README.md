@@ -457,3 +457,12 @@ Existing deployments may continue using `LTSQL_REVIEW_HOME=/data/ludd50155/.ltsq
 - Gateway tokens and API keys must come from environment/configuration, not source code.
 - Server errors returned from Gateway notification paths are sanitized before they are exposed to the client.
 - This project is still a local/private review tool; the Web/API layer does not yet provide full multi-tenant production authentication or authorization.
+
+### Live document and image feedback
+
+The `/live/` PDF, Word, PowerPoint, Excel and image viewers now synchronize comments
+with server storage. Reviewers explicitly submit a batch from the comments panel;
+agents can read it with `review feedback <url> --json`, wait for it with `--wait`,
+or download original snapshots and annotated PNG previews with `--out <directory>`.
+See [Live review feedback](docs/live-feedback.md) for the workflow, storage,
+migration behavior and CLI options.

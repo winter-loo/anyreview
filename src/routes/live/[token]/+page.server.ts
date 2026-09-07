@@ -1,3 +1,4 @@
+import { liveSnapshot, feedbackHome } from '$lib/server/live/snapshots';
 import { createDecipheriv, createHash } from 'node:crypto';
 import { readFileSync, realpathSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
@@ -62,13 +63,15 @@ export function _pathsFromToken(token: string, secret: string): string[] {
 	return [raw];
 }
 
+export function _snapshotPaths(token: string, secret: string) { return liveSnapshot(token, secret).files.map(f=>f.snapshotPath); }
+
 export const load: PageServerLoad = ({ params, setHeaders }) => {
 	const secret = process.env.ONLINE_REVIEW_URL_SECRET;
 	if (!secret) throw error(503, 'Live review is not configured');
 
 	let filePaths: string[];
 	try {
-		filePaths = _pathsFromToken(params.token, secret);
+		filePaths = _snapshotPaths(params.token, secret);
 	} catch {
 		throw error(404, 'Review not found');
 	}
@@ -85,7 +88,7 @@ export const load: PageServerLoad = ({ params, setHeaders }) => {
 		} catch {
 			throw error(404, 'Review not found');
 		}
-		if (!(resolved.startsWith(`${home}${path.sep}`) || resolved.startsWith(`/tmp${path.sep}`))) {
+		if (!(resolved.startsWith(`${home}${path.sep}`) || resolved.startsWith(`/tmp${path.sep}`) || resolved.startsWith(`${realpathSync(feedbackHome())}${path.sep}`))) {
 			throw error(403, 'File is not publishable');
 		}
 		const stats = statSync(resolved);
@@ -107,6 +110,7 @@ export const load: PageServerLoad = ({ params, setHeaders }) => {
 	}
 
 	setHeaders({ 'cache-control': 'no-store' });
+ const revision = liveSnapshot(params.token, secret).version;
 
 	if (isExcel) {
 		const resolved = resolvedPaths[0];
@@ -118,7 +122,7 @@ export const load: PageServerLoad = ({ params, setHeaders }) => {
 			filename: path.basename(resolved),
 			size: stats.size,
 			updatedAt: stats.mtime.toISOString(),
-			src: `/live/${params.token}/excel`
+			src: `/live/${params.token}/excel?v=${revision}`
 		};
 	}
 
@@ -132,7 +136,7 @@ export const load: PageServerLoad = ({ params, setHeaders }) => {
 			filename: path.basename(resolved),
 			size: stats.size,
 			updatedAt: stats.mtime.toISOString(),
-			src: `/live/${params.token}/ppt`
+			src: `/live/${params.token}/ppt?v=${revision}`
 		};
 	}
 
@@ -146,7 +150,7 @@ export const load: PageServerLoad = ({ params, setHeaders }) => {
 			filename: path.basename(resolved),
 			size: stats.size,
 			updatedAt: stats.mtime.toISOString(),
-			src: `/live/${params.token}/word`
+			src: `/live/${params.token}/word?v=${revision}`
 		};
 	}
 
@@ -160,7 +164,7 @@ export const load: PageServerLoad = ({ params, setHeaders }) => {
 			filename: path.basename(resolved),
 			size: stats.size,
 			updatedAt: stats.mtime.toISOString(),
-			src: `/live/${params.token}/pdf`
+			src: `/live/${params.token}/pdf?v=${revision}`
 		};
 	}
 
@@ -189,7 +193,7 @@ export const load: PageServerLoad = ({ params, setHeaders }) => {
 			filename: path.basename(resolved),
 			size: stats.size,
 			updatedAt: stats.mtime.toISOString(),
-			src: `/live/${params.token}/image?index=${index}`,
+			src: `/live/${params.token}/image?index=${index}&v=${revision}`,
 			mediaType: documentImageMediaType(resolved) ?? 'image/png'
 		};
 	});

@@ -172,3 +172,6 @@
 .live-review.live-review.live-review .stage { min-height:0; width:auto; flex:1; background:var(--review-bg); align-items:flex-start; padding:16px; }
 .live-review.live-review.live-review .image-wrapper { flex:none; max-width:none; max-height:none; }
 .live-review.live-review.live-review .image-wrapper img { width:100%; height:auto; max-width:none; max-height:none; border-radius:4px; box-shadow:0 2px 12px #17243b0a; }
+
+.review-feedback-submit { flex-shrink:0; padding:12px 16px; background:white; border-top:1px solid var(--review-line); display:flex; flex-direction:column; gap:8px; }
+.review-feedback-submit p { font-size:12px; line-height:18px; color:var(--review-muted); margin:0; overflow-wrap:anywhere; }

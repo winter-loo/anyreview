@@ -1,4 +1,5 @@
 <script lang="ts">
+ import { createLiveFeedback } from '$lib/feedback/client.svelte';
 	import { onMount, tick } from 'svelte';
 	import { reviewViewport, reviewWidth } from '$lib/review/visualViewport';
 	import './mobile-review.css';
@@ -35,6 +36,8 @@
 		id: string;
 		type: 'text';
 		selectedText: string;
+  prefix?: string;
+  suffix?: string;
 		body: string;
 		createdAt: string;
 	};
@@ -91,7 +94,7 @@
 
 	// Text selection annotation state
 	let textSelectionCandidate = $state<{ selectedText: string; range: Range } | null>(null);
-	let textDraft = $state<{ selectedText: string } | null>(null);
+	let textDraft = $state<{ selectedText: string; prefix: string; suffix: string } | null>(null);
 	let textDraftBody = $state('');
 
 	// Brush annotation state
@@ -114,6 +117,8 @@
 		if (brushMode && drawingCanvas && docContainer) syncCanvasSize();
 	});
 
+ const feedback = createLiveFeedback<WordAnnotation>({token:()=>data.token,kind:'word',read:()=>annotations,replace:next=>annotations=next});
+
 	onMount(() => {
 		showListModal = window.matchMedia('(min-width: 1100px)').matches;
 		try {
@@ -125,6 +130,7 @@
 		} catch {
 			annotations = [];
 		}
+  const stopFeedback = feedback.start(annotations);
 
 		loadWordDocument();
 
@@ -132,6 +138,7 @@
 		document.addEventListener('selectionchange', handleSelectionChange);
 
 		return () => {
+   stopFeedback();
 			window.removeEventListener('resize', handleResize);
 			document.removeEventListener('selectionchange', handleSelectionChange);
 		};
@@ -239,7 +246,7 @@
 
 	function openTextComposer() {
 		if (!textSelectionCandidate) return;
-		textDraft = { selectedText: textSelectionCandidate.selectedText };
+		textDraft = { selectedText: textSelectionCandidate.selectedText, ...selectionContext(textSelectionCandidate.range) };
 		textDraftBody = '';
 		textSelectionCandidate = null;
 		window.getSelection()?.removeAllRanges();
@@ -252,12 +259,22 @@
 		textSelectionCandidate = null;
 	}
 
+ function selectionContext(range: Range) {
+  if(!docContainer)return {prefix:'',suffix:''};
+  const before=range.cloneRange(),after=range.cloneRange();
+  before.selectNodeContents(docContainer);before.setEnd(range.startContainer,range.startOffset);
+  after.selectNodeContents(docContainer);after.setStart(range.endContainer,range.endOffset);
+  return {prefix:before.toString().slice(-200),suffix:after.toString().slice(0,200)};
+ }
+
 	function saveTextDraft() {
 		if (!textDraft || !textDraftBody.trim()) return;
 		const annotation: TextAnnotation = {
 			id: crypto.randomUUID(),
 			type: 'text',
 			selectedText: textDraft.selectedText,
+   prefix: textDraft.prefix,
+   suffix: textDraft.suffix,
 			body: textDraftBody.trim(),
 			createdAt: new Date().toISOString()
 		};
@@ -272,13 +289,8 @@
 	}
 
 	function persistAnnotations(next: WordAnnotation[]) {
-		annotations = next;
-		try {
-			localStorage.setItem(storageKey, JSON.stringify(next));
-		} catch {
-			showNotice('设备存储不足，批注仅临时保留');
-		}
-	}
+  feedback.persist(next);
+ }
 
 	function showNotice(msg: string) {
 		notice = msg;
