@@ -38,6 +38,27 @@ CREATE TABLE IF NOT EXISTS comments (
 	updated_at TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS comment_text_selections (
+	comment_id TEXT PRIMARY KEY REFERENCES comments(id) ON DELETE CASCADE,
+	block_id TEXT NOT NULL,
+	start_offset INTEGER NOT NULL,
+	end_offset INTEGER NOT NULL,
+	selected_text TEXT NOT NULL,
+	prefix TEXT NOT NULL,
+	suffix TEXT NOT NULL,
+	sent_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS comment_page_regions (
+	comment_id TEXT PRIMARY KEY REFERENCES comments(id) ON DELETE CASCADE,
+	page INTEGER NOT NULL,
+	x REAL NOT NULL,
+	y REAL NOT NULL,
+	width REAL NOT NULL,
+	height REAL NOT NULL,
+	sent_at TEXT
+);
+
 CREATE TABLE IF NOT EXISTS events (
 	id TEXT PRIMARY KEY,
 	review_id TEXT NOT NULL REFERENCES reviews(id),

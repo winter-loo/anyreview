@@ -1,21 +1,25 @@
 <script lang="ts">
+	import { createTranslator } from '$lib/i18n/translate';
+	import type { Locale } from '$lib/i18n/locales';
+
 	let { data } = $props();
+	const t = $derived(createTranslator((data as typeof data & { locale: Locale }).locale));
 </script>
 
 <svelte:head>
-	<title>Reviews</title>
+	<title>{t('reviews.pageTitle')}</title>
 </svelte:head>
 
 <main class="page">
 	<header>
-		<p class="eyebrow">Review Platform</p>
-		<h1>Published code and document reviews</h1>
-		<p>Read-only snapshots of local worktree, commit, range diffs, and reviewable documents.</p>
+		<p class="eyebrow">{t('reviews.eyebrow')}</p>
+		<h1>{t('reviews.title')}</h1>
+		<p>{t('reviews.description')}</p>
 	</header>
 
 	{#if data.reviews.length === 0}
 		<section class="empty">
-			<h2>No reviews yet</h2>
+			<h2>{t('reviews.emptyTitle')}</h2>
 			<pre>reviewctl publish --repo &lt;git-root&gt; --range 'HEAD~4...HEAD' --title 'my review'</pre>
 		</section>
 	{:else}
@@ -74,5 +78,29 @@
 		border-radius: 8px;
 		background: #0f172a;
 		color: #e2e8f0;
+	}
+	@media (max-width: 640px) {
+		.page {
+			padding: 28px 12px;
+		}
+		h1 {
+			font-size: 2rem;
+			line-height: 1.1;
+		}
+		.reviews a,
+		.empty {
+			padding: 14px;
+		}
+		.reviews a {
+			min-height: 44px;
+		}
+		.reviews strong,
+		.reviews span,
+		.reviews code {
+			overflow-wrap: anywhere;
+		}
+		pre {
+			font-size: 0.78rem;
+		}
 	}
 </style>

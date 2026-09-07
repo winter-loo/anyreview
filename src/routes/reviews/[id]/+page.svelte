@@ -1496,4 +1496,89 @@
 			flex: none;
 		}
 	}
+	@media (max-width: 640px) {
+		.page {
+			padding: 10px 10px 20px;
+		}
+		.summary {
+			align-items: flex-start;
+			padding: 10px;
+		}
+		.shortcut-hint {
+			display: none;
+		}
+		.review-workspace {
+			gap: 10px;
+		}
+		.summary,
+		.commit-rail,
+		.file-pane,
+		.diff-panel,
+		.comments {
+			border-radius: 12px;
+		}
+		.pane-head,
+		.diff-header {
+			padding: 12px;
+		}
+		.diff-header {
+			flex-direction: column;
+			gap: 8px;
+		}
+		.diff-actions {
+			width: 100%;
+		}
+		.diff-actions button {
+			min-height: 40px;
+			flex: 1 1 auto;
+		}
+		.file-toolbar {
+			padding: 10px;
+		}
+		.file-toolbar input {
+			min-height: 44px;
+			font-size: 16px;
+		}
+		.filters {
+			flex-wrap: nowrap;
+			overflow-x: auto;
+			padding-bottom: 2px;
+		}
+		.filters button {
+			min-height: 40px;
+			flex: 0 0 auto;
+		}
+		.file-list li button,
+		.commit-row {
+			min-height: 44px;
+		}
+		.virtual-diff {
+			height: 68vh;
+			font-size: 11px;
+			line-height: 19px;
+		}
+		.comment-gutter button {
+			opacity: 1;
+		}
+		.inline-comment {
+			left: 8px;
+			width: calc(100vw - 38px);
+			min-width: 280px;
+			margin: 8px;
+			padding: 10px;
+		}
+		.composer-fields {
+			grid-template-columns: 1fr;
+		}
+		.composer-fields input,
+		.composer-fields textarea {
+			font-size: 16px;
+		}
+		.comments {
+			padding: 12px;
+		}
+		.comments-toolbar button {
+			min-height: 44px;
+		}
+	}
 </style>

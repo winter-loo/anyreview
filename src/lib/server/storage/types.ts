@@ -27,6 +27,23 @@ export interface ReviewVersionRecord {
 
 export type CommentSide = 'old' | 'new' | 'file';
 
+export interface TextSelectionAnchor {
+	blockId: string;
+	startOffset: number;
+	endOffset: number;
+	selectedText: string;
+	prefix: string;
+	suffix: string;
+}
+
+export interface PageRegionAnchor {
+	page: number;
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+}
+
 export interface ReviewCommentRecord {
 	id: string;
 	reviewId: string;
@@ -35,6 +52,9 @@ export interface ReviewCommentRecord {
 	side: CommentSide;
 	lineStart: number | null;
 	lineEnd: number | null;
+	textSelection: TextSelectionAnchor | null;
+	pageRegion: PageRegionAnchor | null;
+	sentAt: string | null;
 	body: string;
 	author: string;
 	status: 'open' | 'resolved';

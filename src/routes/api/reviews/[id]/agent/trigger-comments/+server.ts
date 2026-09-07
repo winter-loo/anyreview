@@ -79,9 +79,13 @@ export const POST: RequestHandler = async ({ params }) => {
 	const detail = getReviewDetail(reviewId);
 	if (!detail?.review || !detail.latestVersion) return json({ error: 'Review not found' }, { status: 404 });
 
-	const comments = getReviewStore().listComments(reviewId).filter((comment) => comment.status === 'open');
+	const store = getReviewStore();
+	const openComments = store.listComments(reviewId).filter((comment) => comment.status === 'open');
+	const comments = detail.review.sourceKind === 'document'
+		? openComments.filter((comment) => !(comment.textSelection || comment.pageRegion) || !comment.sentAt)
+		: openComments;
 	if (comments.length === 0) {
-		return json({ message: 'No open comments to notify.', newCommentCount: 0 });
+		return json({ message: 'No unsent comments to notify.', newCommentCount: 0 });
 	}
 
 	let target: DiscordNotificationTarget | null = null;
@@ -98,11 +102,11 @@ export const POST: RequestHandler = async ({ params }) => {
 	}
 
 	const publicUrl = reviewPlatformPublicUrl();
-	const reviewUrl = publicUrl
-		? `${publicUrl.replace(/\/$/, '')}/reviews/${reviewId}`
-		: `/reviews/${reviewId}`;
-	const message = buildDiscordMessage(reviewId, reviewUrl, comments, target);
 	const reviewKind = detail.review.sourceKind === 'document' ? 'document' : 'code';
+	// Document reviews have a different route; sending the code-review URL here leaves the agent on a 404.
+	const reviewPath = reviewKind === 'document' ? `/document-reviews/${reviewId}` : `/reviews/${reviewId}`;
+	const reviewUrl = publicUrl ? `${publicUrl.replace(/\/$/, '')}${reviewPath}` : reviewPath;
+	const message = buildDiscordMessage(reviewId, reviewUrl, comments, target);
 	const structuredComments = comments.map((comment) => commentWithAnchor(comment, reviewKind));
 	const payload = {
 		type: 'review.open_comments',
@@ -123,6 +127,11 @@ export const POST: RequestHandler = async ({ params }) => {
 
 	try {
 		const gatewayOutput = await notifyGateway(payload);
+		// Mark delivery only after the gateway accepts the batch; doing it earlier loses feedback on transient failures.
+		store.markCommentsSent(
+			comments.filter((comment) => comment.textSelection || comment.pageRegion).map((comment) => comment.id),
+			new Date().toISOString()
+		);
 		return json({ message: `Notified Discord executor about ${comments.length} open comment(s).`, newCommentCount: comments.length, target, gatewayOutput });
 	} catch (cause) {
 		return json(

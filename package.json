@@ -16,6 +16,7 @@
 		"package:ltsql": "npm run package:review-platform"
 	},
 	"bin": {
+		"review": "./bin/review.js",
 		"reviewctl": "./bin/reviewctl.js",
 		"ltsql-review": "./bin/ltsql-review.js"
 	},
@@ -33,6 +34,10 @@
 		"vitest": "^4.1.7"
 	},
 	"dependencies": {
-		"markdown-it": "^14.2.0"
+		"@aiden0z/pptx-renderer": "^1.2.4",
+		"docx-preview": "^0.4.0",
+		"markdown-it": "^14.2.0",
+		"pdfjs-dist": "^6.3.289",
+		"xlsx": "^0.18.5"
 	}
 }

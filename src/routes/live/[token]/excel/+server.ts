@@ -1,0 +1,56 @@
+import { readFileSync, realpathSync, statSync } from 'node:fs';
+import { homedir } from 'node:os';
+import path from 'node:path';
+import { error } from '@sveltejs/kit';
+import { _pathsFromToken, _isExcelFile } from '../+page.server';
+import type { RequestHandler } from './$types';
+
+export const GET: RequestHandler = ({ params }) => {
+	const secret = process.env.ONLINE_REVIEW_URL_SECRET;
+	if (!secret) throw error(503, 'Live review is not configured');
+
+	let filePaths: string[];
+	try {
+		filePaths = _pathsFromToken(params.token, secret);
+	} catch {
+		throw error(404, 'Review not found');
+	}
+
+	if (filePaths.length !== 1) {
+		throw error(400, 'Invalid Excel review');
+	}
+
+	const targetPath = filePaths[0];
+	let resolved: string;
+	try {
+		resolved = realpathSync(targetPath);
+	} catch {
+		throw error(404, 'File not found');
+	}
+
+	const home = realpathSync(process.env.HOME || homedir());
+	if (!(resolved.startsWith(`${home}${path.sep}`) || resolved.startsWith(`/tmp${path.sep}`))) {
+		throw error(403, 'File is not publishable');
+	}
+
+	if (!_isExcelFile(resolved)) {
+		throw error(415, 'Not an Excel spreadsheet');
+	}
+
+	const stats = statSync(resolved);
+	if (!stats.isFile()) throw error(404, 'File not found');
+	if (stats.size > 50 * 1024 * 1024) throw error(413, 'Excel file exceeds 50 MiB');
+
+	const ext = path.extname(resolved).toLowerCase();
+	let contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+	if (ext === '.xls') contentType = 'application/vnd.ms-excel';
+	else if (ext === '.csv') contentType = 'text/csv; charset=utf-8';
+
+	return new Response(readFileSync(resolved), {
+		headers: {
+			'content-type': contentType,
+			'cache-control': 'no-store',
+			'x-content-type-options': 'nosniff'
+		}
+	});
+};

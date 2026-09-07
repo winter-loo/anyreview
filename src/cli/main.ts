@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { createReviewStore } from '../lib/server/storage/db';
 import { getGitRoot } from '../lib/server/git/git';
-import { publishDocumentReview, publishReview, type ReviewNotificationTarget } from '../lib/server/reviews/publish';
+import { publishDocumentReview, publishImageReview, publishReview, type ReviewNotificationTarget } from '../lib/server/reviews/publish';
 import { reviewPlatformBaseUrl, reviewPlatformDiscordTargetEnv } from '../lib/server/config/env';
 import type { CommentSide, ReviewCommentRecord, ReviewSourceKind } from '../lib/server/storage/types';
 
@@ -41,6 +41,7 @@ function usage() {
 Commands:
   publish --repo <git-root> [--type worktree|staged] [--range <range>] [--show <ref>] --title <title> [--discord-channel <id>] [--discord-thread <id>] [--executor-mention <mention>]
   publish-doc --file <markdown.md> --title <title>
+  publish-image --file <page.png|page.jpg|page.webp> --title <title>
   list
   add-comment --review <id> --file <path> --line <n> [--line-end <n>] --side old|new --body <text> [--author <name>]
   comments --review <id> --json
@@ -100,6 +101,9 @@ function createCommentFromFlags(flags: Map<string, string | boolean>, reviewId: 
 		side,
 		lineStart,
 		lineEnd,
+		textSelection: null,
+		pageRegion: null,
+		sentAt: null,
 		body,
 		author: stringFlag(flags, 'author') ?? process.env.USER ?? 'anonymous',
 		status: 'open',
@@ -165,6 +169,23 @@ async function main() {
 			console.log(`URL: ${result.url}`);
 			console.log(`Document: ${result.document.path}`);
 			console.log(`Lines: ${result.document.lineCount}`);
+			return;
+		}
+
+		if (command === 'publish-image') {
+			const file = stringFlag(flags, 'file');
+			if (!file) throw new Error('--file is required');
+			const result = publishImageReview({
+				filePath: file,
+				title: stringFlag(flags, 'title') ?? path.basename(file),
+				createdBy: process.env.USER || 'unknown',
+				store,
+				baseUrl: reviewPlatformBaseUrl(),
+				notificationTarget: notificationTargetFromFlags(flags)
+			});
+			console.log(`Created review ${result.review.id}`);
+			console.log(`URL: ${result.url}`);
+			console.log(`Image: ${result.document.path}`);
 			return;
 		}
 

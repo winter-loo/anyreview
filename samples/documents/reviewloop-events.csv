@@ -1,0 +1,8 @@
+date,event,artifact_type,comments,routed_to_agent
+2026-09-01,publish,pdf,4,2
+2026-09-02,publish,word,7,5
+2026-09-03,publish,excel,3,1
+2026-09-04,publish,powerpoint,9,6
+2026-09-05,publish,image,2,0
+2026-09-06,publish,markdown,5,3
+2026-09-07,publish,pdf,8,7

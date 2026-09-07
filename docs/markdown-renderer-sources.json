@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "id": 1,
+      "url": "https://github.com/Vanessa219/vditor",
+      "title": "",
+      "accessed": "2026-09-06"
+    },
+    {
+      "id": 2,
+      "url": "https://raw.githubusercontent.com/Vanessa219/vditor/4535ffb0c6b70809a0d5bcb477d9568e297ae83f/README.md",
+      "title": "",
+      "accessed": "2026-09-06"
+    },
+    {
+      "id": 3,
+      "url": "https://raw.githubusercontent.com/Vanessa219/vditor/4535ffb0c6b70809a0d5bcb477d9568e297ae83f/src/ts/markdown/previewRender.ts",
+      "title": "",
+      "accessed": "2026-09-06"
+    },
+    {
+      "id": 4,
+      "url": "https://raw.githubusercontent.com/Vanessa219/vditor/4535ffb0c6b70809a0d5bcb477d9568e297ae83f/src/ts/markdown/mermaidRender.ts",
+      "title": "",
+      "accessed": "2026-09-06"
+    },
+    {
+      "id": 5,
+      "url": "https://github.com/Tencent/cherry-markdown",
+      "title": "",
+      "accessed": "2026-09-06"
+    },
+    {
+      "id": 6,
+      "url": "https://raw.githubusercontent.com/Tencent/cherry-markdown/5bb02e30e5da6e579cdb383882b1e880a44f627b/README.md",
+      "title": "",
+      "accessed": "2026-09-06"
+    },
+    {
+      "id": 7,
+      "url": "https://raw.githubusercontent.com/Tencent/cherry-markdown/5bb02e30e5da6e579cdb383882b1e880a44f627b/LICENSE",
+      "title": "",
+      "accessed": "2026-09-06"
+    },
+    {
+      "id": 8,
+      "url": "https://github.com/Milkdown/milkdown",
+      "title": "",
+      "accessed": "2026-09-06"
+    },
+    {
+      "id": 9,
+      "url": "https://github.com/nhn/tui.editor",
+      "title": "",
+      "accessed": "2026-09-06"
+    },
+    {
+      "id": 10,
+      "url": "https://registry.npmjs.org/vditor/latest",
+      "title": "",
+      "accessed": "2026-09-06"
+    },
+    {
+      "id": 11,
+      "url": "https://registry.npmjs.org/cherry-markdown/latest",
+      "title": "",
+      "accessed": "2026-09-06"
+    },
+    {
+      "id": 12,
+      "url": "https://raw.githubusercontent.com/Vanessa219/vditor/4535ffb0c6b70809a0d5bcb477d9568e297ae83f/src/ts/markdown/adapterRender.ts",
+      "title": "",
+      "accessed": "2026-09-06"
+    },
+    {
+      "id": 13,
+      "url": "https://github.com/mermaid-js/mermaid/blob/develop/docs/config/usage.md",
+      "title": "",
+      "accessed": "2026-09-06"
+    },
+    {
+      "id": 14,
+      "url": "https://github.com/pd4d10/bytemd",
+      "title": "",
+      "accessed": "2026-09-06"
+    }
+  ]
+}

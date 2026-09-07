@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { artifactsDir, reviewArtifactDir } from '../storage/paths';
 import type { ReviewRecord, ReviewSourceKind, ReviewVersionRecord } from '../storage/types';
@@ -7,7 +7,7 @@ import { writeArtifactManifest, type ReviewArtifactManifest } from '../artifacts
 import { getHeadCommit, type GitCommitSummary } from '../git/git';
 import { parseDiffFileSections, type DiffFileStat } from '../git/diffStats';
 import { captureGitCommitSections, captureGitReviewDiff } from '../publishers/git-diff';
-import { captureDocumentReviewSource } from '../publishers/document';
+import { captureDocumentReviewSource, documentImageMediaType } from '../publishers/document';
 
 export interface ReviewNotificationTarget {
 	platform: 'discord';
@@ -93,6 +93,58 @@ export interface PublishDocumentReviewResult {
 	version: ReviewVersionRecord;
 	document: { path: string; artifactPath: string; lineCount: number };
 	url: string;
+}
+
+export interface PublishImageReviewInput extends Omit<PublishDocumentReviewInput, 'filePath'> {
+	filePath: string;
+}
+
+export interface PublishImageReviewResult {
+	review: ReviewRecord;
+	version: ReviewVersionRecord;
+	document: { path: string; artifactPath: string; lineCount: 0; format: 'image'; mediaType: string; pageCount: 1 };
+	url: string;
+}
+
+export function publishImageReview(input: PublishImageReviewInput): PublishImageReviewResult {
+	const sourcePath = path.resolve(input.filePath);
+	const mediaType = documentImageMediaType(sourcePath);
+	if (!mediaType) throw new Error('Image reviews support PNG, JPEG, and WebP files');
+	const now = timestamp();
+	const id = reviewIdFromDate();
+	const artifactDir = reviewArtifactDir(id, 1).replace(artifactsDir(), path.join(input.store.home, 'artifacts'));
+	mkdirSync(artifactDir, { recursive: true });
+	const artifactPath = path.join(artifactDir, `page-1${path.extname(sourcePath).toLowerCase()}`);
+	const filesPath = path.join(artifactDir, 'document.json');
+	const metadataPath = path.join(artifactDir, 'metadata.json');
+	const review: ReviewRecord = {
+		id, title: input.title, repoRoot: path.dirname(sourcePath), sourceKind: 'document', sourceRef: sourcePath,
+		status: 'in_review', createdBy: input.createdBy, createdAt: now, updatedAt: now
+	};
+	const version: ReviewVersionRecord = {
+		id: `${id}-v1`, reviewId: id, version: 1, baseCommit: null, headCommit: null,
+		diffPath: artifactPath, filesPath, createdAt: now
+	};
+	const document = { path: sourcePath, artifactPath, lineCount: 0 as const, format: 'image' as const, mediaType, pageCount: 1 as const };
+	const manifest: ReviewArtifactManifest = {
+		schemaVersion: 1,
+		reviewKind: 'document',
+		review: { id: review.id, title: review.title, sourceKind: review.sourceKind, sourceRef: review.sourceRef, repoRoot: review.repoRoot },
+		version: { version: 1, baseCommit: null, headCommit: null, diffPath: artifactPath, filesPath },
+		source: { type: 'document', path: sourcePath, format: 'image', repoRoot: path.dirname(sourcePath) },
+		entries: [{ id: 'page-1', kind: 'document', path: sourcePath, artifactPath, mediaType, page: 1 }],
+		groups: [],
+		notificationTarget: input.notificationTarget ?? null,
+		legacyArtifacts: { document: artifactPath, files: filesPath, metadata: metadataPath }
+	};
+	copyFileSync(sourcePath, artifactPath);
+	writeFileSync(filesPath, JSON.stringify({ document }, null, 2), 'utf8');
+	writeArtifactManifest(artifactDir, manifest);
+	writeFileSync(metadataPath, JSON.stringify({ review, version, document, notificationTarget: input.notificationTarget ?? null }, null, 2), 'utf8');
+	input.store.insertReview(review);
+	input.store.insertVersion(version);
+	const baseUrl = input.baseUrl ?? 'http://localhost:5173';
+	return { review, version, document, url: `${baseUrl}/document-reviews/${id}` };
 }
 
 export function publishDocumentReview(input: PublishDocumentReviewInput): PublishDocumentReviewResult {

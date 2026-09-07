@@ -24,6 +24,7 @@ export const POST: RequestHandler = async ({ params, request }) => {
 		lineEnd?: number;
 		body?: string;
 		author?: string;
+		pageRegion?: { page?: number; x?: number; y?: number; width?: number; height?: number };
 	};
 	try {
 		body = (await request.json()) as typeof body;
@@ -32,14 +33,26 @@ export const POST: RequestHandler = async ({ params, request }) => {
 	}
 	if (!body.body?.trim()) throw error(400, 'Comment body is required');
 	if (!body.filePath?.trim()) throw error(400, 'filePath is required for inline review comments');
-	if (body.side !== 'old' && body.side !== 'new') throw error(400, 'side must be old or new for inline review comments');
-	const lineStart = Number(body.lineStart);
-	if (!Number.isInteger(lineStart) || lineStart < 1) {
-		throw error(400, 'lineStart must be a positive integer for inline review comments');
-	}
-	const lineEnd = body.lineEnd === undefined ? lineStart : Number(body.lineEnd);
-	if (!Number.isInteger(lineEnd) || lineEnd < lineStart) {
-		throw error(400, 'lineEnd must be an integer greater than or equal to lineStart');
+	const region = body.pageRegion;
+	let lineStart: number | null = null;
+	let lineEnd: number | null = null;
+	let pageRegion = null;
+	if (region) {
+		if (review.sourceKind !== 'document') throw error(400, 'pageRegion is only valid for document reviews');
+		const values = [region.x, region.y, region.width, region.height].map(Number);
+		const page = Number(region.page);
+		const [x, y, width, height] = values;
+		if (!Number.isInteger(page) || page < 1) throw error(400, 'pageRegion.page must be a positive integer');
+		if (values.some((value) => !Number.isFinite(value)) || x < 0 || y < 0 || width <= 0 || height <= 0 || x + width > 1 || y + height > 1) {
+			throw error(400, 'pageRegion coordinates must describe a normalized rectangle inside the page');
+		}
+		pageRegion = { page, x, y, width, height };
+	} else {
+		if (body.side !== 'old' && body.side !== 'new') throw error(400, 'side must be old or new for inline review comments');
+		lineStart = Number(body.lineStart);
+		if (!Number.isInteger(lineStart) || lineStart < 1) throw error(400, 'lineStart must be a positive integer for inline review comments');
+		lineEnd = body.lineEnd === undefined ? lineStart : Number(body.lineEnd);
+		if (!Number.isInteger(lineEnd) || lineEnd < lineStart) throw error(400, 'lineEnd must be an integer greater than or equal to lineStart');
 	}
 	const now = new Date().toISOString();
 	const comment = {
@@ -47,9 +60,12 @@ export const POST: RequestHandler = async ({ params, request }) => {
 		reviewId: params.id,
 		version: latestVersion.version,
 		filePath: body.filePath.trim(),
-		side: body.side,
+		side: pageRegion ? ('file' as const) : body.side!,
 		lineStart,
 		lineEnd,
+		textSelection: null,
+		pageRegion,
+		sentAt: null,
 		body: body.body.trim(),
 		author: body.author ?? 'anonymous',
 		status: 'open' as const,

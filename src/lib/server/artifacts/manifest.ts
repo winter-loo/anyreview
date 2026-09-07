@@ -5,7 +5,7 @@ import type { ReviewRecord, ReviewVersionRecord } from '../storage/types';
 
 export type ReviewArtifactSource =
 	| { type: 'git-diff'; refKind: 'worktree' | 'staged' | 'show' | 'range'; repoRoot: string; sourceRef: string | null; baseCommit?: string | null; headCommit?: string | null }
-	| { type: 'document'; path: string; format: 'markdown' | 'text' | 'html'; repoRoot?: string | null };
+	| { type: 'document'; path: string; format: 'markdown' | 'text' | 'html' | 'image'; repoRoot?: string | null };
 
 export type ReviewArtifactEntry = {
 	id: string;
@@ -19,6 +19,8 @@ export type ReviewArtifactEntry = {
 	additions?: number;
 	deletions?: number;
 	status?: string;
+	mediaType?: string;
+	page?: number;
 };
 
 export type ReviewArtifactGroup = {

@@ -42,6 +42,28 @@ function toComment(row: Record<string, unknown>): ReviewCommentRecord {
 		side: row.side as ReviewCommentRecord['side'],
 		lineStart: row.line_start === null ? null : Number(row.line_start),
 		lineEnd: row.line_end === null ? null : Number(row.line_end),
+		textSelection:
+			row.block_id === null || row.block_id === undefined
+				? null
+				: {
+						blockId: String(row.block_id),
+						startOffset: Number(row.start_offset),
+						endOffset: Number(row.end_offset),
+						selectedText: String(row.selected_text),
+						prefix: String(row.prefix),
+						suffix: String(row.suffix)
+					},
+		pageRegion:
+			row.region_page === null || row.region_page === undefined
+				? null
+				: {
+						page: Number(row.region_page),
+						x: Number(row.region_x),
+						y: Number(row.region_y),
+						width: Number(row.region_width),
+						height: Number(row.region_height)
+					},
+		sentAt: row.sent_at === null || row.sent_at === undefined ? null : String(row.sent_at),
 		body: String(row.body),
 		author: String(row.author),
 		status: row.status as ReviewCommentRecord['status'],
@@ -64,6 +86,7 @@ export interface ReviewStore {
 	getLatestVersion(reviewId: string): ReviewVersionRecord | null;
 	listComments(reviewId: string): ReviewCommentRecord[];
 	addComment(comment: ReviewCommentRecord): void;
+	markCommentsSent(commentIds: string[], sentAt: string): void;
 	close(): void;
 }
 
@@ -72,6 +95,7 @@ export function createReviewStore(home?: string): ReviewStore {
 	mkdirSync(resolvedHome, { recursive: true });
 	const db = new DatabaseSync(path.join(resolvedHome, 'reviews.db'));
 	db.exec('PRAGMA journal_mode = WAL');
+	db.exec('PRAGMA foreign_keys = ON');
 	db.exec(schemaSql);
 
 	return {
@@ -127,16 +151,29 @@ export function createReviewStore(home?: string): ReviewStore {
 		},
 		listComments(reviewId) {
 			return db
-				.prepare('SELECT * FROM comments WHERE review_id = ? ORDER BY created_at ASC')
+				.prepare(
+					`SELECT comments.*, selection.block_id, selection.start_offset, selection.end_offset,
+						selection.selected_text, selection.prefix, selection.suffix,
+						region.page AS region_page, region.x AS region_x, region.y AS region_y,
+						region.width AS region_width, region.height AS region_height,
+						COALESCE(selection.sent_at, region.sent_at) AS sent_at
+					 FROM comments
+					 LEFT JOIN comment_text_selections AS selection ON selection.comment_id = comments.id
+					 LEFT JOIN comment_page_regions AS region ON region.comment_id = comments.id
+					 WHERE comments.review_id = ?
+					 ORDER BY comments.created_at ASC`
+				)
 				.all(reviewId)
 				.map((row) => toComment(row as Record<string, unknown>));
 		},
 		addComment(comment) {
-			db.prepare(
-				`INSERT INTO comments (id, review_id, version, file_path, side, line_start, line_end, body, author, status, created_at, updated_at)
-				 VALUES (@id, @reviewId, @version, @filePath, @side, @lineStart, @lineEnd, @body, @author, @status, @createdAt, @updatedAt)`
-			).run(
-				sqlParams({
+			db.exec('BEGIN IMMEDIATE');
+			try {
+				db.prepare(
+					`INSERT INTO comments (id, review_id, version, file_path, side, line_start, line_end, body, author, status, created_at, updated_at)
+					 VALUES (@id, @reviewId, @version, @filePath, @side, @lineStart, @lineEnd, @body, @author, @status, @createdAt, @updatedAt)`
+				).run(
+					sqlParams({
 					id: comment.id,
 					reviewId: comment.reviewId,
 					version: comment.version,
@@ -149,8 +186,40 @@ export function createReviewStore(home?: string): ReviewStore {
 					status: comment.status,
 					createdAt: comment.createdAt,
 					updatedAt: comment.updatedAt
-				})
-			);
+					})
+				);
+				if (comment.textSelection) {
+					db.prepare(
+						`INSERT INTO comment_text_selections (comment_id, block_id, start_offset, end_offset, selected_text, prefix, suffix)
+						 VALUES (@commentId, @blockId, @startOffset, @endOffset, @selectedText, @prefix, @suffix)`
+					).run(sqlParams({ commentId: comment.id, ...comment.textSelection }));
+				}
+				if (comment.pageRegion) {
+					db.prepare(
+						`INSERT INTO comment_page_regions (comment_id, page, x, y, width, height)
+						 VALUES (@commentId, @page, @x, @y, @width, @height)`
+					).run(sqlParams({ commentId: comment.id, ...comment.pageRegion }));
+				}
+				db.exec('COMMIT');
+			} catch (cause) {
+				db.exec('ROLLBACK');
+				throw cause;
+			}
+		},
+		markCommentsSent(commentIds, sentAt) {
+			const textStatement = db.prepare('UPDATE comment_text_selections SET sent_at = ? WHERE comment_id = ?');
+			const regionStatement = db.prepare('UPDATE comment_page_regions SET sent_at = ? WHERE comment_id = ?');
+			db.exec('BEGIN IMMEDIATE');
+			try {
+				for (const commentId of commentIds) {
+					textStatement.run(sentAt, commentId);
+					regionStatement.run(sentAt, commentId);
+				}
+				db.exec('COMMIT');
+			} catch (cause) {
+				db.exec('ROLLBACK');
+				throw cause;
+			}
 		},
 		close() {
 			db.close();

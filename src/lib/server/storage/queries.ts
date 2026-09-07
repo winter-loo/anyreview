@@ -61,18 +61,40 @@ export function getDocumentReviewDetail(reviewId: string) {
 	if (!review || review.sourceKind !== 'document') return null;
 	const latestVersion = store.getLatestVersion(reviewId);
 	if (!latestVersion) return null;
-	const markdown = readTextArtifact(latestVersion.diffPath, 'document markdown');
 	const manifest = readArtifactManifest(latestVersion.filesPath);
-	let document = { path: review.sourceRef ?? 'document.md', artifactPath: latestVersion.diffPath, lineCount: markdown.split('\n').length };
+	const format = manifest?.source.type === 'document' ? manifest.source.format : 'markdown';
+	const markdown = format === 'image' ? '' : readTextArtifact(latestVersion.diffPath, 'document markdown');
+	let document: {
+		path: string;
+		artifactPath: string;
+		lineCount: number;
+		format: 'markdown' | 'text' | 'html' | 'image';
+		mediaType?: string;
+		pageCount?: number;
+	} = {
+		path: review.sourceRef ?? 'document.md',
+		artifactPath: latestVersion.diffPath,
+		lineCount: markdown ? markdown.split('\n').length : 0,
+		format
+	};
 	if (manifest?.reviewKind === 'document') {
 		const entry = manifest.entries.find((item) => item.kind === 'document');
-		if (entry) document = { path: entry.path, artifactPath: entry.artifactPath ?? latestVersion.diffPath, lineCount: entry.lineCount ?? document.lineCount };
+		if (entry) {
+			document = {
+				...document,
+				path: entry.path,
+				artifactPath: entry.artifactPath ?? latestVersion.diffPath,
+				lineCount: entry.lineCount ?? document.lineCount,
+				mediaType: entry.mediaType,
+				pageCount: entry.page ? 1 : undefined
+			};
+		}
 	}
 	try {
 		const parsed = readFilesArtifact(latestVersion.filesPath);
 		if (parsed?.document) document = { ...document, ...parsed.document };
 	} catch {
-		// Older document reviews can still render from the markdown artifact alone.
+		// The immutable source artifact is enough to render a document review.
 	}
 	return { review, latestVersion, document, markdown, manifest };
 }

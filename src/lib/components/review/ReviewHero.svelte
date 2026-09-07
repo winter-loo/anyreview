@@ -74,4 +74,29 @@
 		overflow-wrap: anywhere;
 		color: #475569;
 	}
+	@media (max-width: 640px) {
+		.review-hero {
+			margin-top: 12px;
+			padding: 18px;
+			border-radius: 18px;
+			box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+		}
+		h1 {
+			font-size: clamp(28px, 9vw, 38px);
+			line-height: 1.08;
+			overflow-wrap: anywhere;
+		}
+		.meta {
+			gap: 7px;
+			margin-top: 12px;
+			font-size: 13px;
+		}
+		.meta span {
+			padding: 5px 8px;
+		}
+		code {
+			margin-top: 12px;
+			font-size: 13px;
+		}
+	}
 </style>

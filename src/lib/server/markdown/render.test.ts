@@ -11,8 +11,18 @@ describe('renderMarkdownDocument', () => {
 			[7, 9]
 		]);
 		expect(blocks[0].html).toContain('<h1>Title</h1>');
+		expect(blocks[0].text).toBe('Title\n');
+		expect(blocks[0]).toMatchObject({ headingLevel: 1, headingText: 'Title' });
 		expect(blocks[1].html).toContain('<table>');
+		expect(blocks[1].headingText).toBeNull();
 		expect(blocks[2].html).toContain('<pre><code class="language-sql">select 1;');
+	});
+
+	it('extracts section titles for document navigation without including markup', () => {
+		const blocks = renderMarkdownDocument('## Scope & Goals\n\nBody\n\n### `API` details\n');
+
+		expect(blocks.map((block) => block.headingText).filter(Boolean)).toEqual(['Scope & Goals', 'API details']);
+		expect(blocks.map((block) => block.headingLevel).filter(Boolean)).toEqual([2, 3]);
 	});
 
 	it('escapes raw html because document reviews render untrusted markdown artifacts', () => {
