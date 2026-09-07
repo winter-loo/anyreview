@@ -6,6 +6,7 @@ import path from 'node:path';
 import { error } from '@sveltejs/kit';
 import { resolveToken } from '$lib/server/shortLinks';
 import { documentImageMediaType } from '$lib/server/publishers/document';
+import { markdownImageUrl } from '$lib/server/live/markdownAssets';
 import { renderMarkdownDocument } from '$lib/server/markdown/render';
 import type { PageServerLoad } from './$types';
 
@@ -179,7 +180,7 @@ export const load: PageServerLoad = ({ params, setHeaders }) => {
 			filename: path.basename(resolved),
 			updatedAt: stats.mtime.toISOString(),
 			lineCount: markdown.split('\n').length,
-			renderedBlocks: renderMarkdownDocument(markdown)
+			renderedBlocks: renderMarkdownDocument(markdown, src => markdownImageUrl(params.token, src))
 		};
 	}
 

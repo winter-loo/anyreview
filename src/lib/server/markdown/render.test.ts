@@ -1,7 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { renderMarkdownDocument } from './render';
+import { markdownImageSources, renderMarkdownDocument } from './render';
 
 describe('renderMarkdownDocument', () => {
+	it('rewrites parsed images without changing line anchors, alt text, links or code examples', () => {
+		const source = '# Title\n\n[![Alt](image.png "Caption")](https://example.com)\n\n```md\n![Example](code.png)\n```\n';
+		const original = renderMarkdownDocument(source);
+		const rewritten = renderMarkdownDocument(source, () => '/live/token/assets/image');
+		expect(markdownImageSources(source)).toEqual(['image.png']);
+		expect(rewritten.map(b => [b.id, b.lineStart, b.lineEnd, b.text])).toEqual(original.map(b => [b.id, b.lineStart, b.lineEnd, b.text]));
+		expect(rewritten[1].html).toContain('href="https://example.com"');
+		expect(rewritten[1].html).toContain('src="/live/token/assets/image" alt="Alt" title="Caption"');
+		expect(rewritten[2].html).toContain('![Example](code.png)');
+	});
+
 	it('renders real markdown blocks while preserving source line anchors', () => {
 		const blocks = renderMarkdownDocument('# Title\n\n| A | B |\n| - | - |\n| 1 | 2 |\n\n```sql\nselect 1;\n```\n');
 
@@ -30,4 +41,12 @@ describe('renderMarkdownDocument', () => {
 		expect(block.html).toContain('&lt;script&gt;');
 		expect(block.html).not.toContain('<script>');
 	});
+});
+
+it('keeps Mermaid source and annotation anchors while identifying diagrams', () => {
+ const [block] = renderMarkdownDocument('```mermaid\ngraph TD\n A-->B\n```\n');
+ expect(block).toMatchObject({ id: 'L1', lineStart: 1, lineEnd: 4,
+  text: 'graph TD\n A-->B\n\n', diagram: { language: 'mermaid', source: 'graph TD\n A-->B\n' } });
+ expect(block.html).toContain('language-mermaid');
+ expect(renderMarkdownDocument('```text\ngraph TD\n```')[0].diagram).toBeUndefined();
 });

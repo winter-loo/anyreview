@@ -976,17 +976,11 @@
 		box-sizing: border-box;
 	}
 
-	:global(html, body) {
-		margin: 0;
-		padding: 0;
-		height: 100%;
-		overflow: hidden;
-		background: #09090b;
+
+	/* This component is imported on Markdown routes too: never lock html/body scrolling. */
+	.live-image-container {
 		color: #f4f4f5;
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-	}
-
-	.live-image-container {
 		display: flex;
 		flex-direction: column;
 		height: 100dvh;

@@ -458,6 +458,10 @@ Existing deployments may continue using `LTSQL_REVIEW_HOME=/data/ludd50155/.ltsq
 - Server errors returned from Gateway notification paths are sanitized before they are exposed to the client.
 - This project is still a local/private review tool; the Web/API layer does not yet provide full multi-tenant production authentication or authorization.
 
+### Live review public URLs
+
+See [How `review` generates public URLs and serves local files](docs/deployments/live-review-public-url.md) for token generation, snapshots, short-link storage, the deeloo.cn reverse proxy, SSH tunnel, service configuration and troubleshooting.
+
 ### Live document and image feedback
 
 The `/live/` PDF, Word, PowerPoint, Excel and image viewers now synchronize comments
@@ -466,3 +470,27 @@ agents can read it with `review feedback <url> --json`, wait for it with `--wait
 or download original snapshots and annotated PNG previews with `--out <directory>`.
 See [Live review feedback](docs/live-feedback.md) for the workflow, storage,
 migration behavior and CLI options.
+
+### Local images in Markdown live reviews
+
+`review document.md` serves referenced local images directly from their original
+files through `/live/<token>/assets/<image-id>`. Images are not uploaded or copied;
+existing review links also use this route after the server is updated.
+
+Relative image paths resolve from the original Markdown file's directory, even
+though the Markdown itself is snapshotted. Absolute paths are supported when they
+point inside that directory. Subdirectories, reference-style Markdown images,
+spaces and Unicode filenames are supported; URL-encode literal `#` and `?` in
+filenames. HTTP(S), protocol-relative and inline data image URLs remain unchanged.
+
+Only images referenced by the review's Markdown snapshot are accessible. The
+resolved path, including symlink targets, must stay inside the original document
+directory. Supported image types match image reviews, with a 5 MiB limit per image.
+SVG responses are sandboxed. Raw HTML image tags remain disabled with other HTML.
+
+Images are live dependencies: replacing an original image changes what the next
+request displays, and deleting it makes it unavailable. Responses use `no-store`;
+no historical image copy is retained. Keep the original directory available while
+sharing the review. Neither the Markdown source nor its image files are modified.
+
+Markdown live reviews render top-level `mermaid` fenced blocks as SVG diagrams in the browser, with collapsible source and an enlarged preview. No browser extension or external rendering service is required. Invalid diagrams retain their source and show an error. Source text remains available for annotations.

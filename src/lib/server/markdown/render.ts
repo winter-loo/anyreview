@@ -3,6 +3,7 @@ import type Token from 'markdown-it/lib/token.mjs';
 
 export interface RenderedMarkdownBlock {
 	id: string;
+	diagram?: { language: 'mermaid'; source: string };
 	lineStart: number;
 	lineEnd: number;
 	html: string;
@@ -72,8 +73,28 @@ function tokenHeading(tokens: Token[], start: number, end: number) {
 	};
 }
 
-export function renderMarkdownDocument(source: string): RenderedMarkdownBlock[] {
+function visitImages(tokens: Token[], visit: (token: Token) => void) {
+	for (const token of tokens) {
+		if (token.type === 'image') visit(token);
+		if (token.children) visitImages(token.children, visit);
+	}
+}
+
+export function markdownImageSources(source: string): string[] {
+	const sources = new Set<string>();
+	visitImages(markdown.parse(source, {}), token => {
+		const src = token.attrGet('src');
+		if (src) sources.add(src);
+	});
+	return [...sources];
+}
+
+export function renderMarkdownDocument(source: string, resolveImage?: (src: string) => string): RenderedMarkdownBlock[] {
 	const tokens = markdown.parse(source, {});
+	if (resolveImage) visitImages(tokens, token => {
+		const src = token.attrGet('src');
+		if (src) token.attrSet('src', resolveImage(src));
+	});
 	const blocks: RenderedMarkdownBlock[] = [];
 	let index = 0;
 
@@ -91,6 +112,8 @@ export function renderMarkdownDocument(source: string): RenderedMarkdownBlock[] 
 		const html = markdown.renderer.render(group, markdown.options, {});
 		blocks.push({
 			id: `L${lineStart}`,
+			...(token.type === 'fence' && token.info.trim().toLowerCase() === 'mermaid'
+				? { diagram: { language: 'mermaid' as const, source: token.content } } : {}),
 			lineStart,
 			lineEnd,
 			html,
