@@ -29,6 +29,8 @@ ReviewLoop provides that control point:
 
 ### Pasted AI responses
 
+Run `review feedback` without a URL to read submitted comments for the most recently published local review. Use `review feedback --wait` to wait for its feedback, or supply a URL to select a different document. This default applies across working directories on the same machine; a document without submitted feedback returns an empty batch list.
+
 For a desktop clipboard, run `/copy` in the agent, then `review --clipboard` (or `!review --clipboard` in Codex). This saves a `clipboard.md` snapshot. It supports macOS `pbpaste`, Windows/WSL PowerShell, Linux `wl-paste` or `xclip`/`xsel`, and the current tmux buffer. A working desktop clipboard connection is required; no agent launcher or terminal bridge is installed. `review paste` remains available independently.
 
 Run `review paste` in a terminal shell, paste the response, press Enter and then Ctrl+D to publish. Ctrl+C cancels. You can also pipe UTF-8 text: `cat response.md | review paste`. No clipboard utilities, agent wrappers, or agent restart are required.

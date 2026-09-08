@@ -6,6 +6,7 @@ import { homedir } from 'node:os';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { readClipboard } from './clipboard.js';
+import { rememberReview } from './latest-review.js';
 import { readPaste } from './paste.js';
 import { digest, freezeReview } from './live-snapshot.js';
 
@@ -170,17 +171,14 @@ function main(rawFiles) {
 
 	freezeReview(digest(token), files);
 	const isLong = process.argv.slice(2).includes('--long');
-	if (isLong) {
-		console.log(`${BASE_URL}/${token}`);
-	} else {
-		const shortId = createShortLink(token);
-		console.log(`${BASE_URL}/${shortId}`);
-	}
+	const url = `${BASE_URL}/${isLong ? token : createShortLink(token)}`;
+	rememberReview(url);
+	console.log(url);
 }
 
 try {
  if (['--help','-h'].includes(process.argv[2]) || (process.argv[2] === 'paste' && ['--help','-h'].includes(process.argv[3]))) {
-  console.log('Usage: review <file-or-directory> [--long]\n       review paste [--long]\n       review --clipboard [--long]\n       review feedback <url-or-id> [--json] [--wait] [--after <cursor>] [--timeout <seconds>] [--out <new-directory>]\n\nPaste: paste text in a terminal, press Enter then Ctrl+D to publish; Ctrl+C cancels.\n       Or pipe UTF-8 text: cat response.md | review paste');
+  console.log('Usage: review <file-or-directory> [--long]\n       review paste [--long]\n       review --clipboard [--long]\n       review feedback [url-or-id] [--json] [--wait] [--after <cursor>] [--timeout <seconds>] [--out <new-directory>]\n\nPaste: paste text in a terminal, press Enter then Ctrl+D to publish; Ctrl+C cancels.\n       Or pipe UTF-8 text: cat response.md | review paste');
  } else if (process.argv[2] === 'feedback') {
   const { runFeedback } = await import('./feedback.js');
   await runFeedback(process.argv.slice(3));

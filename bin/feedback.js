@@ -1,11 +1,15 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { latestReview } from './latest-review.js';
 
 export async function runFeedback(args) {
- const target=args[0];
- if(!target||target.startsWith('--'))throw new Error('Usage: review feedback <url-or-id> [--json] [--wait] [--after <cursor>] [--timeout <seconds>] [--out <new-directory>]');
+ if (['--help','-h'].includes(args[0])) {
+  console.log('Usage: review feedback [url-or-id] [--json] [--wait] [--after <cursor>] [--timeout <seconds>] [--out <new-directory>]\nWithout a URL, reads submitted feedback for the most recently published local review.');
+  return;
+ }
+ const explicitTarget=args[0] && !args[0].startsWith('--') ? args[0] : undefined;
  let cursor=0,wait=false,timeout=300,out;
- for(let i=1;i<args.length;i++){
+ for(let i=explicitTarget?1:0;i<args.length;i++){
   const flag=args[i];
   if(flag==='--json')continue;
   if(flag==='--wait'){wait=true;continue;}
@@ -13,6 +17,7 @@ export async function runFeedback(args) {
   const value=args[++i];if(flag==='--after')cursor=Number(value);else if(flag==='--timeout')timeout=Number(value);else out=value;
  }
  if(!Number.isSafeInteger(cursor)||cursor<0||!Number.isFinite(timeout)||timeout<0)throw new Error('Invalid cursor or timeout');
+ const target=explicitTarget || latestReview();
  const base=process.env.ONLINE_REVIEW_BASE_URL||'https://deeloo.cn/live';
  const review=new URL(/^https?:\/\//.test(target)?target:`${base.replace(/\/$/,'')}/${target}`);
  if(!['https:','http:'].includes(review.protocol)||!/^\/live\/[^/]+\/?$/.test(review.pathname))throw new Error('Expected a /live/<token> review URL');

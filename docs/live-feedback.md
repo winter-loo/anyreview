@@ -7,6 +7,10 @@ No login or separate per-reviewer permissions are introduced in this version.
 
 ## Reviewer flow
 
+`review feedback` with no arguments reads submitted feedback for the most recently published review on this machine (across working directories). `review feedback --wait` waits on that same document; it does not switch targets when another document is published. Explicit URLs remain supported. An empty batch list means that document has no submitted feedback; the command does not fall back to an older document with comments.
+
+Successful file, paste and clipboard publications record their URL in `latest-review.json` under `ONLINE_REVIEW_FEEDBACK_HOME` (or the default feedback directory), including `--long` URLs. Failed publications do not change the pointer. On first use with older publications, the command falls back to the most recent entry in the local short-link database; old long-only URLs must be passed explicitly. If no publication is known, the command explains how to publish one.
+
 1. Open the review and annotate normally. Saving keeps the document in place.
 2. The status changes from 正在同步 to 已同步 when the server acknowledges it.
 3. Open 批注 and click 提交给 AI. This submits all currently unsubmitted comments
