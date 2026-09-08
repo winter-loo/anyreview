@@ -1,3 +1,4 @@
+import { liveOrigin } from '$lib/server/live/origin';
 import { MAX_FEEDBACK_REQUEST_BYTES } from '$lib/feedback/limits';
 import { readFileSync } from 'node:fs';
 import { error, json } from '@sveltejs/kit';
@@ -7,7 +8,7 @@ import type { FeedbackOperation } from '$lib/feedback/types';
 import type { RequestHandler } from './$types';
 
 const headers = {'cache-control':'no-store','x-content-type-options':'nosniff'};
-export const GET: RequestHandler = ({params,url}) => {
+export const GET: RequestHandler = ({params,url,request}) => {
  const snapshot=liveSnapshot(params.token),db=openFeedbackDb();
  try {
   if (url.searchParams.has('file')) {
@@ -22,14 +23,14 @@ export const GET: RequestHandler = ({params,url}) => {
   }
   if(url.searchParams.get('format')==='agent') {
    const after=Number(url.searchParams.get('after')||0);if(!Number.isSafeInteger(after)||after<0) throw error(400,'Invalid cursor');
-   return json(agentFeedback(db,snapshot,`${url.origin}${url.pathname}`,after),{headers});
+   return json(agentFeedback(db,snapshot,`${liveOrigin(url,request.headers)}${url.pathname}`,after),{headers});
   }
   return json(feedbackState(db,snapshot),{headers});
  } finally {db.close();}
 };
 export const POST: RequestHandler = async ({params,request,url}) => {
  const origin=request.headers.get('origin');
- if(origin && origin!==url.origin) throw error(403,'Cross-origin feedback writes are not allowed');
+ if(origin && origin!==url.origin && origin!==liveOrigin(url,request.headers)) throw error(403,'Cross-origin feedback writes are not allowed');
  if(!request.headers.get('content-type')?.startsWith('application/json')) throw error(415,'JSON body required');
  const reader=request.body?.getReader();if(!reader) throw error(400,'Missing body');
  let size=0;const chunks:Uint8Array[]=[];

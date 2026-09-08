@@ -123,6 +123,9 @@ function resolveFiles(args) {
 }
 
 function main(rawFiles) {
+ const local = process.argv.slice(2).includes('--local');
+ const base = new URL(local ? (process.env.ONLINE_REVIEW_LOCAL_BASE_URL || `http://127.0.0.1:${process.env.PORT || '8787'}/live`) : BASE_URL);
+ if (!['http:', 'https:'].includes(base.protocol) || base.pathname.replace(/\/$/, '') !== '/live' || base.search || base.hash || base.username || base.password) throw new Error('Review base URL must be an HTTP(S) URL ending in /live');
 	const files = rawFiles.map((file) => realpathSync(file));
 	const home = realpathSync(homedir());
 
@@ -171,23 +174,23 @@ function main(rawFiles) {
 
 	freezeReview(digest(token), files);
 	const isLong = process.argv.slice(2).includes('--long');
-	const url = `${BASE_URL}/${isLong ? token : createShortLink(token)}`;
+	const url = `${base.href.replace(/\/$/, '')}/${isLong ? token : createShortLink(token)}`;
 	rememberReview(url);
 	console.log(url);
 }
 
 try {
  if (['--help','-h'].includes(process.argv[2]) || (process.argv[2] === 'paste' && ['--help','-h'].includes(process.argv[3]))) {
-  console.log('Usage: review <file-or-directory> [--long]\n       review paste [--long]\n       review --clipboard [--long]\n       review feedback [url-or-id] [--json] [--wait] [--after <cursor>] [--timeout <seconds>] [--out <new-directory>]\n\nPaste: paste text in a terminal, press Enter then Ctrl+D to publish; Ctrl+C cancels.\n       Or pipe UTF-8 text: cat response.md | review paste');
+  console.log('Usage: review <file-or-directory> [--long] [--local]\n       review paste [--long] [--local]\n       review --clipboard [--long] [--local]\n       review feedback [url-or-id] [--json] [--wait] [--after <cursor>] [--timeout <seconds>] [--out <new-directory>]\n\nPaste: paste text in a terminal, press Enter then Ctrl+D to publish; Ctrl+C cancels.\n       Or pipe UTF-8 text: cat response.md | review paste');
  } else if (process.argv[2] === 'feedback') {
   const { runFeedback } = await import('./feedback.js');
   await runFeedback(process.argv.slice(3));
  } else {
   const paste = process.argv[2] === 'paste';
   const args = process.argv.slice(paste ? 3 : 2);
-  const unknown = args.find(arg => arg.startsWith('--') && !['--long', '--clipboard'].includes(arg));
+  const unknown = args.find(arg => arg.startsWith('--') && !['--long', '--clipboard', '--local'].includes(arg));
   if (unknown) throw new Error(`Unknown option: ${unknown}`);
-  const files = args.filter(arg => !['--long', '--clipboard'].includes(arg));
+  const files = args.filter(arg => !['--long', '--clipboard', '--local'].includes(arg));
   const clipboard = args.includes('--clipboard');
   if (paste && clipboard) throw new Error('Choose review paste or review --clipboard, not both.');
   if (paste || clipboard) {

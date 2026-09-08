@@ -29,6 +29,8 @@ ReviewLoop provides that control point:
 
 ### Pasted AI responses
 
+Add `--local` to publish a direct local-service URL: `review file.md --local`, `review paste --local`, or `review --clipboard --local`. The default is `http://127.0.0.1:8787/live` (uses `PORT` if set); override it with `ONLINE_REVIEW_LOCAL_BASE_URL`, for example `http://localhost:5173/live`. The service must already be running. The URL opens on the machine running the service, and does not use the public tunnel. Default `review feedback` also remembers this local URL.
+
 Run `review feedback` without a URL to read submitted comments for the most recently published local review. Use `review feedback --wait` to wait for its feedback, or supply a URL to select a different document. This default applies across working directories on the same machine; a document without submitted feedback returns an empty batch list.
 
 For a desktop clipboard, run `/copy` in the agent, then `review --clipboard` (or `!review --clipboard` in Codex). This saves a `clipboard.md` snapshot. It supports macOS `pbpaste`, Windows/WSL PowerShell, Linux `wl-paste` or `xclip`/`xsel`, and the current tmux buffer. A working desktop clipboard connection is required; no agent launcher or terminal bridge is installed. `review paste` remains available independently.

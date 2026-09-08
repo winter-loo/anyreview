@@ -20,6 +20,8 @@ review /home/ldd/path/document.md --long
 
 默认 URL 前缀为 `https://deeloo.cn/live`，可以通过 `ONLINE_REVIEW_BASE_URL` 更改。更改前缀只改变输出地址，不会自动配置 DNS、HTTPS、反向代理或隧道。
 
+添加 `--local` 可直接访问本机服务，例如 `review document.pdf --local`、`review paste --local`、`review --clipboard --local`。默认前缀为 `http://127.0.0.1:8787/live`（设置 `PORT` 时使用该端口），也可用 `ONLINE_REVIEW_LOCAL_BASE_URL=http://localhost:5173/live` 指定本地服务。此选项不启动服务、不经过隧道；回环地址需要在运行服务的电脑上打开。最新评审记录会保留本地 URL，所以不带参数的 `review feedback` 同样直连本地。
+
 ## 2. 命令如何生成 URL
 
 实现入口：[bin/review.js](../../bin/review.js)。
