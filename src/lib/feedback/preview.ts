@@ -4,7 +4,7 @@ import html2canvas from 'html2canvas';
 /** Capture the document region, not the browser chrome or the open composer. */
 export async function capturePreview(kind:string,annotation:Annotation):Promise<string> {
  const selector:Record<string,string>={pdf:'.pdf-canvas',image:'.image-wrapper img',ppt:'.slide-viewport-wrapper',word:'.docx-render-container',excel:'.sheet-content-wrapper'};
- const element=document.querySelector(selector[kind]) as HTMLElement|null;
+ const element = kind === 'html' ? document.querySelector<HTMLIFrameElement>('.docx-render-container iframe')?.contentDocument?.documentElement : document.querySelector(selector[kind]) as HTMLElement|null;
  if(!element) throw new Error('文档尚未加载，无法生成截图');
  const rect=element.getBoundingClientRect();
  const strokes=annotation.strokes as {color:string;size:number;points:{x:number;y:number}[]}[]|undefined;
@@ -24,7 +24,7 @@ export async function capturePreview(kind:string,annotation:Annotation):Promise<
  } else {
   const rendered=await html2canvas(element,{logging:false,backgroundColor:'#ffffff',scale,x:left,y:top,width:cropW,height:cropH,useCORS:true,
    onclone: doc => {
-    const clone=doc.querySelector(selector[kind]) as HTMLElement|null;
+    const clone=kind === 'html' ? doc.documentElement : doc.querySelector(selector[kind]) as HTMLElement|null;
     if(!clone)return;
     clone.style.width=`${width}px`;
     for(let parent:HTMLElement|null=clone;parent;parent=parent.parentElement){parent.style.zoom='1';parent.style.transform='none';parent.style.overflow='visible';parent.scrollTop=0;parent.scrollLeft=0;}

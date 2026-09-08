@@ -12,7 +12,7 @@
  {#if data.kind === 'markdown'}<LiveMarkdownReview {data} />
  {:else if data.kind === 'image'}<LiveImageReview {data} />
  {:else if data.kind === 'pdf'}<LivePdfReview {data} />
- {:else if data.kind === 'word'}<LiveWordReview {data} />
+ {:else if data.kind === 'word' || data.kind === 'html'}<LiveWordReview {data} />
  {:else if data.kind === 'ppt'}<LivePptReview {data} />
  {:else if data.kind === 'excel'}<LiveExcelReview {data} />{/if}
 {/key}

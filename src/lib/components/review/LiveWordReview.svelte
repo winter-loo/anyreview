@@ -1,6 +1,6 @@
 <script lang="ts">
  import { createLiveFeedback } from '$lib/feedback/client.svelte';
-	import { onMount, tick } from 'svelte';
+	import { onMount, tick, untrack } from 'svelte';
 	import { reviewViewport, reviewWidth } from '$lib/review/visualViewport';
 	import './mobile-review.css';
 	import { twoFingerPan } from '$lib/review/twoFingerPan';
@@ -13,7 +13,7 @@
 
 	interface Props {
 		data: {
-			kind: 'word';
+			kind: 'word' | 'html';
 			token: string;
 			filename: string;
 			size: number;
@@ -23,6 +23,56 @@
 	}
 
 	let { data }: Props = $props();
+ const formatLabel = $derived(data.kind === 'html' ? 'HTML' : 'Word');
+ let htmlFrame = $state<HTMLIFrameElement | null>(null);
+ let stopHtml: (() => void) | undefined;
+ function contentRoot() { return data.kind === 'html' ? htmlFrame?.contentDocument?.body : docContainer; }
+ function contentDocument() { return data.kind === 'html' ? htmlFrame?.contentDocument : document; }
+ function htmlLoaded() {
+  stopHtml?.();
+  const doc = htmlFrame?.contentDocument;
+  if (!doc?.body || !htmlFrame || doc.contentType !== 'text/html') {
+   isLoading = false;
+   loadError = '无法加载 HTML 文件，请重新加载';
+   return;
+  }
+  loadError = null;
+  const frame = htmlFrame;
+  const resize = () => {
+   frame.style.height = `${Math.max(600, doc.body.scrollHeight, doc.documentElement.scrollHeight)}px`;
+   syncCanvasSize();
+  };
+  doc.addEventListener('selectionchange', handleSelectionChange);
+  let resizeFrame = 0;
+  const observer = new ResizeObserver(() => {
+   cancelAnimationFrame(resizeFrame);
+   resizeFrame = requestAnimationFrame(resize);
+  });
+  observer.observe(doc.body);
+  // Interactive pages can replace text without changing their layout size.
+  // Watch the document root so replacing <body> does not orphan the observer.
+  let highlightFrame = 0;
+  const mutations = new MutationObserver(() => {
+   if (highlightFrame) return;
+   highlightFrame = requestAnimationFrame(() => {
+    highlightFrame = 0;
+    resize();
+    renderHighlights();
+   });
+  });
+  mutations.observe(doc.documentElement, {childList: true, subtree: true, characterData: true});
+  stopHtml = () => {
+   cancelAnimationFrame(resizeFrame);
+   cancelAnimationFrame(highlightFrame);
+   observer.disconnect();
+   mutations.disconnect();
+   doc.removeEventListener('selectionchange', handleSelectionChange);
+  };
+  isLoading = false;
+  resize();
+  void tick().then(() => { fitToWidth(); renderHighlights(); });
+ }
+
 
 	type Point = { x: number; y: number };
 
@@ -107,7 +157,7 @@
 	let composingBrush = $state(false);
 	let brushDraftComment = $state('');
 
-	const storageKey = $derived(`reviewloop:live-word:${data.token}`);
+	const storageKey = $derived(`reviewloop:live-${data.kind}:${data.token}`);
 
 	// The drawing canvas is mounted lazily by {#if brushMode}, so the
 	// syncCanvasSize() call at load time runs while drawingCanvas is still null
@@ -117,7 +167,7 @@
 		if (brushMode && drawingCanvas && docContainer) syncCanvasSize();
 	});
 
- const feedback = createLiveFeedback<WordAnnotation>({token:()=>data.token,kind:'word',read:()=>annotations,replace:next=>annotations=next});
+ const feedback = createLiveFeedback<WordAnnotation>({token:()=>data.token,kind:untrack(() => data.kind),read:()=>annotations,replace:next=>annotations=next});
 
 	onMount(() => {
 		showListModal = window.matchMedia('(min-width: 1100px)').matches;
@@ -132,19 +182,27 @@
 		}
   const stopFeedback = feedback.start(annotations);
 
-		loadWordDocument();
+		if (data.kind === 'word') loadWordDocument();
 
 		window.addEventListener('resize', handleResize);
 		document.addEventListener('selectionchange', handleSelectionChange);
 
 		return () => {
    stopFeedback();
+   stopHtml?.();
+   clearTimeout(noticeTimer);
 			window.removeEventListener('resize', handleResize);
 			document.removeEventListener('selectionchange', handleSelectionChange);
 		};
 	});
 
 	async function loadWordDocument() {
+  if (data.kind === 'html') {
+   isLoading = true;
+   loadError = null;
+   if (htmlFrame) htmlFrame.src = data.src;
+   return;
+  }
 		isLoading = true;
 		loadError = null;
 		try {
@@ -220,14 +278,14 @@
 
 	function handleSelectionChange() {
 		if (brushMode || isLoading) return;
-		const selection = window.getSelection();
+		const selection = contentDocument()?.getSelection();
 		if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
 			textSelectionCandidate = null;
 			return;
 		}
 
 		const range = selection.getRangeAt(0);
-		if (!docContainer || !docContainer.contains(range.commonAncestorContainer)) {
+		if (!contentRoot()?.contains(range.commonAncestorContainer)) {
 			textSelectionCandidate = null;
 			return;
 		}
@@ -249,7 +307,7 @@
 		textDraft = { selectedText: textSelectionCandidate.selectedText, ...selectionContext(textSelectionCandidate.range) };
 		textDraftBody = '';
 		textSelectionCandidate = null;
-		window.getSelection()?.removeAllRanges();
+		contentDocument()?.getSelection()?.removeAllRanges();
 
 	}
 
@@ -260,10 +318,11 @@
 	}
 
  function selectionContext(range: Range) {
-  if(!docContainer)return {prefix:'',suffix:''};
+  const root=contentRoot();
+  if(!root)return {prefix:'',suffix:''};
   const before=range.cloneRange(),after=range.cloneRange();
-  before.selectNodeContents(docContainer);before.setEnd(range.startContainer,range.startOffset);
-  after.selectNodeContents(docContainer);after.setStart(range.endContainer,range.endOffset);
+  before.selectNodeContents(root);before.setEnd(range.startContainer,range.startOffset);
+  after.selectNodeContents(root);after.setStart(range.endContainer,range.endOffset);
   return {prefix:before.toString().slice(-200),suffix:after.toString().slice(0,200)};
  }
 
@@ -309,15 +368,20 @@
 		redrawDraftCanvas();
 	}
 
-	function renderHighlights() {
-		if (!document.getElementById('live-word-highlight-style')) {
-			const style = document.createElement('style');
+	$effect(() => { annotations; if (!isLoading) renderHighlights(); });
+
+ function renderHighlights() {
+		const doc = contentDocument(), root = contentRoot();
+  if (!doc || !root) return;
+  const win = doc.defaultView;
+  if (!doc.getElementById('live-word-highlight-style')) {
+			const style = doc.createElement('style');
 			style.id = 'live-word-highlight-style';
 			style.textContent = '::highlight(live-word-annotations) { background: #fef08a; color: #18181b; }';
-			document.head.append(style);
+			doc.head.append(style);
 		}
-		const registry = (CSS as any)?.highlights;
-		const HighlightClass = (window as any)?.Highlight;
+		const registry = (win as any)?.CSS?.highlights;
+		const HighlightClass = (win as any)?.Highlight;
 		if (!registry || !HighlightClass || !docContainer) return;
 		registry.delete('live-word-annotations');
 
@@ -325,7 +389,7 @@
 		if (textAnns.length === 0) return;
 
 		const ranges: Range[] = [];
-		const walker = document.createTreeWalker(docContainer, NodeFilter.SHOW_TEXT);
+		const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT);
 		const textNodes: { node: Text; start: number; end: number }[] = [];
 		let fullText = '';
 
@@ -336,14 +400,16 @@
 		}
 
 		for (const ann of textAnns) {
+   if (!ann.selectedText) continue;
 			let searchIndex = 0;
 			while ((searchIndex = fullText.indexOf(ann.selectedText, searchIndex)) !== -1) {
 				const matchEnd = searchIndex + ann.selectedText.length;
+    if ((ann.prefix && !fullText.slice(0, searchIndex).endsWith(ann.prefix)) || (ann.suffix && !fullText.slice(matchEnd).startsWith(ann.suffix))) { searchIndex += 1; continue; }
 				const startNodeInfo = textNodes.find((tn) => searchIndex >= tn.start && searchIndex < tn.end);
 				const endNodeInfo = textNodes.find((tn) => matchEnd > tn.start && matchEnd <= tn.end);
 
 				if (startNodeInfo && endNodeInfo) {
-					const range = document.createRange();
+					const range = doc.createRange();
 					range.setStart(startNodeInfo.node, searchIndex - startNodeInfo.start);
 					range.setEnd(endNodeInfo.node, matchEnd - endNodeInfo.start);
 					ranges.push(range);
@@ -562,7 +628,7 @@
 </script>
 
 <svelte:head>
-	<title>{data.filename} · Live Word Review</title>
+	<title>{data.filename} · Live {formatLabel} Review</title>
 	<meta name="robots" content="noindex,nofollow" />
 </svelte:head>
 
@@ -576,7 +642,7 @@
 		{#if isLoading}
 			<div class="loading-overlay">
 				<div class="spinner"></div>
-				<p>正在解析 Word 文档排版与样式...</p>
+				<p>正在加载 {formatLabel} 文档排版与样式...</p>
 			</div>
 		{:else if loadError}
 			<div class="error-overlay">
@@ -595,7 +661,13 @@
 				bind:this={docContainer}
 				class="docx-render-container"
 				class:brush-active={brushMode}
-			></div>
+			>
+    {#if data.kind === 'html'}
+     <iframe bind:this={htmlFrame} title={`${data.filename} HTML 预览`} src={data.src}
+      onload={htmlLoaded}
+      style="display:block;width:1024px;height:600px;border:0;background:white"></iframe>
+    {/if}
+   </div>
 
 			<!-- Saved Brush Annotations (SVG Overlay) -->
 			{#if docContainer && brushAnns.length > 0}
@@ -668,12 +740,12 @@
   oncomments={() => { showListModal = !showListModal; }} onfinish={() => { composingBrush=true; }} onundo={undoLastStroke} />
 
 {#if textDraft}
- <ReviewComposer brush={false} context="Word · 所选文字" quote={textDraft.selectedText} bind:body={textDraftBody} onclose={cancelTextDraft} onsave={saveTextDraft} />
+ <ReviewComposer brush={false} context={`${formatLabel} · 所选文字`} quote={textDraft.selectedText} bind:body={textDraftBody} onclose={cancelTextDraft} onsave={saveTextDraft} />
  {/if}
 	<!-- Brush Draft Comment Composer -->
 
  {#if draftStrokes.length > 0 && composingBrush}
-  <ReviewComposer context={`Word · ${draftStrokes.length} 条笔画`} bind:body={brushDraftComment} onclose={() => composingBrush=false} onsave={saveBrushDraft} />
+  <ReviewComposer context={`${formatLabel} · ${draftStrokes.length} 条笔画`} bind:body={brushDraftComment} onclose={() => composingBrush=false} onsave={saveBrushDraft} />
  {/if}
 
 	<!-- Selected Annotation Detail Card -->
@@ -686,7 +758,7 @@
 
 	<!-- All Annotations Modal -->
  {#if showListModal}
- <ReviewComments entries={annotations.map(a => ({ id:a.id, anchor:a.type==='text' ? 'Word · 文字批注' : 'Word · 画笔标注', body:a.body, createdAt:a.createdAt, quote:a.type==='text' ? a.selectedText : undefined }))} onclose={() => showListModal=false} ondelete={deleteAnnotation} onlocate={(id) => { selectedAnnotationId=id; showListModal=false; const a=annotations.find(a=>a.id===id); if(a?.type==='brush' && scrollContainer && docContainer) scrollContainer.scrollTop=a.badgePosition.y*docContainer.scrollHeight*zoom; }}></ReviewComments>
+ <ReviewComments entries={annotations.map(a => ({ id:a.id, anchor:a.type==='text' ? `${formatLabel} · 文字批注` : `${formatLabel} · 画笔标注`, body:a.body, createdAt:a.createdAt, quote:a.type==='text' ? a.selectedText : undefined }))} onclose={() => showListModal=false} ondelete={deleteAnnotation} onlocate={(id) => { selectedAnnotationId=id; showListModal=false; const a=annotations.find(a=>a.id===id); if(a?.type==='brush' && scrollContainer && docContainer) scrollContainer.scrollTop=a.badgePosition.y*docContainer.scrollHeight*zoom; }}></ReviewComments>
  {/if}
 
 	<!-- Notice Toast -->

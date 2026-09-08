@@ -20,6 +20,10 @@ export function _isMarkdownFile(filePath: string) {
 	return path.extname(filePath).toLowerCase() === '.md';
 }
 
+export function _isHtmlFile(filePath: string) {
+ return ['.html', '.htm'].includes(path.extname(filePath).toLowerCase());
+}
+
 export function _isPdfFile(filePath: string) {
 	return path.extname(filePath).toLowerCase() === '.pdf';
 }
@@ -100,19 +104,25 @@ export const load: PageServerLoad = ({ params, setHeaders }) => {
 	}
 
 	const allImages = resolvedPaths.every(_isImageFile);
+	const isHtml = resolvedPaths.length === 1 && _isHtmlFile(resolvedPaths[0]);
 	const isMarkdown = resolvedPaths.length === 1 && _isMarkdownFile(resolvedPaths[0]);
 	const isPdf = resolvedPaths.length === 1 && _isPdfFile(resolvedPaths[0]);
 	const isWord = resolvedPaths.length === 1 && _isWordFile(resolvedPaths[0]);
 	const isPpt = resolvedPaths.length === 1 && _isPptFile(resolvedPaths[0]);
 	const isExcel = resolvedPaths.length === 1 && _isExcelFile(resolvedPaths[0]);
 
-	if (!allImages && !isMarkdown && !isPdf && !isWord && !isPpt && !isExcel) {
+	if (!allImages && !isHtml && !isMarkdown && !isPdf && !isWord && !isPpt && !isExcel) {
 		throw error(403, 'Unsupported file type');
 	}
 
 	setHeaders({ 'cache-control': 'no-store' });
  const revision = liveSnapshot(params.token, secret).version;
 
+ if (isHtml) {
+  const resolved = resolvedPaths[0], stats = statSync(resolved);
+  if (stats.size > 5 * 1024 * 1024) throw error(413, 'HTML exceeds 5 MiB');
+  return {kind: 'html' as const, token: params.token, filename: path.basename(resolved), size: stats.size, updatedAt: stats.mtime.toISOString(), src: `/live/${params.token}/html?v=${revision}`};
+ }
 	if (isExcel) {
 		const resolved = resolvedPaths[0];
 		const stats = statSync(resolved);

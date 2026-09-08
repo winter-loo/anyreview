@@ -9,6 +9,7 @@ import { GET as getPdf } from './[token]/pdf/+server';
 import { GET as getWord } from './[token]/word/+server';
 import { GET as getPpt } from './[token]/ppt/+server';
 import { GET as getExcel } from './[token]/excel/+server';
+import { GET as getHtml } from './[token]/html/+server';
 import JSZip from 'jszip';
 import * as XLSX from 'xlsx';
 
@@ -495,3 +496,22 @@ describe('standalone live review URL', () => {
 });
 
 
+
+ it.each(['html', 'htm', 'HTML'])('publishes immutable %s previews without restricting JavaScript', async (extension) => {
+  const file = `${feedbackDirectory}/page.${extension}`;
+  const source = '<!doctype html><style>h1{color:red}</style><h1>Hello HTML</h1><script>parent.hacked=true</script>';
+  writeFileSync(file, source);
+  const old = process.env.ONLINE_REVIEW_URL_SECRET;
+  process.env.ONLINE_REVIEW_URL_SECRET = 'html-test';
+  try {
+   const url = execFileSync(cli, [file, '--long', '--local'], {env:{...process.env}, encoding:'utf8'}).trim();
+   const token = url.split('/').at(-1)!;
+   unlinkSync(file);
+   expect(load({params:{token},setHeaders:()=>{}} as any)).toMatchObject({kind:'html',filename:`page.${extension}`});
+   const response = await getHtml({params:{token}} as any);
+   expect(await response.text()).toBe(source);
+   expect(response.headers.get('content-type')).toBe('text/html; charset=utf-8');
+   expect(response.headers.get('content-security-policy')).toBe("frame-ancestors 'self'");
+   expect(response.headers.get('cache-control')).toBe('no-store');
+  } finally { if(old===undefined)delete process.env.ONLINE_REVIEW_URL_SECRET;else process.env.ONLINE_REVIEW_URL_SECRET=old; }
+ });

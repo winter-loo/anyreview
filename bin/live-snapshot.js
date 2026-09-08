@@ -18,13 +18,14 @@ export function freezeReview(id,sources) {
   const stat=statSync(resolved);total+=stat.size;
   if(!stat.isFile()||stat.size>50*1024*1024||total>200*1024*1024)throw new Error('Review is too large');
   const ext=path.extname(resolved).toLowerCase();
-  if(!['.png','.jpg','.jpeg','.webp','.gif','.svg','.bmp','.avif','.pdf','.docx','.doc','.pptx','.ppt','.xlsx','.xls','.csv','.md'].includes(ext))throw new Error('Unsupported review file');
+  if(!['.png','.jpg','.jpeg','.webp','.gif','.svg','.bmp','.avif','.pdf','.docx','.doc','.pptx','.ppt','.xlsx','.xls','.csv','.md','.html','.htm'].includes(ext))throw new Error('Unsupported review file');
+  if (['.html','.htm'].includes(ext) && stat.size>5*1024*1024) throw new Error('HTML file exceeds 5 MiB');
   const bytes=readFileSync(resolved),hash=digest(bytes),filename=path.basename(resolved);
   const snapshotPath=path.join(directory,String(index),filename);mkdirSync(path.dirname(snapshotPath),{recursive:true});writeFileSync(snapshotPath,bytes,{mode:0o600});
   return {filename,hash,size:bytes.length,snapshotPath};
  });
  const ext=path.extname(files[0].filename).toLowerCase();
- const kind=ext==='.pdf'?'pdf':['.doc','.docx'].includes(ext)?'word':['.ppt','.pptx'].includes(ext)?'ppt':['.xlsx','.xls','.csv'].includes(ext)?'excel':ext==='.md'?'markdown':'image';
+ const kind=ext==='.pdf'?'pdf':['.doc','.docx'].includes(ext)?'word':['.ppt','.pptx'].includes(ext)?'ppt':['.xlsx','.xls','.csv'].includes(ext)?'excel':ext==='.md'?'markdown':['.html','.htm'].includes(ext)?'html':'image';
  if(files.length>1&&kind!=='image')throw new Error('Only image reviews support multiple files');
  const snapshot={id,version:digest(JSON.stringify(files.map(f=>[f.filename,f.hash]))),kind,files};
  writeFileSync(manifest+'.tmp',JSON.stringify(snapshot),{mode:0o600});renameSync(manifest+'.tmp',manifest);return snapshot;

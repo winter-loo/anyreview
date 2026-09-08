@@ -67,3 +67,17 @@ it('returns submitted Markdown quotes and offsets to the agent',()=>{
   expect(agentFeedback(db,md,'/feedback').batches[0].comments[0].anchor).toMatchObject({type:'document-text',filename:'paste.md',blockId:'block-1',selectedText:'hello',startOffset:2,endOffset:7});
  } finally {db.close();}
 });
+
+it('validates HTML annotations and returns submitted text and drawing anchors',()=>{
+ const db=database(), html={...snapshot,kind:'html',files:[{...snapshot.files[0],filename:'page.html'}]};
+ const text={id:'text',type:'text',selectedText:'Hello',prefix:'',suffix:' HTML',body:'Revise title',createdAt:new Date().toISOString()};
+ try {
+  expect(()=>applyOperations(db,html,'v1',[{operationId:'invalid',type:'add',annotation:{...text,type:'unknown'}}])).toThrow();
+  expect(()=>applyOperations(db,html,'v1',[{operationId:'empty',type:'add',annotation:{...annotation,type:'brush',strokes:[]}}])).toThrow();
+  applyOperations(db,html,'v1',[{operationId:'text',type:'add',annotation:text},{operationId:'brush',type:'add',annotation:{...annotation,type:'brush'}},{operationId:'preview',type:'preview',id:annotation.id,previewError:'Unavailable'}]);
+  submitFeedback(db,html,'submit');
+  const comments=agentFeedback(db,html,'/feedback').batches[0].comments;
+  expect(comments[0].anchor).toMatchObject({type:'document-text',filename:'page.html',selectedText:'Hello',suffix:' HTML'});
+  expect(comments[1].anchor).toMatchObject({type:'drawing',coordinateSpace:'normalized',strokes:annotation.strokes});
+ } finally {db.close();}
+});

@@ -21,6 +21,7 @@ type Row = { id: string; data: string; submitted: string | null; preview: Uint8A
 function validAnnotation(a: Annotation, kind: string) {
  if (!a || typeof a!=='object' || typeof a.id!=='string' || !a.id || a.id.length>200 || typeof a.body!=='string' || a.body.length>20000 || typeof a.createdAt!=='string' || !Number.isFinite(Date.parse(a.createdAt))) throw error(400,'Invalid annotation');
  if (kind==='markdown' && (typeof a.blockId!=='string' || !a.blockId || typeof a.selectedText!=='string' || !a.selectedText.trim() || a.selectedText.length>10000 || typeof a.prefix!=='string' || typeof a.suffix!=='string' || !Number.isInteger(a.startOffset) || !Number.isInteger(a.endOffset) || Number(a.startOffset)<0 || Number(a.endOffset)<=Number(a.startOffset) || Number(a.endOffset)-Number(a.startOffset)!==a.selectedText.length)) throw error(400,'Invalid Markdown text anchor');
+ if (kind==='html' && a.type==='text' && (typeof a.selectedText!=='string' || !a.selectedText.trim() || a.selectedText.length>5000)) throw error(400,'Invalid HTML text anchor');
  const strokes = a.strokes as {color:string;size:number;points:{x:number;y:number}[]}[] | undefined;
  if (strokes !== undefined) {
   if (!Array.isArray(strokes) || strokes.length>1000) throw error(400,'Invalid strokes');
@@ -37,10 +38,10 @@ function validAnnotation(a: Annotation, kind: string) {
   if (!Number.isInteger(index) || Number(index)<0) throw error(400,'Invalid page');
   if (!strokes?.length) throw error(400,'A drawing is required');
  }
- if(kind==='word' && a.type==='brush' && !strokes?.length)throw error(400,'A drawing is required');
+ if((kind==='word'||kind==='html') && a.type==='brush' && !strokes?.length)throw error(400,'A drawing is required');
  if(kind==='excel' && a.type==='paint' && !strokes?.length)throw error(400,'A drawing is required');
  if(kind==='excel' && a.type==='cell' && ['minR','maxR','minC','maxC'].some(k=>!Number.isInteger(a[k])||Number(a[k])<0))throw error(400,'Invalid cell range');
- if (kind==='word' && (a.type!=='text' && a.type!=='brush' || a.type==='text' && typeof a.selectedText!=='string')) throw error(400,'Invalid Word annotation');
+ if ((kind==='word'||kind==='html') && (a.type!=='text' && a.type!=='brush' || a.type==='text' && typeof a.selectedText!=='string')) throw error(400,'Invalid document annotation');
  if (kind==='excel' && (typeof a.sheetName!=='string' || !['cell','paint'].includes(String(a.type)) || a.type==='cell' && typeof a.cellRef!=='string')) throw error(400,'Invalid worksheet annotation');
 }
 export function feedbackState(db: DatabaseSync,snapshot: Snapshot) {

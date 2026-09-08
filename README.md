@@ -508,3 +508,16 @@ no historical image copy is retained. Keep the original directory available whil
 sharing the review. Neither the Markdown source nor its image files are modified.
 
 Markdown live reviews render top-level `mermaid` fenced blocks as SVG diagrams in the browser, with collapsible source and an enlarged preview. No browser extension or external rendering service is required. Invalid diagrams retain their source and show an error. Source text remains available for annotations.
+
+### HTML live reviews
+
+Run `review page.html` (or `.htm`) to preview an immutable HTML snapshot, select
+text for comments, or draw annotations. Use `--local` for the local service.
+Comments support the same **提交给 AI** and `review feedback --json` workflow.
+HTML files are limited to 5 MiB; publish one file per review.
+
+HTML reviews are intended for your own trusted files. The iframe runs JavaScript
+normally, including interactive controls and script-generated content. Text and
+brush annotations remain available. Relative local assets are not bundled; use a
+self-contained HTML file or absolute resource URLs. External resources remain live
+dependencies.
