@@ -1,6 +1,6 @@
 # Live review → agent feedback
 
-PDF, Word, PowerPoint, Excel and image reviews now save annotations to the server.
+Markdown, PDF, Word, PowerPoint, Excel and image reviews save annotations to the server.
 The existing review URL is a bearer capability: anyone holding it can read,
 add, delete or submit feedback. Keep it with the intended reviewers and agent.
 No login or separate per-reviewer permissions are introduced in this version.
@@ -89,3 +89,29 @@ Writes require JSON, enforce request limits and reject cross-origin browser
 requests. There is no agent webhook, automatic session wake-up or processing
 acknowledgement yet: this first phase exposes durable submitted feedback for an
 agent to pull. `submitted` means available to the agent, not already processed.
+
+## Pasted responses
+
+Alternatively, use `review --clipboard` after `/copy` to publish system clipboard text as `clipboard.md`. It supports macOS, Windows/WSL, Linux desktop clipboard readers and the current tmux buffer. On Linux a working `DISPLAY` or `WAYLAND_DISPLAY` connection is needed for desktop readers. If unavailable, use the paste workflow below. This does not add an agent launcher or terminal bridge.
+
+In a terminal shell, run:
+
+```sh
+review paste
+```
+
+Paste the response, press Enter and then Ctrl+D to publish. Ctrl+C cancels without publication. Use a terminal shell for interactive input, rather than an agent tool that cannot accept subsequent keyboard input. Pipelines also work:
+
+```sh
+cat response.md | review paste
+```
+
+Add `--long` for a full URL. UTF-8 text is limited to 5 MiB; empty or binary input is rejected. Terminal input records submitted lines with newlines; piped input is preserved exactly. The text is saved as an immutable `paste.md` snapshot, and the temporary source is removed.
+
+Open the URL, select text, save comments, and click **提交给 AI**. Retrieve submitted feedback, including quotes, context, block IDs, offsets and the original snapshot:
+
+```sh
+review feedback "<review URL>" --wait --json --out ./paste-feedback
+```
+
+No system clipboard access, terminal bridge, agent restart or conversation parsing is required.

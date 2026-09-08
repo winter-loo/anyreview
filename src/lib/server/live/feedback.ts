@@ -20,6 +20,7 @@ export function openFeedbackDb(filename = path.join(feedbackHome(),'feedback.db'
 type Row = { id: string; data: string; submitted: string | null; preview: Uint8Array | null; preview_error: string | null; imported: number };
 function validAnnotation(a: Annotation, kind: string) {
  if (!a || typeof a!=='object' || typeof a.id!=='string' || !a.id || a.id.length>200 || typeof a.body!=='string' || a.body.length>20000 || typeof a.createdAt!=='string' || !Number.isFinite(Date.parse(a.createdAt))) throw error(400,'Invalid annotation');
+ if (kind==='markdown' && (typeof a.blockId!=='string' || !a.blockId || typeof a.selectedText!=='string' || !a.selectedText.trim() || a.selectedText.length>10000 || typeof a.prefix!=='string' || typeof a.suffix!=='string' || !Number.isInteger(a.startOffset) || !Number.isInteger(a.endOffset) || Number(a.startOffset)<0 || Number(a.endOffset)<=Number(a.startOffset) || Number(a.endOffset)-Number(a.startOffset)!==a.selectedText.length)) throw error(400,'Invalid Markdown text anchor');
  const strokes = a.strokes as {color:string;size:number;points:{x:number;y:number}[]}[] | undefined;
  if (strokes !== undefined) {
   if (!Array.isArray(strokes) || strokes.length>1000) throw error(400,'Invalid strokes');
@@ -80,6 +81,7 @@ export function applyOperations(db: DatabaseSync,snapshot: Snapshot,version: str
 export function annotationAnchor(a: Annotation,snapshot: Snapshot) {
  const fileIndex=snapshot.kind==='image'?Number(a.imageIndex):0;
  const base={filename:snapshot.files[fileIndex]?.filename,version:snapshot.version,fileIndex};
+ if(snapshot.kind==='markdown') return {...base,type:'document-text',blockId:a.blockId,startOffset:a.startOffset,endOffset:a.endOffset,selectedText:a.selectedText,prefix:a.prefix,suffix:a.suffix};
  if(a.type==='cell') return {...base,type:'sheet-range',sheet:a.sheetName,range:a.cellRef,value:a.cellValue,formula:a.formula};
  if(a.type==='text') return {...base,type:'document-text',selectedText:a.selectedText,prefix:a.prefix,suffix:a.suffix};
  return {...base,type:'drawing',page:snapshot.kind==='pdf'?Number(a.pageIndex)+1:snapshot.kind==='ppt'?Number(a.slideIndex)+1:undefined,sheet:a.sheetName,coordinateSpace:snapshot.kind==='excel'?'sheet-pixels':'normalized',strokes:a.strokes,badgePosition:a.badgePosition};

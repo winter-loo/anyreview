@@ -27,6 +27,16 @@ ReviewLoop provides that control point:
 
 ## What it can review
 
+### Pasted AI responses
+
+For a desktop clipboard, run `/copy` in the agent, then `review --clipboard` (or `!review --clipboard` in Codex). This saves a `clipboard.md` snapshot. It supports macOS `pbpaste`, Windows/WSL PowerShell, Linux `wl-paste` or `xclip`/`xsel`, and the current tmux buffer. A working desktop clipboard connection is required; no agent launcher or terminal bridge is installed. `review paste` remains available independently.
+
+Run `review paste` in a terminal shell, paste the response, press Enter and then Ctrl+D to publish. Ctrl+C cancels. You can also pipe UTF-8 text: `cat response.md | review paste`. No clipboard utilities, agent wrappers, or agent restart are required.
+
+ReviewLoop saves the text as a Markdown snapshot and prints a review URL. Select text on the page, save comments, then choose **提交给 AI**. Retrieve submitted feedback with `review feedback "<URL>" --json`. Input is limited to 5 MiB and is never executed. Terminal input records each submitted line with a newline; piped input is preserved exactly.
+
+The CLI and web server must share the configured snapshot storage, just like file-based live reviews. Temporary paste files are deleted after publication; durable snapshots remain. No agent conversation files are read, and feedback does not automatically wake an agent session.
+
 Repository test fixtures and preview commands are documented in [samples/README.md](samples/README.md).
 
 ### Code reviews

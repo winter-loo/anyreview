@@ -54,3 +54,16 @@ describe('durable live feedback',()=>{
   }finally{db.close();}
  });
 });
+
+it('returns submitted Markdown quotes and offsets to the agent',()=>{
+ const db=database();
+ const md={...snapshot,kind:'markdown',files:[{...snapshot.files[0],filename:'paste.md'}]};
+ const note={id:'text',body:'Please clarify',createdAt:new Date().toISOString(),blockId:'block-1',startOffset:2,endOffset:7,selectedText:'hello',prefix:'A ',suffix:' world'};
+ try {
+  expect(()=>applyOperations(db,md,'v1',[{operationId:'invalid',type:'add',annotation:{...note,endOffset:1}}])).toThrow();
+  applyOperations(db,md,'v1',[{operationId:'add',type:'add',annotation:note}]);
+  expect(agentFeedback(db,md,'/feedback').batches).toHaveLength(0);
+  submitFeedback(db,md,'submit');
+  expect(agentFeedback(db,md,'/feedback').batches[0].comments[0].anchor).toMatchObject({type:'document-text',filename:'paste.md',blockId:'block-1',selectedText:'hello',startOffset:2,endOffset:7});
+ } finally {db.close();}
+});

@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
 import { createCipheriv, createHash, randomBytes } from 'node:crypto';
-import { mkdirSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
+import { readClipboard } from './clipboard.js';
+import { readPaste } from './paste.js';
 import { digest, freezeReview } from './live-snapshot.js';
 
 const BASE_URL = process.env.ONLINE_REVIEW_BASE_URL || 'https://deeloo.cn/live';
@@ -119,9 +121,7 @@ function resolveFiles(args) {
 	return args.map((arg) => path.resolve(arg));
 }
 
-function main() {
-	const args = process.argv.slice(2).filter((arg) => !arg.startsWith('--'));
-	const rawFiles = resolveFiles(args);
+function main(rawFiles) {
 	const files = rawFiles.map((file) => realpathSync(file));
 	const home = realpathSync(homedir());
 
@@ -179,12 +179,32 @@ function main() {
 }
 
 try {
- if (['--help','-h'].includes(process.argv[2])) {
-  console.log('Usage: review <file-or-directory> [--long]\n       review feedback <url-or-id> [--json] [--wait] [--after <cursor>] [--timeout <seconds>] [--out <new-directory>]');
+ if (['--help','-h'].includes(process.argv[2]) || (process.argv[2] === 'paste' && ['--help','-h'].includes(process.argv[3]))) {
+  console.log('Usage: review <file-or-directory> [--long]\n       review paste [--long]\n       review --clipboard [--long]\n       review feedback <url-or-id> [--json] [--wait] [--after <cursor>] [--timeout <seconds>] [--out <new-directory>]\n\nPaste: paste text in a terminal, press Enter then Ctrl+D to publish; Ctrl+C cancels.\n       Or pipe UTF-8 text: cat response.md | review paste');
  } else if (process.argv[2] === 'feedback') {
   const { runFeedback } = await import('./feedback.js');
   await runFeedback(process.argv.slice(3));
- } else { main(); }
+ } else {
+  const paste = process.argv[2] === 'paste';
+  const args = process.argv.slice(paste ? 3 : 2);
+  const unknown = args.find(arg => arg.startsWith('--') && !['--long', '--clipboard'].includes(arg));
+  if (unknown) throw new Error(`Unknown option: ${unknown}`);
+  const files = args.filter(arg => !['--long', '--clipboard'].includes(arg));
+  const clipboard = args.includes('--clipboard');
+  if (paste && clipboard) throw new Error('Choose review paste or review --clipboard, not both.');
+  if (paste || clipboard) {
+   if (files.length) throw new Error('Paste/clipboard input cannot be combined with file arguments.');
+   const text = clipboard ? readClipboard() : await readPaste();
+   const root = path.join(homedir(), '.config/online-review-paste');
+   mkdirSync(root, {recursive:true, mode:0o700});
+   const directory = mkdtempSync(path.join(root, 'capture-'));
+   try {
+    const file = path.join(directory, clipboard ? 'clipboard.md' : 'paste.md');
+    writeFileSync(file, text, {mode:0o600});
+    main([file]);
+   } finally { rmSync(directory, {recursive:true, force:true}); }
+  } else main(resolveFiles(files));
+ }
 } catch (error) {
 	console.error(error instanceof Error ? error.message : String(error));
 	process.exitCode = 1;
