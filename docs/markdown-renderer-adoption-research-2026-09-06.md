@@ -2,6 +2,8 @@
 
 **日期：2026-09-06**
 
+> **2026-09-09 更新：** 本文保留为历史选型记录。用户已提出 TOC 跳转、数学公式、更多图表和整体阅读 UI 的改进需求，并指定 markdown-viewer-extension 为参考。“眼下只缺 Mermaid”及下文的绝对技术路线限制不再代表最新需求；后续以 [Markdown 渲染改进方向](markdown-rendering-roadmap.md) 为准。
+
 ## 决策
 
 **方案方向只对一半：可以借用成熟 npm 包，但不应整体替换 `markdown-it`，更不能复制或 fork 上游源码。**

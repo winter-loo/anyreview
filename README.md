@@ -521,3 +521,10 @@ normally, including interactive controls and script-generated content. Text and
 brush annotations remain available. Relative local assets are not bundled; use a
 self-contained HTML file or absolute resource URLs. External resources remain live
 dependencies.
+
+### Planned Markdown rendering improvements
+
+See the [Markdown rendering roadmap](docs/markdown-rendering-roadmap.md) for
+reported TOC navigation, math, diagram and reading UI gaps, with
+[markdown-viewer-extension](https://github.com/markdown-viewer/markdown-viewer-extension)
+as the reference for future work. These improvements are not yet implemented.
