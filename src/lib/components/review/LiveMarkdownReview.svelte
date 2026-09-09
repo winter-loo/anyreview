@@ -231,7 +231,7 @@
 
 	<header bind:clientHeight={headerHeight}>
 		<div class="file-meta">
-			<strong>{data.filename}</strong>
+			<strong title={data.filename}>{data.filename}</strong>
 			<span>{data.lineCount} 行 · 文档快照</span>
 		</div>
 		<div class="toolbar">
@@ -247,16 +247,23 @@
 					}
 				}}
 			>{annotationMode ? '完成' : '标注'}</button>
-			{#if annotations.length}<button type="button" onclick={() => void share()}>分享 {annotations.length} 条</button>{/if}
+			{#if annotations.length}
+				<button class="share-annotations" type="button" aria-label={`分享 ${annotations.length} 条标注`} title={`分享 ${annotations.length} 条标注`} onclick={() => void share()}>
+					<svg class="share-icon" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V3m-4 4 4-4 4 4M5 13v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7" /></svg>
+					<span class="share-label">分享 {annotations.length} 条</span>
+				</button>
+			{/if}
 			{#if annotations.length}
 				<button class="primary submit-feedback" type="button"
 					disabled={feedback.context.busy || !feedback.context.pendingCount || !!feedback.context.error}
 					aria-busy={feedback.context.busy}
-					aria-label={feedback.context.busy ? '正在提交给 AI' : `提交给 AI，${feedback.context.pendingCount} 条待提交`}
+					aria-label={feedback.context.busy ? '正在提交给 AI' : feedback.context.pendingCount > 0 ? `提交给 AI，${feedback.context.pendingCount} 条待提交` : '提交给 AI'}
 					title={feedback.context.error || (feedback.context.pendingCount ? `${feedback.context.pendingCount} 条待提交` : feedback.context.status)}
 					onclick={() => feedback.context.submit()}>
 					<span>{feedback.context.busy ? '正在提交…' : '提交给 AI'}</span>
-					<span class="count-badge" aria-hidden="true">{feedback.context.pendingCount}</span>
+					{#if feedback.context.pendingCount > 0}
+						<span class="count-badge" aria-hidden="true">{feedback.context.pendingCount}</span>
+					{/if}
 				</button>
 			{/if}
 		</div>
@@ -320,6 +327,7 @@
  .feedback-error { display:flex; align-items:center; justify-content:flex-end; gap:12px; padding:10px 14px; background:#fff1f2; color:#9f1239; font-size:14px; }
  .feedback-error span { overflow-wrap:anywhere; }
  .feedback-error button { flex:none; }
+ .share-icon { display:none; }
  .submit-feedback { display:inline-flex; align-items:center; gap:8px; white-space:nowrap; }
  .count-badge { display:inline-grid; place-items:center; min-width:24px; height:24px; padding-inline:6px; border-radius:999px; background:rgba(255,255,255,.22); font-size:12px; line-height:1; font-variant-numeric:tabular-nums; }
  .toolbar button:focus-visible { outline:3px solid #93c5fd; outline-offset:3px; }
@@ -365,11 +373,17 @@
 	.composer-actions { display: flex; justify-content: flex-end; gap: 8px; }
 
 	@media (max-width: 640px) {
-		header { align-items: flex-start; flex-wrap:wrap; }
-		.file-meta { flex:1 1 100%; }
-		.toolbar { width:100%; flex-wrap:wrap; }
-		.file-meta span { max-width: 44vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-		.toolbar button { padding-inline: 10px; font-size: 14px; }
+		header { gap:6px; padding-inline:10px; }
+		.file-meta { flex:1; }
+		.file-meta strong { font-size:14px; }
+		.file-meta span { display:none; }
+		.toolbar { gap:4px; }
+		.toolbar button { min-width:44px; padding-inline:8px; font-size:13px; white-space:nowrap; }
+		.share-annotations { display:inline-grid; place-items:center; width:44px; }
+		.share-icon { display:block; }
+		.share-label { display:none; }
+		.submit-feedback { gap:5px; }
+		.count-badge { min-width:20px; height:20px; padding-inline:5px; }
 		main { width: 100%; margin: 0; padding: 28px 18px calc(88px + env(safe-area-inset-bottom)); border: 0; border-radius: 0; box-shadow: none; }
 		.md-content :global(h1) { font-size: 1.72rem; }
 		.md-content :global(h2) { font-size: 1.38rem; }
