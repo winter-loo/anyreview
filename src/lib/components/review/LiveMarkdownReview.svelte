@@ -17,6 +17,7 @@
 	type Annotation = Anchor & { id: string; body: string; createdAt: string };
 
 	let annotationMode = $state(false);
+	let headerHeight = $state(65);
 	let annotations = $state<Annotation[]>([]);
 	let selectionCandidate = $state<Anchor | null>(null);
 	let draft = $state<Anchor | null>(null);
@@ -228,7 +229,7 @@
 
 
 
-	<header>
+	<header bind:clientHeight={headerHeight}>
 		<div class="file-meta">
 			<strong>{data.filename}</strong>
 			<span>{data.lineCount} 行 · 文档快照</span>
@@ -246,12 +247,29 @@
 					}
 				}}
 			>{annotationMode ? '完成' : '标注'}</button>
-			{#if annotations.length}<button class="primary" type="button" onclick={() => void share()}>分享 {annotations.length} 条</button>{/if}
+			{#if annotations.length}<button type="button" onclick={() => void share()}>分享 {annotations.length} 条</button>{/if}
+			{#if annotations.length}
+				<button class="primary submit-feedback" type="button"
+					disabled={feedback.context.busy || !feedback.context.pendingCount || !!feedback.context.error}
+					aria-busy={feedback.context.busy}
+					aria-label={feedback.context.busy ? '正在提交给 AI' : `提交给 AI，${feedback.context.pendingCount} 条待提交`}
+					title={feedback.context.error || (feedback.context.pendingCount ? `${feedback.context.pendingCount} 条待提交` : feedback.context.status)}
+					onclick={() => feedback.context.submit()}>
+					<span>{feedback.context.busy ? '正在提交…' : '提交给 AI'}</span>
+					<span class="count-badge" aria-hidden="true">{feedback.context.pendingCount}</span>
+				</button>
+			{/if}
 		</div>
 	</header>
+	{#if feedback.context.error}
+		<div class="feedback-error" role="alert">
+			<span>{feedback.context.error}</span>
+			<button type="button" onclick={() => feedback.context.retry()}>重试同步</button>
+		</div>
+	{/if}
 
 	{#if annotationMode}
-		<div class="annotation-hint" role="status">长按选择文字，调整好范围后点“添加批注”</div>
+		<div class="annotation-hint" style:top={`${headerHeight}px`} role="status">长按选择文字，调整好范围后点“添加批注”</div>
 	{/if}
 	{#if notice}<div class="notice" role="status">{notice}</div>{/if}
 
@@ -275,13 +293,7 @@
 				{/each}
 			</div>
 		{/each}
-		{#if annotations.length || feedback.context.error}
-			<section class="feedback-submit" aria-label="提交批注">
-				<p role="status">{feedback.context.error || (feedback.context.pendingCount ? `${feedback.context.pendingCount} 条待提交` : `${feedback.context.submittedCount} 条已提交`)}</p>
-				{#if feedback.context.error}<button onclick={() => feedback.context.retry()}>重试同步</button>{/if}
-				<button class="primary" disabled={feedback.context.busy || !feedback.context.pendingCount || !!feedback.context.error} onclick={() => feedback.context.submit()}>{feedback.context.busy ? '正在提交…' : '提交给 AI'}</button>
-			</section>
-		{/if}
+
 	</main>
 
 	{#if selectionCandidate && !draft}
@@ -305,15 +317,20 @@
 	</div>
 {/if}
 <style>
- .feedback-submit { border-top:1px solid #deded8; padding:16px 0; margin-top:24px; }
- .feedback-submit p { font-size:14px; }
+ .feedback-error { display:flex; align-items:center; justify-content:flex-end; gap:12px; padding:10px 14px; background:#fff1f2; color:#9f1239; font-size:14px; }
+ .feedback-error span { overflow-wrap:anywhere; }
+ .feedback-error button { flex:none; }
+ .submit-feedback { display:inline-flex; align-items:center; gap:8px; white-space:nowrap; }
+ .count-badge { display:inline-grid; place-items:center; min-width:24px; height:24px; padding-inline:6px; border-radius:999px; background:rgba(255,255,255,.22); font-size:12px; line-height:1; font-variant-numeric:tabular-nums; }
+ .toolbar button:focus-visible { outline:3px solid #93c5fd; outline-offset:3px; }
+ .toolbar button:active:not(:disabled) { transform:scale(.97); }
 	:global(*) { box-sizing: border-box; }
 	:global(body) { margin: 0; background: #f7f7f5; color: #242424; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
 	header { position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: calc(10px + env(safe-area-inset-top)) 14px 10px; border-bottom: 1px solid #deded8; background: rgba(255, 255, 253, .96); backdrop-filter: blur(12px); }
 	.file-meta { display: grid; gap: 2px; min-width: 0; }
 	.file-meta strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 	.file-meta span { color: #77776f; font-size: 12px; }
-	.toolbar { display: flex; flex: none; gap: 8px; }
+	.toolbar { display: flex; flex: none; gap: 8px; justify-content:flex-end; }
 	button { min-height: 44px; border: 1px solid #d5d5ce; border-radius: 11px; background: white; padding: 0 14px; color: #242424; font: inherit; font-weight: 700; cursor: pointer; touch-action: manipulation; }
 	button.active, button.primary { border-color: #2563eb; background: #2563eb; color: white; }
 	button:disabled { opacity: .45; cursor: default; }
@@ -348,9 +365,11 @@
 	.composer-actions { display: flex; justify-content: flex-end; gap: 8px; }
 
 	@media (max-width: 640px) {
-		header { align-items: flex-start; }
+		header { align-items: flex-start; flex-wrap:wrap; }
+		.file-meta { flex:1 1 100%; }
+		.toolbar { width:100%; flex-wrap:wrap; }
 		.file-meta span { max-width: 44vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-		.toolbar button { padding-inline: 12px; }
+		.toolbar button { padding-inline: 10px; font-size: 14px; }
 		main { width: 100%; margin: 0; padding: 28px 18px calc(88px + env(safe-area-inset-bottom)); border: 0; border-radius: 0; box-shadow: none; }
 		.md-content :global(h1) { font-size: 1.72rem; }
 		.md-content :global(h2) { font-size: 1.38rem; }
