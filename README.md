@@ -524,6 +524,8 @@ dependencies.
 
 ### Video live reviews
 
+The video page’s **?** button opens the [video annotation help page](https://deeloo.cn/live/help/video), with a quick start, timeline diagram, gesture guide, and keyboard shortcuts.
+
 Run `review video.mp4` (or `review video.mp4 --local`) to review one local video up to 500 MiB. MP4 is the primary format; MOV and WebM work when their codecs are supported by the browser. The server requires `ffprobe` on PATH. Playback and time annotations are available as soon as the video metadata loads. Frame numbers initially use an estimated frame rate (temporarily 30 fps until the server returns the reported rate), clearly marked as estimated. A cached index of actual frames builds in the background and replaces the estimate without interrupting playback. Captured annotation times remain stable across that switch; the video is not transcoded.
 
 Click the timeline track to add a point and open the comment panel. Click or drag above the track to move the playhead without adding a point. Further clicks add points to the same comment. Select **范围**, then click again to turn the last point and the new point into an ordered range; the option resets after one use. Points and ranges can share one comment. Drag the playhead to seek without adding a point, or use the frame buttons and **＋ 当前帧** for precise selection. Hold a −10 / −1 / +1 / +10 frame button to repeat after 350 ms; release or move outside to stop.

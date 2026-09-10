@@ -272,7 +272,7 @@
 <svelte:head><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" /></svelte:head>
 <header>
  <div class="title"><strong title={data.filename}>{data.filename}</strong><span>视频评审</span></div>
- <div class="header-actions"><span class="sync" role="status">{feedback.context.status}</span>
+ <div class="header-actions"><a class="help-link" href="/live/help/video" target="_blank" rel="noopener" aria-label="视频标注帮助（新标签页）" title="视频标注帮助（新标签页）">?</a><span class="sync" role="status">{feedback.context.status}</span>
  {#if annotations.length}<button class="primary submit" disabled={feedback.context.busy} onclick={() => feedback.context.submit()} title={`提交给 AI，${feedback.context.pendingCount} 条待提交`}>提交给 AI{#if feedback.context.pendingCount > 0}<span class="badge">{feedback.context.pendingCount}</span>{/if}</button>{/if}
  </div>
 </header>
@@ -346,6 +346,7 @@
  button.primary,button.active { background:#2563eb; border-color:#2563eb; color:#fff; }
  header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 18px; padding-top:calc(10px + env(safe-area-inset-top)); border-bottom:1px solid #deded8; background:#fffffd; }
  .title { min-width:0; display:grid; gap:2px; }.title strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.title>span,.sync { font-size:12px; color:#77776f; }
+ .help-link { display:grid; place-items:center; width:44px; height:44px; flex:none; color:#526174; font-size:18px; font-weight:700; text-decoration:none; border-radius:8px; user-select:none; } .help-link:hover { background:#edf3ff; color:#2563eb; } .help-link:focus-visible { outline:3px solid #93c5fd; }
  .header-actions { display:flex; align-items:center; gap:14px; flex:none; }.submit { display:flex; align-items:center; gap:8px; white-space:nowrap; font-weight:700; }.badge { border-radius:999px; padding:2px 7px; background:#ffffff35; font-size:12px; }
  main { max-width:1600px; margin:0 auto; padding:24px; display:grid; grid-template-columns:minmax(0,1fr) 360px; align-items:start; gap:24px; }
  .workspace { min-width:0; }.screen { position:relative; display:flex; align-items:center; justify-content:center; background:#111314; border-radius:14px; overflow:hidden; min-height:160px; }video { display:block; width:100%; height:min(56dvh,660px); object-fit:contain; }.screen-message { position:absolute; inset:0; display:grid; place-content:center; padding:32px; color:white; background:#111d; }
