@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "name": "ReviewLoop",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "hyperframes_version": "0.8.33",
+  "template": "templates/film.html.template",
+  "scenes": "config/scenes.json",
+  "assets": "config/assets.json",
+  "output_name": "ReviewLoop",
+  "loudness": {
+    "integrated": -16,
+    "true_peak": -1.5,
+    "range": 11
+  },
+  "proof_times": [
+    1,
+    12.6,
+    13,
+    22.45,
+    32.8,
+    41.8,
+    42.25,
+    43.1,
+    46.3,
+    65,
+    74,
+    76.5,
+    79.5,
+    83.2,
+    86,
+    92
+  ]
+}

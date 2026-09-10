@@ -1,0 +1,398 @@
+{
+  "assets-annotation-entry-v10-png": {
+    "path": "assets/annotation-entry-v10.png",
+    "kind": "image",
+    "origin": "real-browser-capture",
+    "provenance": "PROVENANCE.md",
+    "bytes": 87592,
+    "sha256": "e6bea083f109260102ff9d659e027a1166671825eab2365288bea6d4dbe30b14"
+  },
+  "assets-discord-png": {
+    "path": "assets/discord.png",
+    "kind": "image",
+    "origin": "generated-demo",
+    "provenance": "PROVENANCE.md",
+    "bytes": 1640056,
+    "sha256": "79c647b6dc027b43586e96a20cd1fb838bc9c935899c01bace1d81df2f275fa8"
+  },
+  "assets-font-otf": {
+    "path": "assets/font.otf",
+    "kind": "font",
+    "origin": "project-design",
+    "provenance": "PROVENANCE.md",
+    "bytes": 8429224,
+    "sha256": "e2bc8a2e7f37474b774fff8db758681ece40bb6947a90d571bce9dd60671a8e4"
+  },
+  "assets-image-volcano-mp4": {
+    "path": "assets/image-volcano.mp4",
+    "kind": "video",
+    "origin": "real-browser-capture",
+    "provenance": "PROVENANCE.md",
+    "bytes": 141358,
+    "sha256": "8e3545168d2486303eab9abb452a36fce0dd5464542386ab90f834f9221cf700",
+    "media": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 390,
+          "height": 844
+        }
+      ],
+      "format": {
+        "duration": "8.600000"
+      }
+    }
+  },
+  "assets-interaction-v2-volcano-mp4": {
+    "path": "assets/interaction-v2-volcano.mp4",
+    "kind": "video",
+    "origin": "real-browser-capture",
+    "provenance": "PROVENANCE.md",
+    "bytes": 208184,
+    "sha256": "188575650daca4253b66e7e0e9563d23fe97abf09e453aee28f5b4d6bd102882",
+    "media": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 390,
+          "height": 844
+        }
+      ],
+      "format": {
+        "duration": "13.366667"
+      }
+    }
+  },
+  "assets-logo-svg": {
+    "path": "assets/logo.svg",
+    "kind": "image",
+    "origin": "project-design",
+    "provenance": "PROVENANCE.md",
+    "bytes": 410,
+    "sha256": "77f3e1118594574885e019fb4986515b885863c7b1e4845e5fb2aa27604bf279"
+  },
+  "assets-read-png": {
+    "path": "assets/read.png",
+    "kind": "image",
+    "origin": "real-browser-capture",
+    "provenance": "PROVENANCE.md",
+    "bytes": 139084,
+    "sha256": "a567e820cfd60242169bb71fabcdfffe18e1e288126f26180501032771909725"
+  },
+  "assets-reading-v2-volcano-mp4": {
+    "path": "assets/reading-v2-volcano.mp4",
+    "kind": "video",
+    "origin": "real-browser-capture",
+    "provenance": "PROVENANCE.md",
+    "bytes": 217909,
+    "sha256": "9bdc50d54de3f0ba2f177133f781377e92adc2e50e24241b7f3b9071b65f9700",
+    "media": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 390,
+          "height": 844
+        }
+      ],
+      "format": {
+        "duration": "11.333333"
+      }
+    }
+  },
+  "assets-submit-volcano-mp4": {
+    "path": "assets/submit-volcano.mp4",
+    "kind": "video",
+    "origin": "real-browser-capture",
+    "provenance": "PROVENANCE.md",
+    "bytes": 118844,
+    "sha256": "a31b242a54130d84c68d149cfe91a139534d39802adf83b3be2fc9c3bbaba7d0",
+    "media": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 390,
+          "height": 844
+        }
+      ],
+      "format": {
+        "duration": "5.566667"
+      }
+    }
+  },
+  "assets-terminal-png": {
+    "path": "assets/terminal.png",
+    "kind": "image",
+    "origin": "generated-demo",
+    "provenance": "PROVENANCE.md",
+    "bytes": 1075209,
+    "sha256": "db32a8911984bd69d14cfdbeef0e0df187d02f1beb4b5f9ae512e065bb222933"
+  },
+  "ending-excel-png": {
+    "path": "ending/excel.png",
+    "kind": "image",
+    "origin": "real-browser-capture",
+    "provenance": "ending/PROVENANCE.md",
+    "bytes": 109405,
+    "sha256": "ad6bdf874fe23209f740234007b0b3724bf5b5c4271e8c082a30e69935d194b9"
+  },
+  "ending-markdown-v10-png": {
+    "path": "ending/markdown-v10.png",
+    "kind": "image",
+    "origin": "real-browser-capture",
+    "provenance": "ending/PROVENANCE.md",
+    "bytes": 133700,
+    "sha256": "b8036c5844a4272ea78f72c84e23468200df7ce47e4aed3a98927ed795f6e1dd"
+  },
+  "ending-ppt-png": {
+    "path": "ending/ppt.png",
+    "kind": "image",
+    "origin": "real-browser-capture",
+    "provenance": "ending/PROVENANCE.md",
+    "bytes": 133984,
+    "sha256": "a78fce9eb650175ffa20a434cdca026221b0484147c190ac5a24dec22db437b5"
+  },
+  "ending-video-stable-v10-mp4": {
+    "path": "ending/video-stable-v10.mp4",
+    "kind": "video",
+    "origin": "real-browser-capture",
+    "provenance": "ending/PROVENANCE.md",
+    "bytes": 535329,
+    "sha256": "c6e753e619e2b7de10af7c109a439db0b1d0f0c065d6370f8d835462db4d57df",
+    "media": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 390,
+          "height": 844
+        }
+      ],
+      "format": {
+        "duration": "7.000000"
+      }
+    }
+  },
+  "ending-voice-v8-mp3": {
+    "path": "ending/voice-v8.mp3",
+    "kind": "voice",
+    "origin": "volcano-tts",
+    "provenance": "ending/PROVENANCE.md",
+    "bytes": 83373,
+    "sha256": "cbf59b92dd0dbce1f148de332971869c895a3f9fe450063d735fe88370e2c9ce",
+    "media": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "mp3",
+          "sample_rate": "24000",
+          "channels": 1
+        }
+      ],
+      "format": {
+        "duration": "10.416000"
+      }
+    }
+  },
+  "ending-word-png": {
+    "path": "ending/word.png",
+    "kind": "image",
+    "origin": "real-browser-capture",
+    "provenance": "ending/PROVENANCE.md",
+    "bytes": 229897,
+    "sha256": "827b11fc8e2fddaf1664dd7add8bb0aa597c09ace83fe9086a6b215fd86cc5ef"
+  },
+  "volcano-voice-1-mp3": {
+    "path": "volcano/voice-1.mp3",
+    "kind": "voice",
+    "origin": "volcano-tts",
+    "provenance": "PROVENANCE.md",
+    "bytes": 73773,
+    "sha256": "771aa273b9ff1a13e71cc51fdd4467bd394bf1746935565ddba0bc823a6b6227",
+    "media": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "mp3",
+          "sample_rate": "24000",
+          "channels": 1
+        }
+      ],
+      "format": {
+        "duration": "9.216000"
+      }
+    }
+  },
+  "volcano-voice-2-mp3": {
+    "path": "volcano/voice-2.mp3",
+    "kind": "voice",
+    "origin": "volcano-tts",
+    "provenance": "PROVENANCE.md",
+    "bytes": 91629,
+    "sha256": "2c96e4629d9829af51c46aac7d892c88a1187db965255cb876d9f193fcbe443d",
+    "media": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "mp3",
+          "sample_rate": "24000",
+          "channels": 1
+        }
+      ],
+      "format": {
+        "duration": "11.448000"
+      }
+    }
+  },
+  "volcano-voice-3-mp3": {
+    "path": "volcano/voice-3.mp3",
+    "kind": "voice",
+    "origin": "volcano-tts",
+    "provenance": "PROVENANCE.md",
+    "bytes": 75693,
+    "sha256": "94c031686cb36d5e02c0bad05f7dd255479c6853830a6b6373c20a52983f9363",
+    "media": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "mp3",
+          "sample_rate": "24000",
+          "channels": 1
+        }
+      ],
+      "format": {
+        "duration": "9.456000"
+      }
+    }
+  },
+  "volcano-voice-4-mp3": {
+    "path": "volcano/voice-4.mp3",
+    "kind": "voice",
+    "origin": "volcano-tts",
+    "provenance": "PROVENANCE.md",
+    "bytes": 73773,
+    "sha256": "2857b856f20b6a77665213a10cc985ac24c2d6552acadcc4c079c895f1d57f73",
+    "media": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "mp3",
+          "sample_rate": "24000",
+          "channels": 1
+        }
+      ],
+      "format": {
+        "duration": "9.216000"
+      }
+    }
+  },
+  "volcano-voice-5-mp3": {
+    "path": "volcano/voice-5.mp3",
+    "kind": "voice",
+    "origin": "volcano-tts",
+    "provenance": "PROVENANCE.md",
+    "bytes": 101229,
+    "sha256": "d1488d6b27febd517760eb08c40354b337670240e99b0fac7da8aedc91a91c92",
+    "media": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "mp3",
+          "sample_rate": "24000",
+          "channels": 1
+        }
+      ],
+      "format": {
+        "duration": "12.648000"
+      }
+    }
+  },
+  "volcano-voice-6-mp3": {
+    "path": "volcano/voice-6.mp3",
+    "kind": "voice",
+    "origin": "volcano-tts",
+    "provenance": "PROVENANCE.md",
+    "bytes": 62829,
+    "sha256": "f4cb6aa7578cf69db192e60874ae8f24c469a87859b138bbcf0e6683a54929d2",
+    "media": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "mp3",
+          "sample_rate": "24000",
+          "channels": 1
+        }
+      ],
+      "format": {
+        "duration": "7.848000"
+      }
+    }
+  },
+  "volcano-voice-7-mp3": {
+    "path": "volcano/voice-7.mp3",
+    "kind": "voice",
+    "origin": "volcano-tts",
+    "provenance": "PROVENANCE.md",
+    "bytes": 93165,
+    "sha256": "1ba71cda8ecabe1a5dc261dbd320c86e4d97957d297db577374fcc4a0deb5655",
+    "media": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "mp3",
+          "sample_rate": "24000",
+          "channels": 1
+        }
+      ],
+      "format": {
+        "duration": "11.640000"
+      }
+    }
+  },
+  "volcano-voice-8-mp3": {
+    "path": "volcano/voice-8.mp3",
+    "kind": "voice",
+    "origin": "volcano-tts",
+    "provenance": "PROVENANCE.md",
+    "bytes": 46701,
+    "sha256": "9b7ddbe58952694a1d876a4d6708454ee99abf6d3dad57476cbb85217e477d4b",
+    "media": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "mp3",
+          "sample_rate": "24000",
+          "channels": 1
+        }
+      ],
+      "format": {
+        "duration": "5.832000"
+      }
+    }
+  },
+  "gsap-runtime": {
+    "path": "vendor/gsap.min.js",
+    "kind": "runtime",
+    "origin": "GSAP 3.14.2",
+    "provenance": "https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js",
+    "bytes": 72779,
+    "sha256": "c174bfce53a729418d57a8ad8625e7247c793a22fef8e2851e3cfa3de9cd8280"
+  }
+}

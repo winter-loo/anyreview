@@ -1,0 +1,132 @@
+<!-- 源模板：结构在此维护；样式见 film.css；素材、字幕和时刻见 config/。
+     include 由 pipeline.py 在构建时展开，生成文件 index.html 不直接编辑。 -->
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <script src="{{asset:gsap-runtime}}"></script>
+    <style>{{include:film.css}}</style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-width="{{width}}" data-height="{{height}}" data-duration="{{duration}}">
+      <div id="glow"></div>
+      <!-- 主手机：第一至七幕共用，保持页面与圆角遮罩在同一容器。 -->
+      <div id="phone" data-layout-allow-overflow>
+        <div id="screen">
+          <!-- 第一幕：终端 Agent 场景演示。 -->
+          <img id="screen-1" class="screen-content clip" src="{{clip:screen-1:src}}" data-start="{{clip:screen-1:start}}" data-duration="{{clip:screen-1:duration}}" data-track-index="{{clip:screen-1:track}}">
+          <!-- 第二幕：Discord 场景演示。 -->
+          <img id="screen-2" class="screen-content clip" src="{{clip:screen-2:src}}" data-start="{{clip:screen-2:start}}" data-duration="{{clip:screen-2:duration}}" data-track-index="{{clip:screen-2:track}}">
+          <!-- 第三幕：打开真实 Review 页面。 -->
+          <div id="review-entry" class="screen-transition">
+            <img id="screen-3" class="screen-content clip" src="{{clip:screen-3:src}}" data-start="{{clip:screen-3:start}}" data-duration="{{clip:screen-3:duration}}" data-track-index="{{clip:screen-3:track}}">
+          </div>
+          <!-- 第四幕：阅读与流程图操作录屏。 -->
+          <video id="screen-4" class="screen-content clip" src="{{clip:screen-4:src}}" data-start="{{clip:screen-4:start}}" data-duration="{{clip:screen-4:duration}}" data-track-index="{{clip:screen-4:track}}" muted playsinline></video>
+          <!-- 第五幕：先呈现未批注状态，再进入真实标注录屏。 -->
+          <div id="annotation-transition" class="screen-transition">
+            <img id="annotation-entry-still" class="screen-content clip" src="{{clip:annotation-entry-still:src}}" data-start="{{clip:annotation-entry-still:start}}" data-duration="{{clip:annotation-entry-still:duration}}" data-track-index="{{clip:annotation-entry-still:track}}">
+            <video id="screen-5" class="screen-content clip" src="{{clip:screen-5:src}}" data-start="{{clip:screen-5:start}}" data-duration="{{clip:screen-5:duration}}" data-track-index="{{clip:screen-5:track}}" muted playsinline></video>
+          </div>
+          <!-- 第六幕：图片批注。 -->
+          <video id="screen-6" class="screen-content clip" src="{{clip:screen-6:src}}" data-start="{{clip:screen-6:start}}" data-duration="{{clip:screen-6:duration}}" data-track-index="{{clip:screen-6:track}}" muted playsinline></video>
+          <!-- 第七幕：提交反馈，随后回到 Agent 输入提示词。 -->
+          <video id="screen-7" class="screen-content clip" src="{{clip:screen-7:src}}" data-start="{{clip:screen-7:start}}" data-duration="{{clip:screen-7:duration}}" data-track-index="{{clip:screen-7:track}}" muted playsinline></video>
+          <div id="agent-return" class="screen-content clip" data-start="{{clip:agent-return:start}}" data-duration="{{clip:agent-return:duration}}" data-track-index="{{clip:agent-return:track}}">
+            <img src="{{asset:assets-terminal-png}}">
+            <div class="agent-input">
+              <span class="chevron">❯</span>
+              <span>
+                <span class="prompt-char" id="prompt-char-0">用</span>
+                <span class="prompt-char" id="prompt-char-1">&nbsp;</span>
+                <span class="prompt-char" id="prompt-char-2">r</span>
+                <span class="prompt-char" id="prompt-char-3">e</span>
+                <span class="prompt-char" id="prompt-char-4">v</span>
+                <span class="prompt-char" id="prompt-char-5">i</span>
+                <span class="prompt-char" id="prompt-char-6">e</span>
+                <span class="prompt-char" id="prompt-char-7">w</span>
+                <span class="prompt-char" id="prompt-char-8">&nbsp;</span>
+                <span class="prompt-char" id="prompt-char-9">f</span>
+                <span class="prompt-char" id="prompt-char-10">e</span>
+                <span class="prompt-char" id="prompt-char-11">e</span>
+                <span class="prompt-char" id="prompt-char-12">d</span>
+                <span class="prompt-char" id="prompt-char-13">b</span>
+                <span class="prompt-char" id="prompt-char-14">a</span>
+                <span class="prompt-char" id="prompt-char-15">c</span>
+                <span class="prompt-char" id="prompt-char-16">k</span>
+                <span class="prompt-char" id="prompt-char-17">&nbsp;</span>
+                <span class="prompt-char" id="prompt-char-18">获</span>
+                <span class="prompt-char" id="prompt-char-19">取</span>
+                <span class="prompt-char" id="prompt-char-20">评</span>
+                <span class="prompt-char" id="prompt-char-21">论</span>
+                <span class="prompt-char" id="prompt-char-22">并</span>
+                <span class="prompt-char" id="prompt-char-23">解</span>
+                <span class="prompt-char" id="prompt-char-24">决</span>
+                <span class="prompt-char" id="prompt-char-25">。</span>
+                <b class="cursor"></b>
+              </span>
+            </div>
+          </div>
+          <!-- 第八幕：Markdown 保持在场，其他文档手机错落叠入。 -->
+          <div id="ending-markdown" class="screen-transition">
+            <img id="ending-markdown-media" class="screen-content clip" src="{{clip:ending-markdown-media:src}}" data-start="{{clip:ending-markdown-media:start}}" data-duration="{{clip:ending-markdown-media:duration}}" data-track-index="{{clip:ending-markdown-media:track}}">
+          </div>
+          <!-- 圆角补偿遮罩：防止网页直角露出手机边框。 -->
+          <svg id="screen-bezel" viewBox="0 0 424 954" aria-hidden="true" data-layout-ignore>
+            <path fill="#080a11" fill-rule="evenodd" d="M0 0H424V954H0Z M39 0H385A39 39 0 0 1 424 39V915A39 39 0 0 1 385 954H39A39 39 0 0 1 0 915V39A39 39 0 0 1 39 0Z"/>
+          </svg>
+        </div>
+      </div>
+      <!-- 探索更多：Word。 -->
+      <div id="stack-0" class="stack-phone" style="z-index:2" data-layout-allow-overflow>
+        <div class="stack-screen">
+          <img id="stack-media-0" class="clip" src="{{clip:stack-media-0:src}}" data-start="{{clip:stack-media-0:start}}" data-duration="{{clip:stack-media-0:duration}}" data-track-index="{{clip:stack-media-0:track}}">
+          <svg class="stack-bezel" viewBox="0 0 424 954" aria-hidden="true" data-layout-ignore>
+            <path fill="#080a11" fill-rule="evenodd" d="M0 0H424V954H0Z M39 0H385A39 39 0 0 1 424 39V915A39 39 0 0 1 385 954H39A39 39 0 0 1 0 915V39A39 39 0 0 1 39 0Z"/>
+          </svg>
+        </div>
+      </div>
+      <!-- 探索更多：Excel。 -->
+      <div id="stack-1" class="stack-phone" style="z-index:3" data-layout-allow-overflow>
+        <div class="stack-screen">
+          <img id="stack-media-1" class="clip" src="{{clip:stack-media-1:src}}" data-start="{{clip:stack-media-1:start}}" data-duration="{{clip:stack-media-1:duration}}" data-track-index="{{clip:stack-media-1:track}}">
+          <svg class="stack-bezel" viewBox="0 0 424 954" aria-hidden="true" data-layout-ignore>
+            <path fill="#080a11" fill-rule="evenodd" d="M0 0H424V954H0Z M39 0H385A39 39 0 0 1 424 39V915A39 39 0 0 1 385 954H39A39 39 0 0 1 0 915V39A39 39 0 0 1 39 0Z"/>
+          </svg>
+        </div>
+      </div>
+      <!-- 探索更多：PPT。 -->
+      <div id="stack-2" class="stack-phone" style="z-index:4" data-layout-allow-overflow>
+        <div class="stack-screen">
+          <img id="stack-media-2" class="clip" src="{{clip:stack-media-2:src}}" data-start="{{clip:stack-media-2:start}}" data-duration="{{clip:stack-media-2:duration}}" data-track-index="{{clip:stack-media-2:track}}">
+          <svg class="stack-bezel" viewBox="0 0 424 954" aria-hidden="true" data-layout-ignore>
+            <path fill="#080a11" fill-rule="evenodd" d="M0 0H424V954H0Z M39 0H385A39 39 0 0 1 424 39V915A39 39 0 0 1 385 954H39A39 39 0 0 1 0 915V39A39 39 0 0 1 39 0Z"/>
+          </svg>
+        </div>
+      </div>
+      <!-- 探索更多：视频批注。 -->
+      <div id="stack-3" class="stack-phone" style="z-index:5" data-layout-allow-overflow>
+        <div class="stack-screen">
+          <video id="stack-media-3" class="clip" src="{{clip:stack-media-3:src}}" data-start="{{clip:stack-media-3:start}}" data-duration="{{clip:stack-media-3:duration}}" data-track-index="{{clip:stack-media-3:track}}" muted playsinline></video>
+          <svg class="stack-bezel" viewBox="0 0 424 954" aria-hidden="true" data-layout-ignore>
+            <path fill="#080a11" fill-rule="evenodd" d="M0 0H424V954H0Z M39 0H385A39 39 0 0 1 424 39V915A39 39 0 0 1 385 954H39A39 39 0 0 1 0 915V39A39 39 0 0 1 39 0Z"/>
+          </svg>
+        </div>
+      </div>
+      <div class="brand">
+        <img src="{{asset:assets-logo-svg}}">ReviewLoop</div>
+      <div id="source-note">参考界面生成 · 场景演示</div>
+      <div id="agent-note">Claude Code · 场景演示</div>
+      <div class="closing">
+        <img src="{{asset:assets-logo-svg}}">
+        <h1>让 AI 的产出
+          <br>方便查看，直接批注。</h1>
+        <small>ReviewLoop</small>
+      </div>
+      <!-- 字幕文字与时刻来自 scenes.json。 -->
+      {{include:captions.html.template}}
+      {{include:audio.html.template}}
+    </div>
+    <script>{{timeline}}</script>
+  </body>
+</html>

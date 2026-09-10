@@ -1,0 +1,19 @@
+<!-- 旁白轨：只负责绑定，文字及时间由场景配置管理。 -->
+<audio id="voice-1" src="{{clip:voice-1:src}}" data-start="{{clip:voice-1:start}}" data-duration="{{clip:voice-1:duration}}" data-track-index="{{clip:voice-1:track}}" data-volume="1">
+      </audio>
+      <audio id="voice-2" src="{{clip:voice-2:src}}" data-start="{{clip:voice-2:start}}" data-duration="{{clip:voice-2:duration}}" data-track-index="{{clip:voice-2:track}}" data-volume="1">
+      </audio>
+      <audio id="voice-3" src="{{clip:voice-3:src}}" data-start="{{clip:voice-3:start}}" data-duration="{{clip:voice-3:duration}}" data-track-index="{{clip:voice-3:track}}" data-volume="1">
+      </audio>
+      <audio id="voice-4" src="{{clip:voice-4:src}}" data-start="{{clip:voice-4:start}}" data-duration="{{clip:voice-4:duration}}" data-track-index="{{clip:voice-4:track}}" data-volume="1">
+      </audio>
+      <audio id="voice-5" src="{{clip:voice-5:src}}" data-start="{{clip:voice-5:start}}" data-duration="{{clip:voice-5:duration}}" data-track-index="{{clip:voice-5:track}}" data-volume="1">
+      </audio>
+      <audio id="voice-6" src="{{clip:voice-6:src}}" data-start="{{clip:voice-6:start}}" data-duration="{{clip:voice-6:duration}}" data-track-index="{{clip:voice-6:track}}" data-volume="1">
+      </audio>
+      <audio id="voice-7" src="{{clip:voice-7:src}}" data-start="{{clip:voice-7:start}}" data-duration="{{clip:voice-7:duration}}" data-track-index="{{clip:voice-7:track}}" data-volume="1">
+      </audio>
+      <audio id="voice-8" src="{{clip:voice-8:src}}" data-start="{{clip:voice-8:start}}" data-duration="{{clip:voice-8:duration}}" data-track-index="{{clip:voice-8:track}}" data-volume="1">
+      </audio>
+      <audio id="voice-explore" src="{{clip:voice-explore:src}}" data-start="{{clip:voice-explore:start}}" data-duration="{{clip:voice-explore:duration}}" data-track-index="{{clip:voice-explore:track}}" data-volume="1">
+      </audio>

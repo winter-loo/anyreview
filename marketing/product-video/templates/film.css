@@ -1,0 +1,263 @@
+/* 全局画布 → 主手机与圆角遮罩 → 字幕/品牌 → Agent 输入 → 尾声堆叠手机。
+   固定像素来自已批准镜头；修改尺寸时同时检查 SVG 遮罩与运镜。 */
+
+@font-face {
+  font-family:Film;
+  src:url('{{asset:assets-font-otf}}');
+}
+
+* {
+  box-sizing:border-box;
+}
+
+body {
+  margin:0;
+  background:#111320;
+  color:#fff;
+  font-family:Film,sans-serif;
+}
+
+#root {
+  width:{{width}}px;
+  height:{{height}}px;
+  position:relative;
+  overflow:hidden;
+}
+
+#glow {
+  position:absolute;
+  inset:0;
+  background:radial-gradient(ellipse at 50% 45%,#35315c 0%,#111320 65%);
+}
+
+#phone {
+  position:absolute;
+  left:728px;
+  top:0;
+  width:464px;
+  height:994px;
+  border:2px solid #85848f;
+  border-radius:59px;
+  padding:12px;
+  background:linear-gradient(110deg,#9c9ca7,#272932 20%,#080a11 80%,#7c7e88);
+  box-shadow:0 35px 90px #0009;
+  transform-origin:50% 0%;
+}
+
+#screen {
+  position:relative;
+  isolation:isolate;
+  width:436px;
+  height:966px;
+  overflow:hidden;
+  border:6px solid #080a11;
+  border-radius:45px;
+  background:#080a11;
+}
+
+.screen-content {
+  position:absolute;
+  inset:0;
+  width:424px;
+  height:954px;
+  object-fit:fill;
+  clip-path:inset(0 round 39px);
+}
+
+#screen-1 {
+  object-fit:contain;
+  background:#000;
+}
+
+#screen-bezel {
+  position:absolute;
+  left:0;
+  top:0;
+  width:424px;
+  height:954px;
+  z-index:5;
+  pointer-events:none;
+}
+
+.brand {
+  position:absolute;
+  left:65px;
+  top:46px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  font-size:27px;
+  z-index:8;
+}
+
+.brand img {
+  width:38px;
+  height:38px;
+}
+
+#subtitle {
+  position:absolute;
+  left:0;
+  bottom:0;
+  height:106px;
+  width:{{width}}px;
+  background:linear-gradient(transparent,#111320 35%);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-size:29px;
+  color:#eceaf4;
+  z-index:10;
+}
+
+.caption {
+  position:absolute;
+  white-space:nowrap;
+  max-width:1680px;
+  text-align:center;
+}
+
+#source-note {
+  position:absolute;
+  right:65px;
+  top:55px;
+  font-size:16px;
+  color:#bbb8ca;
+}
+
+.closing {
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:32px;
+  opacity:0;
+}
+
+.closing img {
+  width:100px;
+  height:100px;
+}
+
+.closing h1 {
+  font-size:66px;
+  font-weight:500;
+  line-height:1.5;
+  letter-spacing:1px;
+  text-align:center;
+  margin:0;
+}
+
+.closing small {
+  font-size:26px;
+  color:#bbb6d4;
+}
+
+#agent-return {
+  background:#000;
+}
+
+#agent-return>img {
+  width:424px;
+  height:954px;
+  object-fit:contain;
+}
+
+.agent-input {
+  position:absolute;
+  left:11px;
+  top:779px;
+  width:401px;
+  height:34px;
+  background:#000;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  font:16px/1.4 Film,monospace;
+  white-space:nowrap;
+}
+
+.chevron {
+  font-size:20px;
+}
+
+.prompt-char {
+  display:none;
+}
+
+.cursor {
+  display:inline-block;
+  width:7px;
+  height:18px;
+  background:#aaa;
+  vertical-align:middle;
+  margin-left:2px;
+}
+
+#agent-note {
+  position:absolute;
+  right:65px;
+  top:55px;
+  font-size:16px;
+  color:#bbb8ca;
+  opacity:0;
+}
+
+.stack-phone {
+  position:absolute;
+  left:728px;
+  top:0;
+  width:464px;
+  height:994px;
+  border:2px solid #85848f;
+  border-radius:59px;
+  padding:12px;
+  background:linear-gradient(110deg,#9c9ca7,#272932 20%,#080a11 80%,#7c7e88);
+  box-shadow:-20px 25px 70px #0007;
+  transform-origin:50% 0%;
+  opacity:0;
+}
+
+.stack-screen {
+  position:relative;
+  width:436px;
+  height:966px;
+  overflow:hidden;
+  border:6px solid #080a11;
+  border-radius:45px;
+  background:#080a11;
+}
+
+.stack-screen>img,.stack-screen>video {
+  position:absolute;
+  inset:0;
+  width:424px;
+  height:954px;
+  object-fit:fill;
+  clip-path:inset(0 round 39px);
+}
+
+.stack-screen>svg {
+  position:absolute;
+  inset:0;
+  width:424px;
+  height:954px;
+  z-index:5;
+  pointer-events:none;
+}
+
+.screen-transition {
+  position:absolute;
+  inset:0;
+  width:424px;
+  height:954px;
+}
+
+#annotation-transition {
+  opacity:0;
+}
+
+
+

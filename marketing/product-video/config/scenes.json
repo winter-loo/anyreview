@@ -1,0 +1,1414 @@
+[
+  {
+    "id": "terminal",
+    "title": "终端产出",
+    "duration": 9.916,
+    "clips": [
+      {
+        "id": "screen-1",
+        "offset": 0.0,
+        "duration": 12.726,
+        "track": 0,
+        "asset": "assets-terminal-png"
+      },
+      {
+        "id": "caption-0",
+        "offset": 0.35,
+        "duration": 4.56,
+        "track": 20,
+        "text": "AI 给出了回复，也生成了文档和图片。"
+      },
+      {
+        "id": "caption-1",
+        "offset": 5.25,
+        "duration": 2.0,
+        "track": 20,
+        "text": "可要仔细看看这些结果，"
+      },
+      {
+        "id": "caption-2",
+        "offset": 7.65,
+        "duration": 2.08,
+        "track": 20,
+        "text": "有时候，还真不方便。"
+      },
+      {
+        "id": "voice-1",
+        "offset": 0.35,
+        "duration": 9.216,
+        "track": 10,
+        "asset": "volcano-voice-1-mp3"
+      }
+    ],
+    "motion": [
+      {
+        "order": 0,
+        "op": "set",
+        "target": "#phone",
+        "props": {
+          "y": 42,
+          "scale": 1,
+          "rotation": -3
+        },
+        "offset": 0
+      },
+      {
+        "order": 1,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "scale": 1.25,
+          "y": -95,
+          "rotation": -1,
+          "duration": 4.223529,
+          "ease": "power2.inOut"
+        },
+        "offset": 1.132223
+      },
+      {
+        "order": 2,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "scale": 1,
+          "y": 42,
+          "rotation": 2,
+          "duration": 0.619287,
+          "ease": "power2.inOut"
+        },
+        "offset": 9.296713
+      },
+      {
+        "order": 53,
+        "op": "set",
+        "target": "#stack-0",
+        "props": {
+          "x": 360,
+          "y": 125,
+          "scale": 0.91,
+          "rotation": 5
+        },
+        "offset": 0
+      },
+      {
+        "order": 56,
+        "op": "set",
+        "target": "#stack-1",
+        "props": {
+          "x": 360,
+          "y": 125,
+          "scale": 0.91,
+          "rotation": 5
+        },
+        "offset": 0
+      },
+      {
+        "order": 60,
+        "op": "set",
+        "target": "#stack-2",
+        "props": {
+          "x": 360,
+          "y": 125,
+          "scale": 0.91,
+          "rotation": 5
+        },
+        "offset": 0
+      },
+      {
+        "order": 65,
+        "op": "set",
+        "target": "#stack-3",
+        "props": {
+          "x": 360,
+          "y": 125,
+          "scale": 0.91,
+          "rotation": 5
+        },
+        "offset": 0
+      },
+      {
+        "order": 81,
+        "op": "set",
+        "target": "#review-entry",
+        "props": {
+          "x": 424
+        },
+        "offset": 0
+      },
+      {
+        "order": 85,
+        "op": "set",
+        "target": "#ending-markdown",
+        "props": {
+          "x": 424
+        },
+        "offset": 0
+      }
+    ],
+    "poster_offset": 1
+  },
+  {
+    "id": "discord",
+    "title": "聊天中的反馈痛点",
+    "duration": 12.148,
+    "clips": [
+      {
+        "id": "screen-2",
+        "offset": 2.81,
+        "duration": 10.238,
+        "track": 0,
+        "asset": "assets-discord-png"
+      },
+      {
+        "id": "caption-3",
+        "offset": 0.35,
+        "duration": 2.0,
+        "track": 20,
+        "text": "在终端里用 AI，"
+      },
+      {
+        "id": "caption-4",
+        "offset": 2.81,
+        "duration": 2.5,
+        "track": 20,
+        "text": "或者在 Discord 里和 Agent 聊天，"
+      },
+      {
+        "id": "caption-5",
+        "offset": 5.75,
+        "duration": 3.0,
+        "track": 20,
+        "text": "你想说的，往往不只是“再改一下”，"
+      },
+      {
+        "id": "caption-6",
+        "offset": 9.15,
+        "duration": 2.5,
+        "track": 20,
+        "text": "而是——这一段，具体怎么改。"
+      },
+      {
+        "id": "voice-2",
+        "offset": 0.35,
+        "duration": 11.448,
+        "track": 10,
+        "asset": "volcano-voice-2-mp3"
+      }
+    ],
+    "motion": [
+      {
+        "order": 3,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "scale": 1.38,
+          "y": -150,
+          "rotation": 0,
+          "duration": 1.5,
+          "ease": "power2.inOut"
+        },
+        "offset": 2.81
+      },
+      {
+        "order": 4,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "y": -390,
+          "duration": 4.249408,
+          "ease": "power2.inOut"
+        },
+        "offset": 4.311703
+      },
+      {
+        "order": 5,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "scale": 1,
+          "y": 42,
+          "rotation": -3,
+          "duration": 1.168892,
+          "ease": "power2.inOut"
+        },
+        "offset": 10.979108
+      },
+      {
+        "order": 6,
+        "op": "to",
+        "target": "#source-note",
+        "props": {
+          "opacity": 0,
+          "duration": 0.134547
+        },
+        "offset": 12.052665
+      }
+    ],
+    "poster_offset": 4.084
+  },
+  {
+    "id": "review",
+    "title": "打开审阅页",
+    "duration": 10.156,
+    "clips": [
+      {
+        "id": "screen-3",
+        "offset": 0.0,
+        "duration": 10.156,
+        "track": 0,
+        "asset": "assets-read-png"
+      },
+      {
+        "id": "caption-7",
+        "offset": 0.35,
+        "duration": 3.68,
+        "track": 20,
+        "text": "ReviewLoop 把 AI 的回复和文件，"
+      },
+      {
+        "id": "caption-8",
+        "offset": 4.33,
+        "duration": 2.14,
+        "track": 20,
+        "text": "变成一张独立的审阅网页。"
+      },
+      {
+        "id": "caption-9",
+        "offset": 6.71,
+        "duration": 3.02,
+        "track": 20,
+        "text": "打开链接，在手机上就能看。"
+      },
+      {
+        "id": "voice-3",
+        "offset": 0.35,
+        "duration": 9.456,
+        "track": 10,
+        "asset": "volcano-voice-3-mp3"
+      }
+    ],
+    "motion": [
+      {
+        "order": 7,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "scale": 1.28,
+          "y": -80,
+          "rotation": 0,
+          "duration": 2.674366,
+          "ease": "power2.inOut"
+        },
+        "offset": 2.931048
+      },
+      {
+        "order": 8,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "scale": 1,
+          "y": 42,
+          "duration": 1.047781,
+          "ease": "power2.inOut"
+        },
+        "offset": 9.108219
+      },
+      {
+        "order": 52,
+        "op": "set",
+        "target": "#source-note",
+        "props": {
+          "opacity": 0
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 82,
+        "op": "to",
+        "target": "#review-entry",
+        "props": {
+          "x": 0,
+          "duration": 0.85,
+          "ease": "power3.inOut"
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 83,
+        "op": "to",
+        "target": "#screen-2",
+        "props": {
+          "x": -90,
+          "duration": 0.85,
+          "ease": "power3.inOut"
+        },
+        "offset": 0.0
+      }
+    ],
+    "poster_offset": 3.936
+  },
+  {
+    "id": "reading",
+    "title": "阅读与流程图",
+    "duration": 9.916,
+    "clips": [
+      {
+        "id": "screen-4",
+        "offset": 0.0,
+        "duration": 10.416,
+        "track": 0,
+        "asset": "assets-reading-v2-volcano-mp4"
+      },
+      {
+        "id": "annotation-entry-still",
+        "offset": 9.616,
+        "duration": 0.3,
+        "track": 1,
+        "asset": "assets-annotation-entry-v10-png"
+      },
+      {
+        "id": "caption-10",
+        "offset": 0.35,
+        "duration": 2.0,
+        "track": 20,
+        "text": "长回复慢慢读，"
+      },
+      {
+        "id": "caption-11",
+        "offset": 2.61,
+        "duration": 3.7,
+        "track": 20,
+        "text": "文档里的图片、流程图，也能直接查看。"
+      },
+      {
+        "id": "caption-12",
+        "offset": 6.77,
+        "duration": 2.7,
+        "track": 20,
+        "text": "需要看清细节，就点开放大。"
+      },
+      {
+        "id": "voice-4",
+        "offset": 0.35,
+        "duration": 9.216,
+        "track": 10,
+        "asset": "volcano-voice-4-mp3"
+      }
+    ],
+    "motion": [
+      {
+        "order": 9,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "scale": 1.25,
+          "y": -80,
+          "rotation": 0,
+          "duration": 1.457202,
+          "ease": "power2.inOut"
+        },
+        "offset": 0.865426
+      },
+      {
+        "order": 10,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "scale": 1,
+          "y": 42,
+          "duration": 1.123383,
+          "ease": "power2.inOut"
+        },
+        "offset": 6.598172
+      },
+      {
+        "order": 11,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "scale": 1.58,
+          "y": -140,
+          "rotation": 0,
+          "duration": 2.634162,
+          "ease": "power2.inOut"
+        },
+        "offset": 8.745838
+      },
+      {
+        "order": 84,
+        "op": "to",
+        "target": "#annotation-transition",
+        "props": {
+          "opacity": 1,
+          "duration": 0.8,
+          "ease": "power2.inOut"
+        },
+        "offset": 9.616
+      }
+    ],
+    "poster_offset": 3.78
+  },
+  {
+    "id": "annotation",
+    "title": "文字批注",
+    "duration": 13.348,
+    "clips": [
+      {
+        "id": "screen-5",
+        "offset": 0.0,
+        "duration": 13.348,
+        "track": 0,
+        "asset": "assets-interaction-v2-volcano-mp4"
+      },
+      {
+        "id": "caption-13",
+        "offset": 0.35,
+        "duration": 3.34,
+        "track": 20,
+        "text": "选中一句话，直接写下意见。"
+      },
+      {
+        "id": "caption-14",
+        "offset": 4.07,
+        "duration": 4.38,
+        "track": 20,
+        "text": "比如：“这里，请补充一个具体的使用示例。”"
+      },
+      {
+        "id": "caption-15",
+        "offset": 9.05,
+        "duration": 1.3,
+        "track": 20,
+        "text": "不用再复制原文，"
+      },
+      {
+        "id": "caption-16",
+        "offset": 10.73,
+        "duration": 2.1,
+        "track": 20,
+        "text": "解释自己说的是哪一段。"
+      },
+      {
+        "id": "voice-5",
+        "offset": 0.35,
+        "duration": 12.648,
+        "track": 10,
+        "asset": "volcano-voice-5-mp3"
+      }
+    ],
+    "motion": [
+      {
+        "order": 12,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "y": -560,
+          "duration": 1.038139,
+          "ease": "power2.inOut"
+        },
+        "offset": 1.976906
+      },
+      {
+        "order": 13,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "scale": 1,
+          "y": 42,
+          "duration": 1.867008,
+          "ease": "power2.inOut"
+        },
+        "offset": 9.98777
+      }
+    ],
+    "poster_offset": 4.864
+  },
+  {
+    "id": "image",
+    "title": "图片批注",
+    "duration": 8.548,
+    "clips": [
+      {
+        "id": "screen-6",
+        "offset": 0.0,
+        "duration": 8.548,
+        "track": 0,
+        "asset": "assets-image-volcano-mp4"
+      },
+      {
+        "id": "caption-17",
+        "offset": 0.35,
+        "duration": 3.7,
+        "track": 20,
+        "text": "图片和设计稿，也能圈出具体位置。"
+      },
+      {
+        "id": "caption-18",
+        "offset": 4.37,
+        "duration": 1.96,
+        "track": 20,
+        "text": "哪里要改，怎么改，"
+      },
+      {
+        "id": "caption-19",
+        "offset": 6.81,
+        "duration": 1.3,
+        "track": 20,
+        "text": "对着内容说清楚。"
+      },
+      {
+        "id": "voice-6",
+        "offset": 0.35,
+        "duration": 7.848,
+        "track": 10,
+        "asset": "volcano-voice-6-mp3"
+      }
+    ],
+    "motion": [
+      {
+        "order": 14,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "scale": 1.35,
+          "y": -65,
+          "rotation": 0,
+          "duration": 0.602079,
+          "ease": "power2.inOut"
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 15,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "y": -360,
+          "duration": 0.80434,
+          "ease": "power2.inOut"
+        },
+        "offset": 2.767611
+      },
+      {
+        "order": 16,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "scale": 1,
+          "y": 42,
+          "duration": 0.584182,
+          "ease": "power2.inOut"
+        },
+        "offset": 7.813261
+      }
+    ],
+    "poster_offset": 3.516
+  },
+  {
+    "id": "feedback",
+    "title": "提交与 AI 处理",
+    "duration": 12.34,
+    "clips": [
+      {
+        "id": "screen-7",
+        "offset": 0.0,
+        "duration": 5.571891,
+        "track": 0,
+        "asset": "assets-submit-volcano-mp4"
+      },
+      {
+        "id": "agent-return",
+        "offset": 5.571891,
+        "duration": 6.846109,
+        "track": 0
+      },
+      {
+        "id": "ending-markdown-media",
+        "offset": 11.968,
+        "duration": 11.372,
+        "track": 2,
+        "asset": "ending-markdown-v10-png"
+      },
+      {
+        "id": "caption-20",
+        "offset": 0.35,
+        "duration": 2.98,
+        "track": 20,
+        "text": "标注完成，提交给 AI。"
+      },
+      {
+        "id": "caption-21",
+        "offset": 3.93,
+        "duration": 3.1,
+        "track": 20,
+        "text": "让它读取带着原文和位置的反馈，"
+      },
+      {
+        "id": "caption-22",
+        "offset": 7.45,
+        "duration": 1.3,
+        "track": 20,
+        "text": "再继续工作。"
+      },
+      {
+        "id": "caption-23",
+        "offset": 8.89,
+        "duration": 3.06,
+        "track": 20,
+        "text": "你审阅结果，AI 执行修改。"
+      },
+      {
+        "id": "voice-7",
+        "offset": 0.35,
+        "duration": 11.64,
+        "track": 10,
+        "asset": "volcano-voice-7-mp3"
+      }
+    ],
+    "motion": [
+      {
+        "order": 17,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "scale": 1.35,
+          "y": 40,
+          "duration": 1.259226,
+          "ease": "power2.inOut"
+        },
+        "offset": 0.156848
+      },
+      {
+        "order": 18,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "scale": 1,
+          "y": 42,
+          "duration": 1.241349,
+          "ease": "power2.inOut"
+        },
+        "offset": 4.330542
+      },
+      {
+        "order": 19,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "scale": 1.65,
+          "y": -690,
+          "duration": 1.055147,
+          "ease": "power2.inOut"
+        },
+        "offset": 5.696026
+      },
+      {
+        "order": 20,
+        "op": "to",
+        "target": "#agent-note",
+        "props": {
+          "opacity": 1,
+          "duration": 0.372405
+        },
+        "offset": 5.571891
+      },
+      {
+        "order": 21,
+        "op": "to",
+        "target": "#agent-note",
+        "props": {
+          "opacity": 0,
+          "duration": 0.155153
+        },
+        "offset": 12.049088
+      },
+      {
+        "order": 22,
+        "op": "set",
+        "target": "#prompt-char-0",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 6.875308
+      },
+      {
+        "order": 23,
+        "op": "set",
+        "target": "#prompt-char-1",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 6.968409
+      },
+      {
+        "order": 24,
+        "op": "set",
+        "target": "#prompt-char-2",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 7.06151
+      },
+      {
+        "order": 25,
+        "op": "set",
+        "target": "#prompt-char-3",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 7.154611
+      },
+      {
+        "order": 26,
+        "op": "set",
+        "target": "#prompt-char-4",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 7.247712
+      },
+      {
+        "order": 27,
+        "op": "set",
+        "target": "#prompt-char-5",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 7.340813
+      },
+      {
+        "order": 28,
+        "op": "set",
+        "target": "#prompt-char-6",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 7.433915
+      },
+      {
+        "order": 29,
+        "op": "set",
+        "target": "#prompt-char-7",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 7.515415
+      },
+      {
+        "order": 30,
+        "op": "set",
+        "target": "#prompt-char-8",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 7.594492
+      },
+      {
+        "order": 31,
+        "op": "set",
+        "target": "#prompt-char-9",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 7.67357
+      },
+      {
+        "order": 32,
+        "op": "set",
+        "target": "#prompt-char-10",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 7.752647
+      },
+      {
+        "order": 33,
+        "op": "set",
+        "target": "#prompt-char-11",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 7.831725
+      },
+      {
+        "order": 34,
+        "op": "set",
+        "target": "#prompt-char-12",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 7.910802
+      },
+      {
+        "order": 35,
+        "op": "set",
+        "target": "#prompt-char-13",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 7.98988
+      },
+      {
+        "order": 36,
+        "op": "set",
+        "target": "#prompt-char-14",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 8.068957
+      },
+      {
+        "order": 37,
+        "op": "set",
+        "target": "#prompt-char-15",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 8.148034
+      },
+      {
+        "order": 38,
+        "op": "set",
+        "target": "#prompt-char-16",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 8.227112
+      },
+      {
+        "order": 39,
+        "op": "set",
+        "target": "#prompt-char-17",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 8.306189
+      },
+      {
+        "order": 40,
+        "op": "set",
+        "target": "#prompt-char-18",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 8.385267
+      },
+      {
+        "order": 41,
+        "op": "set",
+        "target": "#prompt-char-19",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 8.464344
+      },
+      {
+        "order": 42,
+        "op": "set",
+        "target": "#prompt-char-20",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 8.543422
+      },
+      {
+        "order": 43,
+        "op": "set",
+        "target": "#prompt-char-21",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 8.622499
+      },
+      {
+        "order": 44,
+        "op": "set",
+        "target": "#prompt-char-22",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 8.701576
+      },
+      {
+        "order": 45,
+        "op": "set",
+        "target": "#prompt-char-23",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 8.780654
+      },
+      {
+        "order": 46,
+        "op": "set",
+        "target": "#prompt-char-24",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 8.859731
+      },
+      {
+        "order": 47,
+        "op": "set",
+        "target": "#prompt-char-25",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 8.949325
+      },
+      {
+        "order": 48,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "scale": 0.88,
+          "y": 95,
+          "rotation": -3,
+          "duration": 0.772,
+          "ease": "power2.inOut"
+        },
+        "offset": 11.568
+      },
+      {
+        "order": 86,
+        "op": "to",
+        "target": "#ending-markdown",
+        "props": {
+          "x": 0,
+          "duration": 0.45,
+          "ease": "power3.inOut"
+        },
+        "offset": 11.968
+      }
+    ],
+    "poster_offset": 8.968
+  },
+  {
+    "id": "explore",
+    "title": "探索更多",
+    "duration": 11,
+    "clips": [
+      {
+        "id": "stack-media-0",
+        "offset": 2.62,
+        "duration": 8.38,
+        "track": 30,
+        "asset": "ending-word-png"
+      },
+      {
+        "id": "stack-media-1",
+        "offset": 3.34,
+        "duration": 7.66,
+        "track": 31,
+        "asset": "ending-excel-png"
+      },
+      {
+        "id": "stack-media-2",
+        "offset": 4.5,
+        "duration": 6.5,
+        "track": 32,
+        "asset": "ending-ppt-png"
+      },
+      {
+        "id": "stack-media-3",
+        "offset": 5.66,
+        "duration": 5.34,
+        "track": 33,
+        "asset": "ending-video-stable-v10-mp4"
+      },
+      {
+        "id": "caption-24",
+        "offset": 0.1,
+        "duration": 2.35,
+        "track": 20,
+        "text": "不只是文字和图片，"
+      },
+      {
+        "id": "caption-25",
+        "offset": 2.62,
+        "duration": 2.7,
+        "track": 20,
+        "text": "文档、表格、演示稿，"
+      },
+      {
+        "id": "caption-26",
+        "offset": 5.56,
+        "duration": 2.59,
+        "track": 20,
+        "text": "甚至视频，都能这样审阅。"
+      },
+      {
+        "id": "caption-27",
+        "offset": 8.44,
+        "duration": 2.31,
+        "track": 20,
+        "text": "更多用法，等你探索。"
+      },
+      {
+        "id": "voice-explore",
+        "offset": 0.0,
+        "duration": 10.416,
+        "track": 10,
+        "asset": "ending-voice-v8-mp3"
+      }
+    ],
+    "motion": [
+      {
+        "order": 54,
+        "op": "to",
+        "target": "#stack-0",
+        "props": {
+          "x": 180,
+          "y": 200,
+          "scale": 0.78,
+          "rotation": 0,
+          "opacity": 1,
+          "duration": 0.6699999999999997,
+          "ease": "power3.out"
+        },
+        "offset": 2.62
+      },
+      {
+        "order": 55,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "x": 35,
+          "y": 156,
+          "scale": 0.762,
+          "rotation": -0.5,
+          "duration": 0.6699999999999997,
+          "ease": "power3.inOut"
+        },
+        "offset": 2.62
+      },
+      {
+        "order": 57,
+        "op": "to",
+        "target": "#stack-1",
+        "props": {
+          "x": 180,
+          "y": 200,
+          "scale": 0.78,
+          "rotation": 0,
+          "opacity": 1,
+          "duration": 0.9,
+          "ease": "power3.out"
+        },
+        "offset": 3.34
+      },
+      {
+        "order": 58,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "x": -110,
+          "y": 112,
+          "scale": 0.744,
+          "rotation": -1,
+          "duration": 0.9,
+          "ease": "power3.inOut"
+        },
+        "offset": 3.34
+      },
+      {
+        "order": 59,
+        "op": "to",
+        "target": "#stack-0",
+        "props": {
+          "x": 35,
+          "y": 156,
+          "scale": 0.762,
+          "rotation": -0.5,
+          "duration": 0.9,
+          "ease": "power3.inOut"
+        },
+        "offset": 3.34
+      },
+      {
+        "order": 61,
+        "op": "to",
+        "target": "#stack-2",
+        "props": {
+          "x": 180,
+          "y": 200,
+          "scale": 0.78,
+          "rotation": 0,
+          "opacity": 1,
+          "duration": 0.9,
+          "ease": "power3.out"
+        },
+        "offset": 4.5
+      },
+      {
+        "order": 62,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "x": -255,
+          "y": 68,
+          "scale": 0.726,
+          "rotation": -1.5,
+          "duration": 0.9,
+          "ease": "power3.inOut"
+        },
+        "offset": 4.5
+      },
+      {
+        "order": 63,
+        "op": "to",
+        "target": "#stack-0",
+        "props": {
+          "x": -110,
+          "y": 112,
+          "scale": 0.744,
+          "rotation": -1,
+          "duration": 0.9,
+          "ease": "power3.inOut"
+        },
+        "offset": 4.5
+      },
+      {
+        "order": 64,
+        "op": "to",
+        "target": "#stack-1",
+        "props": {
+          "x": 35,
+          "y": 156,
+          "scale": 0.762,
+          "rotation": -0.5,
+          "duration": 0.9,
+          "ease": "power3.inOut"
+        },
+        "offset": 4.5
+      },
+      {
+        "order": 66,
+        "op": "to",
+        "target": "#stack-3",
+        "props": {
+          "x": 180,
+          "y": 200,
+          "scale": 0.78,
+          "rotation": 0,
+          "opacity": 1,
+          "duration": 0.9,
+          "ease": "power3.out"
+        },
+        "offset": 5.66
+      },
+      {
+        "order": 67,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "x": -400,
+          "y": 24,
+          "scale": 0.7080000000000001,
+          "rotation": -2,
+          "duration": 0.9,
+          "ease": "power3.inOut"
+        },
+        "offset": 5.66
+      },
+      {
+        "order": 68,
+        "op": "to",
+        "target": "#stack-0",
+        "props": {
+          "x": -255,
+          "y": 68,
+          "scale": 0.726,
+          "rotation": -1.5,
+          "duration": 0.9,
+          "ease": "power3.inOut"
+        },
+        "offset": 5.66
+      },
+      {
+        "order": 69,
+        "op": "to",
+        "target": "#stack-1",
+        "props": {
+          "x": -110,
+          "y": 112,
+          "scale": 0.744,
+          "rotation": -1,
+          "duration": 0.9,
+          "ease": "power3.inOut"
+        },
+        "offset": 5.66
+      },
+      {
+        "order": 70,
+        "op": "to",
+        "target": "#stack-2",
+        "props": {
+          "x": 35,
+          "y": 156,
+          "scale": 0.762,
+          "rotation": -0.5,
+          "duration": 0.9,
+          "ease": "power3.inOut"
+        },
+        "offset": 5.66
+      },
+      {
+        "order": 71,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "opacity": 0,
+          "duration": 0.45
+        },
+        "offset": 10.55
+      },
+      {
+        "order": 73,
+        "op": "to",
+        "target": "#stack-0",
+        "props": {
+          "opacity": 0,
+          "duration": 0.45
+        },
+        "offset": 10.55
+      },
+      {
+        "order": 75,
+        "op": "to",
+        "target": "#stack-1",
+        "props": {
+          "opacity": 0,
+          "duration": 0.45
+        },
+        "offset": 10.55
+      },
+      {
+        "order": 77,
+        "op": "to",
+        "target": "#stack-2",
+        "props": {
+          "opacity": 0,
+          "duration": 0.45
+        },
+        "offset": 10.55
+      },
+      {
+        "order": 79,
+        "op": "to",
+        "target": "#stack-3",
+        "props": {
+          "opacity": 0,
+          "duration": 0.45
+        },
+        "offset": 10.55
+      }
+    ],
+    "poster_offset": 9.628
+  },
+  {
+    "id": "closing",
+    "title": "品牌收尾",
+    "duration": 6.532,
+    "clips": [
+      {
+        "id": "caption-28",
+        "offset": 0.35,
+        "duration": 3.14,
+        "track": 20,
+        "text": "ReviewLoop，让 AI 的产出，"
+      },
+      {
+        "id": "caption-29",
+        "offset": 3.93,
+        "duration": 2.08,
+        "track": 20,
+        "text": "方便查看，直接批注。"
+      },
+      {
+        "id": "voice-8",
+        "offset": 0.35,
+        "duration": 5.832,
+        "track": 10,
+        "asset": "volcano-voice-8-mp3"
+      }
+    ],
+    "motion": [
+      {
+        "order": 49,
+        "op": "to",
+        "target": ".closing",
+        "props": {
+          "opacity": 1,
+          "duration": 0.683384
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 50,
+        "op": "to",
+        "target": ".brand",
+        "props": {
+          "opacity": 0,
+          "duration": 0.313697
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 51,
+        "op": "set",
+        "target": ".brand",
+        "props": {
+          "opacity": 0
+        },
+        "offset": 0.35607
+      },
+      {
+        "order": 72,
+        "op": "set",
+        "target": "#phone",
+        "props": {
+          "opacity": 0
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 74,
+        "op": "set",
+        "target": "#stack-0",
+        "props": {
+          "opacity": 0
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 76,
+        "op": "set",
+        "target": "#stack-1",
+        "props": {
+          "opacity": 0
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 78,
+        "op": "set",
+        "target": "#stack-2",
+        "props": {
+          "opacity": 0
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 80,
+        "op": "set",
+        "target": "#stack-3",
+        "props": {
+          "opacity": 0
+        },
+        "offset": 0.0
+      }
+    ],
+    "poster_offset": 4.628
+  }
+]

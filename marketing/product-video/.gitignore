@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+renders/
+index.html
+captions.srt
+timing.json
+watch.html
+ASSETS.md
+SCENES.md
+node_modules/
+*.log
+.hf*/
+work-*/
