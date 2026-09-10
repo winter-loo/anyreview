@@ -3,7 +3,7 @@ import { promisify } from 'node:util';
 import { createInterface } from 'node:readline';
 import { readFileSync, writeFileSync, renameSync } from 'node:fs';
 import type { Snapshot } from './snapshots';
-import type { VideoIndex } from '$lib/video/model';
+import type { VideoIndex, VideoMetadata } from '$lib/video/model';
 const exec = promisify(execFile);
 type IndexState = { status: 'processing'; progress: number } | { status: 'ready'; index: VideoIndex } | { status: 'error'; message: string };
 const jobs = new Map<string, IndexState>();
@@ -11,6 +11,32 @@ let pending = Promise.resolve();
 const cachePath = (snapshot: Snapshot) => `${snapshot.files[0].snapshotPath}.frames-v1.json`;
 export function readVideoIndex(snapshot: Snapshot): VideoIndex | null {
  try { const index = JSON.parse(readFileSync(cachePath(snapshot), 'utf8')) as VideoIndex; return index.schema === 1 && index.hash === snapshot.files[0].hash && index.timestamps.length ? index : null; } catch { return null; }
+}
+const metadataJobs = new Map<string, Promise<VideoMetadata>>();
+const metadataPath = (snapshot: Snapshot) => `${snapshot.files[0].snapshotPath}.metadata-v1.json`;
+export function readVideoMetadata(snapshot: Snapshot): VideoMetadata | null {
+ try { const value = JSON.parse(readFileSync(metadataPath(snapshot), 'utf8')) as VideoMetadata;
+  return value.hash === snapshot.files[0].hash && value.duration > 0 && Number.isFinite(value.duration) && value.fps > 0 && Number.isFinite(value.fps) ? value : null;
+ } catch { return null; }
+}
+export function videoMetadata(snapshot: Snapshot): Promise<VideoMetadata> {
+ const cached = readVideoMetadata(snapshot);
+ if (cached) return Promise.resolve(cached);
+ const existing = metadataJobs.get(snapshot.id); if (existing) return existing;
+ const job = (async () => {
+  const result = await exec('ffprobe', ['-v','error','-select_streams','v:0','-show_entries','stream=codec_name,duration,start_time,avg_frame_rate,r_frame_rate:format=duration,start_time','-of','json',snapshot.files[0].snapshotPath], {timeout:30000,maxBuffer:1024*1024});
+  const data = JSON.parse(result.stdout), stream = data.streams?.[0];
+  if (!stream) throw new Error('文件中没有可评审的视频轨道');
+  const rate = (value: string) => { const [a,b='1'] = String(value).split('/'); return Number(a)/Number(b); };
+  const average = rate(stream.avg_frame_rate), nominal = rate(stream.r_frame_rate);
+  const fps = Number.isFinite(average) && average > 0 ? average : Number.isFinite(nominal) && nominal > 0 ? nominal : 30;
+  const duration = Number(data.format?.duration ?? stream.duration);
+  if (!Number.isFinite(duration) || duration <= 0) throw new Error('无法读取视频时长');
+  const metadata: VideoMetadata = {hash:snapshot.files[0].hash,duration,fps,sourceStartTime:Number(data.format?.start_time ?? 0),codec:stream.codec_name};
+  writeFileSync(metadataPath(snapshot)+'.tmp', JSON.stringify(metadata), {mode:0o600});renameSync(metadataPath(snapshot)+'.tmp', metadataPath(snapshot));
+  return metadata;
+ })().finally(() => metadataJobs.delete(snapshot.id));
+ metadataJobs.set(snapshot.id,job); return job;
 }
 export function videoIndexState(snapshot: Snapshot): IndexState {
  const existing = jobs.get(snapshot.id);

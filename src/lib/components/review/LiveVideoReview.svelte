@@ -3,7 +3,7 @@
  import { frameTicks, nearestFrame, pinchTimeline, timelineWindow, type TimelineWindow } from '$lib/video/timeline';
  import VideoReviewDrawer from './VideoReviewDrawer.svelte';
  import { createLiveFeedback } from '$lib/feedback/client.svelte';
- import { appendLocation, frameAt, frameSeekTime, formatVideoTime, temporaryRate, type VideoIndex, type VideoLocation, type VideoAnnotation } from '$lib/video/model';
+ import { appendTimedLocation, estimatedIndex, resolveLocation, frameAt, frameSeekTime, formatVideoTime, temporaryRate, type VideoIndex, type VideoLocation, type VideoAnnotation } from '$lib/video/model';
  let { data }: { data: { kind: 'video'; token: string; filename: string; src: string } } = $props();
  let video: HTMLVideoElement;
  let timeline: HTMLDivElement;
@@ -30,7 +30,7 @@
  const fingers = new Map<number, { x: number; y: number }>();
  let timelineGesture: { mode: 'tap' | 'seek' | 'pan' | 'pinch' | 'blocked'; x: number; y: number; thumb: boolean; aboveTrack: boolean; initial: TimelineWindow; distance: number; ratio: number } | null = null;
  const ready = $derived(!!index && loaded && !mediaError);
- const lastPoint = $derived(locations.at(-1)?.type === 'point');
+ const lastPoint = $derived(locations.at(-1)?.type === 'point' && canLocate(locations.at(-1)!));
  const percent = $derived(visibleSpan ? Math.max(0, Math.min(100, (frameTime - viewStart) / visibleSpan * 100)) : 0);
  const feedback = createLiveFeedback<VideoAnnotation>({ token: () => data.token, kind: 'video', read: () => annotations, replace: next => { annotations = next; } });
  const draftKey = () => `reviewloop:video-draft:${data.token}`;
@@ -42,6 +42,7 @@
   try { const saved = JSON.parse(localStorage.getItem(`reviewloop:live-video:${data.token}`) ?? '[]'); if (Array.isArray(saved)) annotations = saved; } catch {}
   try { const saved = JSON.parse(localStorage.getItem(draftKey()) ?? 'null'); if (saved && Array.isArray(saved.locations) && typeof saved.body === 'string') { locations = saved.locations; body = saved.body; composing = !!saved.composing; } } catch {}
   loaded = video.readyState >= 1;
+  initializeEstimate();
   if (video.error) mediaError = '浏览器无法播放此视频编码，请使用兼容的 MP4 视频';
   const query = matchMedia('(max-width: 900px)');
   const resize = () => { mobile = query.matches; };
@@ -56,7 +57,12 @@
     const response = await fetch(`${data.src}&index=1`, { signal: abort.signal, cache: 'no-store' });
     if (!response.ok) throw new Error('无法读取视频帧索引，请刷新重试');
     const result = await response.json();
-    if (result.status === 'ready') { index = result.index; updateTime(); }
+    if (result.status === 'ready') { installIndex(result.index); }
+    else if (result.metadata) {
+     if (!index || (index.approximate && index.hash !== result.metadata.hash)) installIndex(estimatedIndex(result.metadata));
+     if (result.status === 'error') indexError = result.message;
+     else { progress = result.progress; timer = setTimeout(pollIndex, 800); }
+    }
     else if (result.status === 'error') indexError = result.message;
     else { progress = result.progress; timer = setTimeout(pollIndex, 800); }
    } catch (cause) { if (!abort.signal.aborted) indexError = cause instanceof Error ? cause.message : '加载失败'; }
@@ -74,6 +80,17 @@
   window.addEventListener('keydown', keydown); window.addEventListener('keyup', keyup); window.addEventListener('blur', cancelGestures); document.addEventListener('visibilitychange', visibility);
   return () => { clearTimeout(holdTimer); clearTimeout(controlsTimer); query.removeEventListener('change', resize); document.removeEventListener('fullscreenchange', fullscreenChange); abort.abort(); clearTimeout(timer); stop(); if (callback) video.cancelVideoFrameCallback(callback); window.removeEventListener('keydown', keydown); window.removeEventListener('keyup', keyup); window.removeEventListener('blur', cancelGestures); document.removeEventListener('visibilitychange', visibility); };
  });
+ function initializeEstimate() {
+  if (!index && Number.isFinite(video.duration) && video.duration > 0) {
+   installIndex(estimatedIndex({hash:'',duration:video.duration,fps:30,sourceStartTime:0,codec:''}));
+  }
+ }
+ function installIndex(next: VideoIndex) {
+  index = next;
+  frame = frameAt(next, video.currentTime); time = video.currentTime;
+  // Keep playback and the selected time window stable while precision improves.
+  if (viewSpan) setView(timelineWindow(viewStart,viewSpan,next.endTime));
+ }
  function updateTime() { if (index && video && !video.seeking) { frame = frameAt(index, video.currentTime); time = index.timestamps[frame]; } }
  function restoreRate() { clearTimeout(holdTimer); holdDirection = null; held = null; activeRate = baseRate; if (video) video.playbackRate = baseRate; }
  function pause() { video.pause(); restoreRate(); }
@@ -121,7 +138,7 @@
  function seekTime(next: number) { if (index) seekFrame(frameAt(index, Math.max(0, Math.min(index.endTime, next)))); }
  function step(amount: number) { if (scale === 'frame') seekFrame(frame + amount); else seekTime(time + amount); }
  async function togglePlay() {
-  if (!ready) return;
+  if (!loaded || mediaError) return;
   if (!video.paused) pause(); else { try { await video.play(); } catch { mediaError = '视频无法播放，请检查浏览器是否支持此编码'; } }
  }
  function revealControls() {
@@ -172,7 +189,7 @@
  function setRate() { restoreRate(); }
  function addFrame(next: number) {
   if (!ready || (locations.length >= 200 && !range)) return;
-  seekFrame(next); composing = true; drawer = 'composer'; locations = appendLocation(locations, frame, range); range = false;
+  seekFrame(next); composing = true; drawer = 'composer'; locations = appendTimedLocation(locations, frame, range, index!); range = false;
  }
  function setView(next: TimelineWindow) { viewStart = next.start; viewSpan = next.end - next.start; }
  function resetTimeline() { viewStart = 0; viewSpan = 0; }
@@ -225,13 +242,19 @@
   if (!ready || !locations.length || !body.trim()) return;
   feedback.persist([...annotations, { id: crypto.randomUUID(), createdAt: new Date().toISOString(), type: 'video', locations: [...locations], body: body.trim() }]); cancel(); pause();
  }
+ function canLocate(p: VideoLocation) { return ready && (!index?.approximate || (p.type === 'point' ? p.time !== undefined : p.startTime !== undefined)); }
  function label(p: VideoLocation) {
+  if (index?.approximate && !canLocate(p)) return p.type === 'point' ? `第 ${p.frameIndex+1} 帧 · 待校准` : `第 ${p.startFrameIndex+1}–${p.endFrameIndex+1} 帧 · 待校准`;
+  const anchor = p;
+  if (index) p = resolveLocation(p,index);
   const at = (f: number) => scale === 'frame' ? `第 ${f + 1} 帧` : formatVideoTime(index?.timestamps[f] ?? 0);
-  return p.type === 'point' ? at(p.frameIndex) : `${at(p.startFrameIndex)} – ${at(p.endFrameIndex)}`;
+  if (scale === 'time' && anchor.type === 'point' && anchor.time !== undefined) return formatVideoTime(anchor.time);
+  if (scale === 'time' && anchor.type === 'range' && anchor.startTime !== undefined && anchor.endTimeExclusive !== undefined) return `${formatVideoTime(anchor.startTime)} – ${formatVideoTime(anchor.endTimeExclusive)}`;
+  return (index?.approximate ? '约 ' : '') + (p.type === 'point' ? at(p.frameIndex) : `${at(p.startFrameIndex)} – ${at(p.endFrameIndex)}`);
  }
- function locationStart(p: VideoLocation) { return p.type === 'point' ? p.frameIndex : p.startFrameIndex; }
- function locationPercent(p: VideoLocation) { return index && visibleSpan ? (index.timestamps[locationStart(p)] - viewStart) / visibleSpan * 100 : 0; }
- function locationWidth(p: VideoLocation) { return index && p.type === 'range' ? (index.timestamps[p.endFrameIndex] - index.timestamps[p.startFrameIndex]) / visibleSpan * 100 : 0; }
+ function locationStart(p: VideoLocation) { if (index) p = resolveLocation(p,index); return p.type === 'point' ? p.frameIndex : p.startFrameIndex; }
+ function locationPercent(p: VideoLocation) { if (!canLocate(p)) return -10000; return index && visibleSpan ? (index.timestamps[locationStart(p)] - viewStart) / visibleSpan * 100 : 0; }
+ function locationWidth(p: VideoLocation) { if (index) p = resolveLocation(p,index); return index && p.type === 'range' ? (index.timestamps[p.endFrameIndex] - index.timestamps[p.startFrameIndex]) / visibleSpan * 100 : 0; }
  function inputTarget(event: KeyboardEvent) { return event.target instanceof Element && !!event.target.closest('input, textarea, select, [contenteditable="true"]'); }
  function keydown(event: KeyboardEvent) {
   if (event.key === 'Escape' && fallbackFullscreen) { event.preventDefault(); fallbackFullscreen = false; return; }
@@ -259,19 +282,19 @@
   <div class="screen" class:fullscreen={fallbackFullscreen} bind:this={screen}>
    <!-- Video is the reviewed artifact; its audio is preserved without an invented caption track. -->
    <!-- svelte-ignore a11y_media_has_caption -->
-   <video bind:this={video} src={data.src} playsinline preload="metadata" onloadedmetadata={() => { loaded = true; }} ontimeupdate={updateTime} onseeked={updateTime} onplay={() => { paused = false; revealControls(); }} onpause={() => { paused = true; restoreRate(); revealControls(); }} onended={() => { paused = true; restoreRate(); revealControls(); }} onerror={() => { mediaError = '浏览器无法播放此视频编码。请使用兼容的 MP4（H.264/AAC）视频。'; }}></video>
-   <button class="video-surface" disabled={!ready} aria-label="视频画面：点击播放或暂停，长按左侧减速、右侧加速" onpointerdown={startHold} onpointermove={moveHold} onpointerup={endHold} onpointercancel={endHold} onlostpointercapture={endHold} oncontextmenu={event => event.preventDefault()} onclick={screenClick}></button>
-   <button class="play" class:controls-hidden={!paused && !showControls} disabled={!ready} onclick={() => { void togglePlay(); revealControls(); }} aria-label={paused ? '播放' : '暂停'}>
+   <video bind:this={video} src={data.src} playsinline preload="metadata" onloadedmetadata={() => { loaded = true; initializeEstimate(); }} ontimeupdate={updateTime} onseeked={updateTime} onplay={() => { paused = false; revealControls(); }} onpause={() => { paused = true; restoreRate(); revealControls(); }} onended={() => { paused = true; restoreRate(); revealControls(); }} onerror={() => { mediaError = '浏览器无法播放此视频编码。请使用兼容的 MP4（H.264/AAC）视频。'; }}></video>
+   <button class="video-surface" disabled={!loaded || !!mediaError} aria-label="视频画面：点击播放或暂停，长按左侧减速、右侧加速" onpointerdown={startHold} onpointermove={moveHold} onpointerup={endHold} onpointercancel={endHold} onlostpointercapture={endHold} oncontextmenu={event => event.preventDefault()} onclick={screenClick}></button>
+   <button class="play" class:controls-hidden={!paused && !showControls} disabled={!loaded || !!mediaError} onclick={() => { void togglePlay(); revealControls(); }} aria-label={paused ? '播放' : '暂停'}>
     {#if paused}<svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>{:else}<svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor" aria-hidden="true"><path d="M6 5h4v14H6zm8 0h4v14h-4z" /></svg>{/if}
    </button>
    <button class="fullscreen-button" disabled={!loaded} onclick={toggleFullscreen} aria-label={fullscreen || fallbackFullscreen ? '退出全屏' : '全屏'}><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">{#if fullscreen || fallbackFullscreen}<path d="M9 3v6H3m18 0h-6V3M3 15h6v6m6 0v-6h6" />{:else}<path d="M9 3H3v6m12-6h6v6M3 15v6h6m6 0h6v-6" />{/if}</svg></button>
    {#if mediaError}<div class="screen-message" role="alert">{mediaError}</div>{/if}
   </div>
   <div class="transport">
-   <button class="position" onclick={toggleScale} aria-label={`当前${scale === 'time' ? '时间' : '帧数'}，点击切换为${scale === 'time' ? '帧数' : '时间'}`} title="点击切换时间 / 帧数">{scale === 'frame' ? `${frame + 1} / ${index?.timestamps.length ?? '—'} 帧` : `${formatVideoTime(time)} / ${index ? formatVideoTime(index.endTime) : '—'}`}</button>
+   <button class="position" onclick={toggleScale} aria-label={`当前${scale === 'time' ? '时间' : '帧数'}，点击切换为${scale === 'time' ? '帧数' : '时间'}`} title="点击切换时间 / 帧数">{scale === 'frame' ? `${index?.approximate ? '约 ' : ''}${frame + 1} / ${index?.timestamps.length ?? '—'} 帧` : `${formatVideoTime(time)} / ${index ? formatVideoTime(index.endTime) : '—'}`}</button>
    <label class="select-label"><span class="sr-only">基准播放速度</span>{#if holdDirection || activeRate !== baseRate}<span class="temporary-speed" role="status" aria-label={`临时 ${activeRate} 倍速，松开恢复 ${baseRate} 倍速`}>{activeRate > baseRate ? '↑' : activeRate < baseRate ? '↓' : ''} {activeRate}×</span>{:else}<select bind:value={baseRate} onchange={setRate}>{#each [0.25, 0.5, 1, 1.5, 2, 3, 4] as rate}<option value={rate}>{rate}×</option>{/each}</select>{/if}</label>
   </div>
-  {#if indexError}<div class="error" role="alert">{indexError}</div>{:else if !index}<div class="index-progress" role="status"><span>正在准备精确帧定位 · {progress}%</span><progress max="100" value={progress}></progress></div>{/if}
+  {#if indexError}<div class="index-progress" role="status">精确帧定位暂不可用，仍可播放和按时间标注。帧号为估算值。{indexError}</div>{:else if !index || index.approximate}<div class="index-progress" role="status"><span>帧号为估算值 · 后台校准 {progress}% · 可正常播放和标注</span><progress max="100" value={progress}></progress></div>{/if}
   <div class="timeline" bind:this={timeline} role="group" aria-label="视频时间轴，双指缩放，缩放后拖动查看其他时间" onpointerdown={timelineDown} onpointermove={timelineMove} onpointerup={timelineUp} onpointercancel={timelineUp} onlostpointercapture={timelineUp}>
    <button class="timeline-surface" disabled={!ready} onclick={event => { if (event.detail === 0) addFrame(frame); }} aria-label="点击时间轴添加评论位置"><span class="track"></span></button>
    <div class="timeline-marks" aria-hidden="true">
@@ -297,7 +320,7 @@
 {#snippet composerPanel()}
   <section class="composer" aria-label="添加视频评论">
    <div class="composer-heading"><h2>视频评论</h2><div class="panel-actions"><button class:active={range} disabled={!lastPoint} aria-pressed={range} onclick={() => { range = !range; }}>范围</button>{#if mobile}<button class="close-drawer" aria-label="收起视频评论" onclick={closeDrawer}>×</button>{/if}</div></div>
-   <div class="chips" aria-label="已选位置">{#each locations as p, i}<span class="chip"><button disabled={!ready} onclick={() => seekFrame(locationStart(p))}>{label(p)}</button><button aria-label={`移除 ${label(p)}`} onclick={() => removeLocation(i)}>×</button></span>{/each}</div>
+   <div class="chips" aria-label="已选位置">{#each locations as p, i}<span class="chip"><button disabled={!canLocate(p)} onclick={() => seekFrame(locationStart(p))}>{label(p)}</button><button aria-label={`移除 ${label(p)}`} onclick={() => removeLocation(i)}>×</button></span>{/each}</div>
    {#if range}<p class="range-hint" role="status">点击时间轴上的另一处，与最后一个点组成范围。</p>{/if}
    {#if !locations.length}<p class="range-hint">在时间轴上添加位置，继续这条评论。</p>{/if}
    <textarea bind:value={body} rows="3" maxlength="20000" placeholder="这里需要怎样修改？" aria-label="评论内容"></textarea>
@@ -307,7 +330,7 @@
 {#snippet commentsPanel()}
  <section class="comments" aria-label="已保存评论"><div class="list-heading"><h2>标注列表{#if annotations.length}<span>{annotations.length}</span>{/if}</h2>{#if mobile}<button class="close-drawer" aria-label="收起标注列表" onclick={closeDrawer}>×</button>{/if}</div><div class="comment-scroll">
  {#if !annotations.length}<div class="empty"><strong>把修改意见留在具体时刻</strong><p>点击时间轴开始；多个时间点和时间段可以共用一条评论。</p></div>{/if}
- {#each annotations as annotation (annotation.id)}<article><div class="chips">{#each annotation.locations as p}<button class="saved-chip" disabled={!ready} onclick={() => recall(p)}>{label(p)}</button>{/each}</div><p>{annotation.body}</p><button class="delete" aria-label="删除评论" onclick={() => feedback.persist(annotations.filter(a => a.id !== annotation.id))}>删除</button></article>{/each}
+ {#each annotations as annotation (annotation.id)}<article><div class="chips">{#each annotation.locations as p}<button class="saved-chip" disabled={!canLocate(p)} onclick={() => recall(p)}>{label(p)}</button>{/each}</div><p>{annotation.body}</p><button class="delete" aria-label="删除评论" onclick={() => feedback.persist(annotations.filter(a => a.id !== annotation.id))}>删除</button></article>{/each}
  </div></section>
 {/snippet}
 {#if mobile && drawer}

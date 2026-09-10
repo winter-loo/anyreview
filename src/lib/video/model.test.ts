@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { appendLocation, frameAt, frameSeekTime, temporaryRate, type VideoIndex } from './model';
+import { appendTimedLocation, estimatedIndex, resolveLocation, appendLocation, frameAt, frameSeekTime, temporaryRate, type VideoIndex } from './model';
 const index: VideoIndex = { schema: 1, hash: 'vfr', codec: 'h264', timestamps: [0, 0.04, 0.16, 0.2], endTime: 0.24, sourceStartTime: 0 };
 describe('video review selection', () => {
  it('keeps independent points while converting the last point into an ordered range', () => {
@@ -21,4 +21,14 @@ describe('video review selection', () => {
   expect(temporaryRate(2, 'up')).toBe(3); expect(temporaryRate(2, 'down')).toBe(1);
   expect(temporaryRate(4, 'up')).toBe(4); expect(temporaryRate(0.5, 'down')).toBe(0.25);
  });
+});
+
+it('keeps captured times when estimated frames become exact, including range endpoints', () => {
+ const estimated = estimatedIndex({hash:'vfr',duration:.24,fps:25,sourceStartTime:0,codec:'h264'});
+ const points = appendTimedLocation([],3,false,estimated);
+ expect(points[0]).toEqual({type:'point',frameIndex:3,time:.12});
+ expect(resolveLocation(points[0],index)).toEqual({type:'point',frameIndex:1,time:.12});
+ const ranges = appendTimedLocation(points,5,true,estimated);
+ expect(resolveLocation(ranges[0],index)).toEqual({type:'range',startFrameIndex:1,endFrameIndex:3,startTime:.12,endTimeExclusive:.24});
+ expect(JSON.parse(JSON.stringify(points))).toEqual(points);
 });

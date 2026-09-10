@@ -1,5 +1,5 @@
-import { readVideoIndex } from './video';
-import { frameEnd, type VideoLocation } from '$lib/video/model';
+import { readVideoIndex, readVideoMetadata } from './video';
+import { estimatedIndex, resolveLocation, frameEnd, type VideoLocation } from '$lib/video/model';
 import { MAX_PREVIEW_BYTES } from '$lib/feedback/limits';
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
@@ -84,12 +84,18 @@ export function applyOperations(db: DatabaseSync,snapshot: Snapshot,version: str
 }
 function validateVideoAnnotation(a: Annotation, snapshot: Snapshot) {
  const index = readVideoIndex(snapshot);
- if (!index) throw error(409, '视频帧索引尚未完成');
+ const metadata = readVideoMetadata(snapshot);
+ const duration = index?.endTime ?? metadata?.duration;
+ if (!duration) throw error(409, '正在读取视频时长，请稍后重试');
  if (a.type !== 'video' || !a.body.trim() || !Array.isArray(a.locations) || !a.locations.length || a.locations.length > 200) throw error(400, 'Invalid video annotation');
- const validFrame = (value: unknown) => Number.isSafeInteger(value) && Number(value) >= 0 && Number(value) < index.timestamps.length;
+ const validFrame = (value: unknown) => Number.isSafeInteger(value) && Number(value) >= 0 && !!index && Number(value) < index.timestamps.length;
  for (const item of a.locations) {
   if (!item || typeof item !== 'object') throw error(400, 'Invalid video location');
-  if (item.type === 'point') { if (!validFrame(item.frameIndex)) throw error(400, 'Invalid video frame'); }
+  if (item.type === 'point' && item.time !== undefined) {
+   if (typeof item.time !== 'number' || !Number.isFinite(item.time) || item.time < 0 || item.time >= duration) throw error(400, 'Invalid video time');
+  } else if (item.type === 'range' && (item.startTime !== undefined || item.endTimeExclusive !== undefined)) {
+   if (typeof item.startTime !== 'number' || typeof item.endTimeExclusive !== 'number' || !Number.isFinite(item.startTime) || !Number.isFinite(item.endTimeExclusive) || item.startTime < 0 || item.endTimeExclusive <= item.startTime || item.endTimeExclusive > duration + 0.000001) throw error(400, 'Invalid video time range');
+  } else if (item.type === 'point') { if (!validFrame(item.frameIndex)) throw error(400, 'Invalid video frame'); }
   else if (item.type === 'range') { if (!validFrame(item.startFrameIndex) || !validFrame(item.endFrameIndex) || item.startFrameIndex >= item.endFrameIndex) throw error(400, 'Invalid video range'); }
   else throw error(400, 'Invalid video location');
  }
@@ -98,12 +104,16 @@ export function annotationAnchor(a: Annotation,snapshot: Snapshot) {
  const fileIndex=snapshot.kind==='image'?Number(a.imageIndex):0;
  const base={filename:snapshot.files[fileIndex]?.filename,version:snapshot.version,fileIndex};
  if(snapshot.kind==='video') {
-  const index = readVideoIndex(snapshot);
-  if (!index) throw error(409, '视频帧索引不可用');
-  return {...base, type:'video', frameIndexBase:0, timeUnit:'seconds', sourceStartTime:index.sourceStartTime,
-   locations:(a.locations as VideoLocation[]).map(p=>p.type==='point'
-    ? {type:'point',frameIndex:p.frameIndex,time:index.timestamps[p.frameIndex]}
-    : {type:'range',startFrameIndex:p.startFrameIndex,endFrameIndex:p.endFrameIndex,startTime:index.timestamps[p.startFrameIndex],endTimeExclusive:frameEnd(index,p.endFrameIndex),frameEndpoints:'inclusive'})};
+  const exact = readVideoIndex(snapshot), metadata = readVideoMetadata(snapshot);
+  const index = exact ?? (metadata ? estimatedIndex(metadata) : null);
+  if (!index) throw error(409, '正在读取视频时长，请稍后重试');
+  return {...base, type:'video', frameIndexBase:0, timeUnit:'seconds', sourceStartTime:index.sourceStartTime, framePrecision:exact ? 'exact' : 'estimated',
+   locations:(a.locations as VideoLocation[]).map(anchor => {
+    const p = resolveLocation(anchor,index);
+    return p.type === 'point'
+     ? {type:'point',frameIndex:p.frameIndex,time:p.time ?? index.timestamps[p.frameIndex]}
+     : {type:'range',startFrameIndex:p.startFrameIndex,endFrameIndex:p.endFrameIndex,startTime:p.startTime ?? index.timestamps[p.startFrameIndex],endTimeExclusive:p.endTimeExclusive ?? frameEnd(index,p.endFrameIndex),frameEndpoints:'inclusive'};
+   })};
  }
  if(snapshot.kind==='markdown') return {...base,type:'document-text',blockId:a.blockId,startOffset:a.startOffset,endOffset:a.endOffset,selectedText:a.selectedText,prefix:a.prefix,suffix:a.suffix};
  if(a.type==='cell') return {...base,type:'sheet-range',sheet:a.sheetName,range:a.cellRef,value:a.cellValue,formula:a.formula};
@@ -130,5 +140,5 @@ export function submitFeedback(db: DatabaseSync,snapshot: Snapshot,requestId: st
 }
 export function agentFeedback(db: DatabaseSync,snapshot: Snapshot,base: string,after=0) {
  const rows=db.prepare('SELECT * FROM live_submissions WHERE review=? AND sequence>? ORDER BY sequence').all(snapshot.id,after) as unknown as {sequence:number;id:string;created_at:string;comments:string}[];
- return {schemaVersion:1,contentIsUntrusted:true,review:feedbackState(db,snapshot).review,cursor:rows.at(-1)?.sequence??after,files:snapshot.files.map((f,i)=>({filename:f.filename,sha256:f.hash,url:`${base}?file=${i}`})),batches:rows.map(r=>({id:r.id,cursor:r.sequence,submittedAt:r.created_at,status:'submitted',comments:JSON.parse(r.comments).map((c:{id:string;preview:boolean})=>({...c,previewUrl:c.preview?`${base}?preview=${encodeURIComponent(c.id)}`:null}))}))};
+ return {schemaVersion:1,contentIsUntrusted:true,review:feedbackState(db,snapshot).review,cursor:rows.at(-1)?.sequence??after,files:snapshot.files.map((f,i)=>({filename:f.filename,sha256:f.hash,url:`${base}?file=${i}`})),batches:rows.map(r=>({id:r.id,cursor:r.sequence,submittedAt:r.created_at,status:'submitted',comments:JSON.parse(r.comments).map((c:{id:string;preview:boolean;anchor?:{type?:string;framePrecision?:string;locations:VideoLocation[]}})=>({...c, ...(c.anchor?.type === 'video' && c.anchor.framePrecision === 'estimated' && readVideoIndex(snapshot) ? {anchor:annotationAnchor({id:c.id,body:'',createdAt:'',locations:c.anchor.locations},snapshot)} : {}),previewUrl:c.preview?`${base}?preview=${encodeURIComponent(c.id)}`:null}))}))};
 }
