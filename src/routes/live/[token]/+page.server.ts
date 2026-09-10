@@ -103,6 +103,7 @@ export const load: PageServerLoad = ({ params, setHeaders }) => {
 		resolvedPaths.push(resolved);
 	}
 
+	const isVideo = resolvedPaths.length === 1 && ['.mp4', '.mov', '.webm'].includes(path.extname(resolvedPaths[0]).toLowerCase());
 	const allImages = resolvedPaths.every(_isImageFile);
 	const isHtml = resolvedPaths.length === 1 && _isHtmlFile(resolvedPaths[0]);
 	const isMarkdown = resolvedPaths.length === 1 && _isMarkdownFile(resolvedPaths[0]);
@@ -111,13 +112,16 @@ export const load: PageServerLoad = ({ params, setHeaders }) => {
 	const isPpt = resolvedPaths.length === 1 && _isPptFile(resolvedPaths[0]);
 	const isExcel = resolvedPaths.length === 1 && _isExcelFile(resolvedPaths[0]);
 
-	if (!allImages && !isHtml && !isMarkdown && !isPdf && !isWord && !isPpt && !isExcel) {
+	if (!isVideo && !allImages && !isHtml && !isMarkdown && !isPdf && !isWord && !isPpt && !isExcel) {
 		throw error(403, 'Unsupported file type');
 	}
 
 	setHeaders({ 'cache-control': 'no-store' });
  const revision = liveSnapshot(params.token, secret).version;
 
+ if (isVideo) {
+  return {kind: 'video' as const, token: params.token, filename: path.basename(resolvedPaths[0]), src: `/live/${params.token}/video?v=${revision}`};
+ }
  if (isHtml) {
   const resolved = resolvedPaths[0], stats = statSync(resolved);
   if (stats.size > 5 * 1024 * 1024) throw error(413, 'HTML exceeds 5 MiB');

@@ -1,6 +1,7 @@
 import { liveOrigin } from '$lib/server/live/origin';
 import { MAX_FEEDBACK_REQUEST_BYTES } from '$lib/feedback/limits';
-import { readFileSync } from 'node:fs';
+import { createReadStream } from 'node:fs';
+import { Readable } from 'node:stream';
 import { error, json } from '@sveltejs/kit';
 import { liveSnapshot } from '$lib/server/live/snapshots';
 import { openFeedbackDb, feedbackState, applyOperations, submitFeedback, agentFeedback } from '$lib/server/live/feedback';
@@ -14,7 +15,7 @@ export const GET: RequestHandler = ({params,url,request}) => {
   if (url.searchParams.has('file')) {
    const index=Number(url.searchParams.get('file'));
    if(!Number.isInteger(index)||index<0||index>=snapshot.files.length) throw error(404,'File not found');
-   const file=snapshot.files[index];return new Response(readFileSync(file.snapshotPath),{headers:{...headers,'content-type':'application/octet-stream','content-disposition':`attachment; filename*=UTF-8''${encodeURIComponent(file.filename)}`}});
+   const file=snapshot.files[index];return new Response(Readable.toWeb(createReadStream(file.snapshotPath)) as ReadableStream<Uint8Array>,{headers:{...headers,'content-type':'application/octet-stream','content-disposition':`attachment; filename*=UTF-8''${encodeURIComponent(file.filename)}`}});
   }
   if (url.searchParams.has('preview')) {
    const row=db.prepare('SELECT preview FROM live_annotations WHERE review=? AND id=?').get(snapshot.id,url.searchParams.get('preview')!) as {preview:Uint8Array}|undefined;

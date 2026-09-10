@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, realpathSync, statSync, writeFileSync, existsSync, renameSync } from 'node:fs';
+import { mkdirSync, readFileSync, realpathSync, statSync, writeFileSync, existsSync, renameSync, copyFileSync, chmodSync, openSync, readSync, closeSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
 /** @param {string | Uint8Array} value */
@@ -16,16 +16,22 @@ export function freezeReview(id,sources) {
   const resolved=realpathSync(source);
   if(!resolved.startsWith(home+path.sep)&&!resolved.startsWith('/tmp/'))throw new Error('File is not publishable');
   const stat=statSync(resolved);total+=stat.size;
-  if(!stat.isFile()||stat.size>50*1024*1024||total>200*1024*1024)throw new Error('Review is too large');
+  const video=['.mp4','.mov','.webm'].includes(path.extname(resolved).toLowerCase());
+  if(!stat.isFile()||stat.size>(video?500:50)*1024*1024||total>(video&&sources.length===1?500:200)*1024*1024)throw new Error('Review is too large');
   const ext=path.extname(resolved).toLowerCase();
-  if(!['.png','.jpg','.jpeg','.webp','.gif','.svg','.bmp','.avif','.pdf','.docx','.doc','.pptx','.ppt','.xlsx','.xls','.csv','.md','.html','.htm'].includes(ext))throw new Error('Unsupported review file');
+  if(!['.png','.jpg','.jpeg','.webp','.gif','.svg','.bmp','.avif','.pdf','.docx','.doc','.pptx','.ppt','.xlsx','.xls','.csv','.md','.html','.htm','.mp4','.mov','.webm'].includes(ext))throw new Error('Unsupported review file');
   if (['.html','.htm'].includes(ext) && stat.size>5*1024*1024) throw new Error('HTML file exceeds 5 MiB');
-  const bytes=readFileSync(resolved),hash=digest(bytes),filename=path.basename(resolved);
-  const snapshotPath=path.join(directory,String(index),filename);mkdirSync(path.dirname(snapshotPath),{recursive:true});writeFileSync(snapshotPath,bytes,{mode:0o600});
-  return {filename,hash,size:bytes.length,snapshotPath};
+  const filename=path.basename(resolved),snapshotPath=path.join(directory,String(index),filename);
+  mkdirSync(path.dirname(snapshotPath),{recursive:true});
+  copyFileSync(resolved,snapshotPath);chmodSync(snapshotPath,0o600);
+  const hashState=createHash('sha256'),buffer=Buffer.alloc(1024*1024),fd=openSync(snapshotPath,'r');
+  let size=0;
+  try { let count;while((count=readSync(fd,buffer,0,buffer.length,null))>0){hashState.update(buffer.subarray(0,count));size+=count;} } finally {closeSync(fd);}
+  if(size>(video?500:50)*1024*1024)throw new Error('Review is too large');
+  return {filename,hash:hashState.digest('hex'),size,snapshotPath};
  });
  const ext=path.extname(files[0].filename).toLowerCase();
- const kind=ext==='.pdf'?'pdf':['.doc','.docx'].includes(ext)?'word':['.ppt','.pptx'].includes(ext)?'ppt':['.xlsx','.xls','.csv'].includes(ext)?'excel':ext==='.md'?'markdown':['.html','.htm'].includes(ext)?'html':'image';
+ const kind=['.mp4','.mov','.webm'].includes(ext)?'video':ext==='.pdf'?'pdf':['.doc','.docx'].includes(ext)?'word':['.ppt','.pptx'].includes(ext)?'ppt':['.xlsx','.xls','.csv'].includes(ext)?'excel':ext==='.md'?'markdown':['.html','.htm'].includes(ext)?'html':'image';
  if(files.length>1&&kind!=='image')throw new Error('Only image reviews support multiple files');
  const snapshot={id,version:digest(JSON.stringify(files.map(f=>[f.filename,f.hash]))),kind,files};
  writeFileSync(manifest+'.tmp',JSON.stringify(snapshot),{mode:0o600});renameSync(manifest+'.tmp',manifest);return snapshot;

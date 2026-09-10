@@ -1,6 +1,6 @@
 # Live review → agent feedback
 
-Markdown, PDF, Word, PowerPoint, Excel and image reviews save annotations to the server.
+Markdown, HTML, PDF, Word, PowerPoint, Excel, video and image reviews save annotations to the server.
 The existing review URL is a bearer capability: anyone holding it can read,
 add, delete or submit feedback. Keep it with the intended reviewers and agent.
 No login or separate per-reviewer permissions are introduced in this version.
@@ -119,3 +119,12 @@ review feedback "<review URL>" --wait --json --out ./paste-feedback
 ```
 
 No system clipboard access, terminal bridge, agent restart or conversation parsing is required.
+
+## Video anchors
+
+Video comments use `anchor.type: "video"` and a `locations` array that can mix points and ranges. `frameIndexBase` is 0, `timeUnit` is `seconds`, and times follow the media playback timeline. `sourceStartTime` gives the source timestamp offset. These are positions in the immutable reviewed export, not the editing project's frame numbers. The server derives timestamps from its actual-frame index, including variable frame rates.
+
+- Point: `{ "type": "point", "frameIndex": 11, "time": 0.366667 }`.
+- Range: `{ "type": "range", "startFrameIndex": 10, "endFrameIndex": 21, "startTime": 0.333333, "endTimeExclusive": 0.733333, "frameEndpoints": "inclusive" }`.
+
+Video feedback has `preview: false`, `previewUrl: null`, and `previewError: null`: screenshots are intentionally absent. The original video remains available through the file URL and `--out` streams it to disk. The page serves byte ranges through `/live/<token>/video`; `?index=1` reports indexing progress or the completed frame index. The index is stored next to the immutable video as a `.frames-v1.json` sidecar. Production indexing needs `ffprobe`; the video integration test also uses `ffmpeg` to generate a small variable-frame-rate fixture.

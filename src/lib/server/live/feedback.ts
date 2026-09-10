@@ -1,3 +1,5 @@
+import { readVideoIndex } from './video';
+import { frameEnd, type VideoLocation } from '$lib/video/model';
 import { MAX_PREVIEW_BYTES } from '$lib/feedback/limits';
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
@@ -58,6 +60,7 @@ export function applyOperations(db: DatabaseSync,snapshot: Snapshot,version: str
    if (db.prepare('SELECT 1 FROM live_operations WHERE review=? AND id=?').get(snapshot.id,op.operationId)) continue;
    if (op.type==='add') {
     validAnnotation(op.annotation!,snapshot.kind);
+    if (snapshot.kind==='video') validateVideoAnnotation(op.annotation!, snapshot);
     if (snapshot.kind==='image' && Number(op.annotation!.imageIndex)>=snapshot.files.length) throw error(400,'Invalid image index');
     db.prepare('INSERT OR IGNORE INTO live_annotations(review,id,version,data,imported,preview_error) VALUES(?,?,?,?,?,?)').run(snapshot.id,op.annotation!.id,version,JSON.stringify(op.annotation),op.imported?1:0,Array.isArray(op.annotation!.strokes)&&!op.imported?'pending':null);
    } else if (op.type==='delete') {
@@ -79,9 +82,29 @@ export function applyOperations(db: DatabaseSync,snapshot: Snapshot,version: str
  } catch(e) {db.exec('ROLLBACK');throw e;}
  return feedbackState(db,snapshot);
 }
+function validateVideoAnnotation(a: Annotation, snapshot: Snapshot) {
+ const index = readVideoIndex(snapshot);
+ if (!index) throw error(409, '视频帧索引尚未完成');
+ if (a.type !== 'video' || !a.body.trim() || !Array.isArray(a.locations) || !a.locations.length || a.locations.length > 200) throw error(400, 'Invalid video annotation');
+ const validFrame = (value: unknown) => Number.isSafeInteger(value) && Number(value) >= 0 && Number(value) < index.timestamps.length;
+ for (const item of a.locations) {
+  if (!item || typeof item !== 'object') throw error(400, 'Invalid video location');
+  if (item.type === 'point') { if (!validFrame(item.frameIndex)) throw error(400, 'Invalid video frame'); }
+  else if (item.type === 'range') { if (!validFrame(item.startFrameIndex) || !validFrame(item.endFrameIndex) || item.startFrameIndex >= item.endFrameIndex) throw error(400, 'Invalid video range'); }
+  else throw error(400, 'Invalid video location');
+ }
+}
 export function annotationAnchor(a: Annotation,snapshot: Snapshot) {
  const fileIndex=snapshot.kind==='image'?Number(a.imageIndex):0;
  const base={filename:snapshot.files[fileIndex]?.filename,version:snapshot.version,fileIndex};
+ if(snapshot.kind==='video') {
+  const index = readVideoIndex(snapshot);
+  if (!index) throw error(409, '视频帧索引不可用');
+  return {...base, type:'video', frameIndexBase:0, timeUnit:'seconds', sourceStartTime:index.sourceStartTime,
+   locations:(a.locations as VideoLocation[]).map(p=>p.type==='point'
+    ? {type:'point',frameIndex:p.frameIndex,time:index.timestamps[p.frameIndex]}
+    : {type:'range',startFrameIndex:p.startFrameIndex,endFrameIndex:p.endFrameIndex,startTime:index.timestamps[p.startFrameIndex],endTimeExclusive:frameEnd(index,p.endFrameIndex),frameEndpoints:'inclusive'})};
+ }
  if(snapshot.kind==='markdown') return {...base,type:'document-text',blockId:a.blockId,startOffset:a.startOffset,endOffset:a.endOffset,selectedText:a.selectedText,prefix:a.prefix,suffix:a.suffix};
  if(a.type==='cell') return {...base,type:'sheet-range',sheet:a.sheetName,range:a.cellRef,value:a.cellValue,formula:a.formula};
  if(a.type==='text') return {...base,type:'document-text',selectedText:a.selectedText,prefix:a.prefix,suffix:a.suffix};
@@ -97,7 +120,7 @@ export function submitFeedback(db: DatabaseSync,snapshot: Snapshot,requestId: st
   if(rows.some(r=>r.preview_error==='pending'))throw error(409,'截图仍在生成，请稍后重试提交');
   const id=rows.length?randomUUID():null;
   if (id) {
-   const comments=rows.map(r=>{const a=JSON.parse(r.data) as Annotation;return {id:a.id,body:a.body,createdAt:a.createdAt,anchor:annotationAnchor(a,snapshot),preview:!!r.preview,previewError:r.preview_error||(!r.preview?'No preview available; inspect the original snapshot and anchor.':null),importedFromLocal:!!r.imported,versionVerified:!r.imported};});
+   const comments=rows.map(r=>{const a=JSON.parse(r.data) as Annotation;return {id:a.id,body:a.body,createdAt:a.createdAt,anchor:annotationAnchor(a,snapshot),preview:!!r.preview,previewError:r.preview_error||(!r.preview && snapshot.kind!=='video'?'No preview available; inspect the original snapshot and anchor.':null),importedFromLocal:!!r.imported,versionVerified:!r.imported};});
    db.prepare('INSERT INTO live_submissions(id,review,version,created_at,comments) VALUES(?,?,?,?,?)').run(id,snapshot.id,snapshot.version,new Date().toISOString(),JSON.stringify(comments));
    for (const r of rows) db.prepare('UPDATE live_annotations SET submitted=? WHERE review=? AND id=?').run(id,snapshot.id,r.id);
   }

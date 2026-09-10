@@ -522,6 +522,18 @@ brush annotations remain available. Relative local assets are not bundled; use a
 self-contained HTML file or absolute resource URLs. External resources remain live
 dependencies.
 
+### Video live reviews
+
+Run `review video.mp4` (or `review video.mp4 --local`) to review one local video up to 500 MiB. MP4 is the primary format; MOV and WebM work when their codecs are supported by the browser. The server requires `ffprobe` on PATH. On first opening, the page builds a cached index of actual video frames and shows its progress; it does not transcode the video.
+
+Click the timeline track to add a point and open the comment panel. Click or drag above the track to move the playhead without adding a point. Further clicks add points to the same comment. Select **范围**, then click again to turn the last point and the new point into an ordered range; the option resets after one use. Points and ranges can share one comment. Drag the playhead to seek without adding a point, or use the frame buttons and **＋ 当前帧** for precise selection. Hold a −10 / −1 / +1 / +10 frame button to repeat after 350 ms; release or move outside to stop.
+
+Pinch outward on the timeline to zoom into a shorter interval; pinch inward to zoom back out. Drag the zoomed timeline to pan, or choose **完整时间轴** to reset. Ticks and annotation positions follow the visible interval, down to a 0.25-second window; pinching and panning never add comments.
+
+Click the time readout to switch between time and frame display. Left/right move one second or one frame; Shift moves ten. Space plays/pauses. In time mode, hold up/down while playing for temporary speed changes, then release to restore the selected speed. Keyboard shortcuts do not interfere with comment input. The play/pause button sits in the bottom-left corner of the video, with fullscreen in the bottom-right corner; playback speed stays beside the time readout below the video. Hold the right half of the video to temporarily speed up, or the left half to slow down, using the same baseline-relative rules as the keyboard. Release or cancel the gesture to restore the selected rate. Mobile comments open in an overlay drawer without resizing the video or shifting the page; its height is capped by the space below the video, preserving timeline access when space permits; the **标注列表** button opens a separate scrollable drawer. Close or swipe down to dismiss the composer without losing its draft.
+
+Save comments, then choose **提交给 AI**. `review feedback --json` returns the immutable video's identity, comments, zero-based frame indices and timestamps. Ranges include both endpoint frames and supply a start-inclusive/end-exclusive time interval. No screenshots are generated and no editing or AI execution starts automatically. See [video review design](docs/video-review-design.md) for the agreed interaction rules.
+
 ### Planned Markdown rendering improvements
 
 See the [Markdown rendering roadmap](docs/markdown-rendering-roadmap.md) for

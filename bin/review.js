@@ -22,6 +22,8 @@ const WORD_EXTENSIONS = new Set(['.docx', '.doc']);
 const PPT_EXTENSIONS = new Set(['.pptx', '.ppt']);
 const EXCEL_EXTENSIONS = new Set(['.xlsx', '.xls', '.csv']);
 
+function isVideoFile(filePath) { return ['.mp4', '.mov', '.webm'].includes(path.extname(filePath).toLowerCase()); }
+
 function isImageFile(filePath) {
 	return IMAGE_EXTENSIONS.has(path.extname(filePath).toLowerCase());
 }
@@ -141,7 +143,9 @@ function main(rawFiles) {
 		if (!stats.isFile()) {
 			throw new Error(`Not a regular file: ${file}`);
 		}
-		if (isImageFile(file)) {
+		if (isVideoFile(file)) {
+   if (stats.size > 500 * 1024 * 1024) throw new Error(`Video file must be no larger than 500 MiB: ${file}`);
+  } else if (isImageFile(file)) {
 			if (stats.size > MAX_IMAGE_BYTES) throw new Error(`Image must be no larger than 5 MiB: ${file}`);
 		} else if (isHtmlFile(file)) {
    if (stats.size > MAX_MARKDOWN_BYTES) throw new Error(`HTML file must be no larger than 5 MiB: ${file}`);
@@ -160,6 +164,7 @@ function main(rawFiles) {
 		}
 	}
 
+	const isVideoMode = files.length === 1 && isVideoFile(files[0]);
 	const allImagesMode = files.every(isImageFile);
 	const isHtmlMode = files.length === 1 && isHtmlFile(files[0]);
 	const isMarkdownMode = files.length === 1 && isMarkdownFile(files[0]);
@@ -168,8 +173,8 @@ function main(rawFiles) {
 	const isPptMode = files.length === 1 && isPptFile(files[0]);
 	const isExcelMode = files.length === 1 && isExcelFile(files[0]);
 
-	if (!allImagesMode && !isHtmlMode && !isMarkdownMode && !isPdfMode && !isWordMode && !isPptMode && !isExcelMode) {
-		throw new Error('Only HTML, Markdown, PDF, Word, PowerPoint, Excel, or Image files are supported');
+	if (!isVideoMode && !allImagesMode && !isHtmlMode && !isMarkdownMode && !isPdfMode && !isWordMode && !isPptMode && !isExcelMode) {
+		throw new Error('Only video (MP4/MOV/WebM), HTML, Markdown, PDF, Word, PowerPoint, Excel, or Image files are supported');
 	}
 
 	const payload = files.length === 1 ? files[0] : JSON.stringify(files);
@@ -188,7 +193,7 @@ function main(rawFiles) {
 
 try {
  if (['--help','-h'].includes(process.argv[2]) || (process.argv[2] === 'paste' && ['--help','-h'].includes(process.argv[3]))) {
-  console.log('Usage: review <file-or-directory> [--long] [--local]\n       review paste [--long] [--local]\n       review --clipboard [--long] [--local]\n       review feedback [url-or-id] [--json] [--wait] [--after <cursor>] [--timeout <seconds>] [--out <new-directory>]\n\nFiles: HTML (.html/.htm), Markdown, PDF, Word, PowerPoint, Excel, or images.\n\nPaste: paste text in a terminal, press Enter then Ctrl+D to publish; Ctrl+C cancels.\n       Or pipe UTF-8 text: cat response.md | review paste');
+  console.log('Usage: review <file-or-directory> [--long] [--local]\n       review paste [--long] [--local]\n       review --clipboard [--long] [--local]\n       review feedback [url-or-id] [--json] [--wait] [--after <cursor>] [--timeout <seconds>] [--out <new-directory>]\n\nFiles: Video (.mp4/.mov/.webm, up to 500 MiB), HTML (.html/.htm), Markdown, PDF, Word, PowerPoint, Excel, or images.\n\nPaste: paste text in a terminal, press Enter then Ctrl+D to publish; Ctrl+C cancels.\n       Or pipe UTF-8 text: cat response.md | review paste');
  } else if (process.argv[2] === 'feedback') {
   const { runFeedback } = await import('./feedback.js');
   await runFeedback(process.argv.slice(3));

@@ -1,3 +1,5 @@
+import { createWriteStream } from 'node:fs';
+import { pipeline } from 'node:stream/promises';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { latestReview } from './latest-review.js';
@@ -40,8 +42,9 @@ export async function runFeedback(args) {
   for(const resource of resources){
    if(downloaded.has(resource.name))continue;downloaded.add(resource.name);
    const url=new URL(resource.url);if(url.origin!==endpoint.origin||url.pathname!==endpoint.pathname)throw new Error('Unexpected attachment URL');
-   const response=await fetch(url,{signal:AbortSignal.timeout(30000)});if(!response.ok)throw new Error(`Attachment download failed (HTTP ${response.status})`);
-   await writeFile(path.join(out,resource.name),Buffer.from(await response.arrayBuffer()),{flag:'wx'});resource.localPath=path.join(out,resource.name);
+   const response=await fetch(url,{signal:AbortSignal.timeout(600000)});if(!response.ok)throw new Error(`Attachment download failed (HTTP ${response.status})`);
+   if(!response.body)throw new Error('Empty attachment response');
+   await pipeline(response.body,createWriteStream(path.join(out,resource.name),{flags:'wx'}));resource.localPath=path.join(out,resource.name);
   }
   result.downloads=resources;await writeFile(path.join(out,'feedback.json'),JSON.stringify(result,null,2),{flag:'wx'});
  }
