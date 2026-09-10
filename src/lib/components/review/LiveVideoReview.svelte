@@ -8,6 +8,7 @@
  let video: HTMLVideoElement;
  let timeline: HTMLDivElement;
  let screen: HTMLDivElement;
+ let desktopListVisible = $state(true);
  let mobile = $state(false), drawer = $state<'composer' | 'list' | null>(null);
  let fullscreen = $state(false), fallbackFullscreen = $state(false), showControls = $state(true);
  let holdDirection = $state<'up' | 'down' | null>(null);
@@ -128,7 +129,7 @@
   if (!video.paused) controlsTimer = setTimeout(() => { showControls = false; }, 1800);
  }
  function toggleScale() { scale = scale === 'time' ? 'frame' : 'time'; restoreRate(); }
- function openList() { endHold(); if (mobile) drawer = 'list'; else document.querySelector('.comments')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+ function openList() { endHold(); if (mobile) drawer = 'list'; else desktopListVisible = !desktopListVisible; }
  function closeDrawer() { drawer = null; }
  function recall(p: VideoLocation) { seekFrame(locationStart(p)); if (mobile && drawer === 'list') closeDrawer(); }
  function startHold(event: PointerEvent) {
@@ -253,7 +254,7 @@
  </div>
 </header>
 {#if feedback.context.error}<div class="error" role="alert">{feedback.context.error}<button onclick={() => feedback.context.retry()}>重试同步</button></div>{/if}
-<main>
+<main class:wide={!mobile && !desktopListVisible && !composing}>
  <section class="workspace" aria-label="视频与时间轴">
   <div class="screen" class:fullscreen={fallbackFullscreen} bind:this={screen}>
    <!-- Video is the reviewed artifact; its audio is preserved without an invented caption track. -->
@@ -288,10 +289,10 @@
    <button class="add" disabled={!ready || (locations.length >= 200 && !range)} onclick={() => addFrame(frame)}>＋ 当前帧</button>
    <button use:repeatFrame={1} disabled={!ready} onclick={() => seekFrame(frame + 1)} aria-label="下一帧">+1 帧</button><button use:repeatFrame={10} disabled={!ready} onclick={() => seekFrame(frame + 10)} aria-label="前进十帧">+10 帧</button>
   </div>
-  <div class="annotation-actions"><button class="list-button" onclick={openList} aria-haspopup="dialog" aria-expanded={drawer === 'list'}>标注列表{#if annotations.length}<span class="list-count">{annotations.length}</span>{/if}</button>{#if composing && drawer !== 'composer'}<button onclick={() => { drawer = 'composer'; }}>继续评论</button>{/if}{#if zoomed}<button onclick={resetTimeline}>完整时间轴</button>{:else}<span class="gesture-hint">长按画面左侧减速 · 右侧加速</span>{/if}</div>
+  <div class="annotation-actions"><button class="list-button" onclick={openList} aria-haspopup={mobile ? 'dialog' : undefined} aria-expanded={mobile ? drawer === 'list' : desktopListVisible}>标注列表{#if annotations.length}<span class="list-count">{annotations.length}</span>{/if}</button>{#if composing && drawer !== 'composer'}<button onclick={() => { drawer = 'composer'; }}>继续评论</button>{/if}{#if zoomed}<button onclick={resetTimeline}>完整时间轴</button>{:else}<span class="gesture-hint">长按画面左侧减速 · 右侧加速</span>{/if}</div>
   <div class="hints"><span>{activeRate !== baseRate ? `临时 ${activeRate}× · 松开恢复 ${baseRate}×` : '空格播放 · ← → 定位 · Shift 移动十倍'}</span><details><summary>快捷键</summary><p>帧数刻度：← → 移动一帧，Shift + ← → 移动十帧。时间刻度：移动一秒 / 十秒；播放时按住 ↑ ↓ 临时变速，松开恢复。输入评论时不触发快捷键。</p></details></div>
  </section>
- {#if !mobile}<aside aria-label="视频评论">{#if composing}{@render composerPanel()}{/if}{@render commentsPanel()}</aside>{/if}
+ {#if !mobile && (desktopListVisible || composing)}<aside aria-label="视频评论">{#if composing}{@render composerPanel()}{/if}{#if desktopListVisible}{@render commentsPanel()}{/if}</aside>{/if}
 </main>
 {#snippet composerPanel()}
   <section class="composer" aria-label="添加视频评论">
@@ -332,6 +333,7 @@
  .timeline-tick>span { position:absolute; bottom:26px; transform:translateX(-50%); font-size:10px; color:#77776f; font-variant-numeric:tabular-nums; white-space:nowrap; }
  .timeline-labels { display:flex; justify-content:space-between; gap:6px; color:#77776f; font-size:11px; margin:0 4px 12px; font-variant-numeric:tabular-nums; }.step-controls { display:flex; gap:6px; }.step-controls button { flex:1; padding:0 6px; white-space:nowrap; }.step-controls .add { flex:1.6; color:#1d4ed8; border-color:#b6c9f5; background:#edf3ff; }
  .hints { display:flex; justify-content:space-between; gap:12px; font-size:12px; color:#77776f; margin:12px 0; }.hints details { max-width:320px; }.hints summary { cursor:pointer; }.hints p { line-height:1.6; }.index-progress { display:grid; gap:8px; font-size:13px; padding:12px; }progress { width:100%; height:5px; accent-color:#2563eb; }
+ main.wide { grid-template-columns:minmax(0,1fr); }
  aside { min-width:0; }.composer,.comments { background:#fffffd; border:1px solid #deded8; border-radius:14px; padding:16px; margin-bottom:16px; }.composer-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px; }h2 { font-size:15px; margin:0; }h2>span { color:#77776f; margin-left:8px; font-weight:400; }.chips { display:flex; flex-wrap:wrap; gap:7px; }.chip { display:inline-flex; max-width:100%; border:1px solid #b6c9f5; border-radius:9px; overflow:hidden; background:#edf3ff; }.chip button { border:0; border-radius:0; background:transparent; color:#1d4ed8; font-size:12px; padding:0 8px; font-variant-numeric:tabular-nums; }.chip button:last-child { padding:0 12px; font-size:18px; }.composer textarea { display:block; width:100%; resize:vertical; min-height:100px; margin:14px 0; border:1px solid #d5d5ce; border-radius:10px; padding:12px; font:inherit; font-size:16px; }.composer textarea:focus { outline:2px solid #93c5fd; border-color:#2563eb; }.composer-actions { display:flex; justify-content:flex-end; gap:8px; }.range-hint { font-size:12px; color:#1d4ed8; line-height:1.6; }.empty { padding:32px 0 16px; font-size:14px; }.empty p { color:#77776f; line-height:1.7; }.comments article { padding:16px 0; border-bottom:1px solid #e8e8e2; }.comments article:last-child { border-bottom:0; padding-bottom:0; }.comments article p { white-space:pre-wrap; overflow-wrap:anywhere; font-size:14px; line-height:1.6; }.saved-chip { min-height:36px; font-size:12px; padding:0 8px; background:#f5f5f2; }.delete { min-height:36px; border:0; font-size:12px; color:#77776f; background:transparent; }.error { padding:12px 18px; color:#9f1239; background:#fff1f2; display:flex; align-items:center; gap:12px; font-size:14px; }.sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
  @media(max-width:900px) { main { grid-template-columns:minmax(0,1fr); max-width:780px; padding:14px; gap:12px; } video { height:auto; max-height:40svh; }.hints { display:none; }.comments,.composer { margin-bottom:12px; } }
  @media(max-width:480px) { header { padding-inline:10px; gap:6px; }.title strong { font-size:14px; }.title>span,.sync { display:none; }.submit { padding:0 9px; font-size:13px; gap:5px; }main { padding:10px; }.screen { border-radius:10px; min-height:120px; }.transport { gap:5px; }.position { font-size:10px; }select { font-size:12px; min-width:0; }.select-label select { padding:0 4px; }.play { min-width:38px; padding:0 9px; }.step-controls button { font-size:12px; }.timeline-labels { font-size:10px; }.composer { padding:12px; }.composer textarea { min-height:80px; }.composer-actions { padding-bottom:env(safe-area-inset-bottom); } }
