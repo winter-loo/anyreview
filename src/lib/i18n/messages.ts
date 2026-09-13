@@ -1,10 +1,10 @@
 export const messages = {
 	en: {
-		'app.title': 'LTSQL Review Platform',
+		'app.title': 'ReviewLoop',
 		'nav.reviews': 'Reviews',
-		'home.eyebrow': 'LTSQL local review',
+		'home.eyebrow': 'Local review',
 		'home.title': 'Publish local worktree diffs without pushing shared mainline.',
-		'home.description': 'Create safe, durable, browser-readable review snapshots from local LTSQL worktrees, commits, or ranges. Review comments are persisted separately from source worktrees.',
+		'home.description': 'Create safe, durable, browser-readable review snapshots from local worktrees, commits, or ranges. Review comments are persisted separately from source worktrees.',
 		'home.openReviews': 'Open reviews',
 		'reviews.pageTitle': 'Reviews',
 		'reviews.eyebrow': 'Review Platform',
@@ -51,11 +51,11 @@ export const messages = {
 		'error.lineEndInvalid': 'lineEnd must be greater than or equal to lineStart.'
 	},
 	'zh-CN': {
-		'app.title': 'LTSQL 评审平台',
+		'app.title': 'ReviewLoop',
 		'nav.reviews': '评审',
-		'home.eyebrow': 'LTSQL 本地评审',
+		'home.eyebrow': '本地评审',
 		'home.title': '发布本地 worktree diff，无需推送到共享主线。',
-		'home.description': '从本地 LTSQL worktree、commit 或 range 创建安全、持久、浏览器可读的评审快照。评审评论会和源码 worktree 分开保存。',
+		'home.description': '从本地 worktree、commit 或 range 创建安全、持久、浏览器可读的评审快照。评审评论会和源码 worktree 分开保存。',
 		'home.openReviews': '打开评审',
 		'reviews.pageTitle': '评审',
 		'reviews.eyebrow': '评审平台',

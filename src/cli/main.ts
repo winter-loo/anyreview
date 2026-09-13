@@ -36,7 +36,7 @@ function stringFlag(flags: Map<string, string | boolean>, name: string) {
 }
 
 function usage() {
-	return `reviewctl (ltsql-review compatible alias)
+	return `reviewctl
 
 Commands:
   publish --repo <git-root> [--type worktree|staged] [--range <range>] [--show <ref>] --title <title> [--discord-channel <id>] [--discord-thread <id>] [--executor-mention <mention>]

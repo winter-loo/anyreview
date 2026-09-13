@@ -6,18 +6,18 @@ script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 default_ip=$(hostname -I 2>/dev/null | awk '{print $1}')
 default_ip=${default_ip:-127.0.0.1}
 
-export LTSQL_REVIEW_HOME="${LTSQL_REVIEW_HOME:-/data/ludd50155/.ltsql-review}"
+export REVIEW_PLATFORM_HOME="${REVIEW_PLATFORM_HOME:-$HOME/.review-platform}"
 export HOST="${HOST:-0.0.0.0}"
 export PORT="${PORT:-2067}"
-export LTSQL_REVIEW_BASE_URL="${LTSQL_REVIEW_BASE_URL:-http://${default_ip}:${PORT}}"
+export REVIEW_PLATFORM_BASE_URL="${REVIEW_PLATFORM_BASE_URL:-http://${default_ip}:${PORT}}"
 
-mkdir -p "$LTSQL_REVIEW_HOME"
+mkdir -p "$REVIEW_PLATFORM_HOME"
 
 cat <<INFO
-Starting LTSQL Review Platform
+Starting ReviewLoop
   app:  $script_dir
-  home: $LTSQL_REVIEW_HOME
-  url:  $LTSQL_REVIEW_BASE_URL
+  home: $REVIEW_PLATFORM_HOME
+  url:  $REVIEW_PLATFORM_BASE_URL
   bind: $HOST:$PORT
 INFO
 

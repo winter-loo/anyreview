@@ -34,7 +34,7 @@ if (globalBin.error || globalBin.status !== 0) {
 
 const binDir = globalBin.stdout.trim();
 const suffixes = process.platform === 'win32' ? ['.cmd', '.ps1', '.exe', ''] : [''];
-const commands = ['review', 'reviewctl', 'ltsql-review'];
+const commands = ['review', 'reviewctl'];
 const missing = commands.filter((command) => !suffixes.some((suffix) => existsSync(resolve(binDir, `${command}${suffix}`))));
 
 if (missing.length > 0) {

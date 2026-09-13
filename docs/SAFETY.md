@@ -1,6 +1,6 @@
 # Safety Rules
 
-This platform is a read-only review publishing layer for LTSQL local worktrees.
+This platform is a read-only publishing layer for local worktree reviews.
 
 ## Hard boundaries
 
@@ -17,7 +17,6 @@ This platform is a read-only review publishing layer for LTSQL local worktrees.
 - Resolve a Git root from an explicitly selected repo/cwd.
 - Read `git rev-parse` metadata.
 - Read `git diff` / `git show` output.
-- Import Hunk live notes via `ltsql-hunk session comment list`.
 
 ## Disallowed source interaction in MVP
 

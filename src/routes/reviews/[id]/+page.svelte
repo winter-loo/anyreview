@@ -837,7 +837,7 @@
 		</div>
 		{#if agentTriggerMessage}<p class="success compact-status">{agentTriggerMessage}</p>{/if}
 		{#if agentTriggerError}<p class="error compact-status">{agentTriggerError}</p>{/if}
-		<p class="comment-filter-note">Use <strong>+</strong> for a single-line comment, or press and drag <strong>+</strong> across diff lines before releasing to choose a line range. Comments are anchored by path, side, and line range, and exported by <code>ltsql-review comments --review {data.review.id} --json</code>.</p>
+		<p class="comment-filter-note">Use <strong>+</strong> for a single-line comment, or press and drag <strong>+</strong> across diff lines before releasing to choose a line range. Comments are anchored by path, side, and line range, and exported by <code>reviewctl comments --review {data.review.id} --json</code>.</p>
 		{#if comments.length === 0}
 			<p class="empty-comment">No inline comments yet.</p>
 		{:else}

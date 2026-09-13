@@ -6,7 +6,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 function createRepo() {
-	const repo = mkdtempSync(path.join(os.tmpdir(), 'ltsql-review-cli-repo-'));
+	const repo = mkdtempSync(path.join(os.tmpdir(), 'reviewloop-cli-repo-'));
 	execFileSync('git', ['init'], { cwd: repo });
 	execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd: repo });
 	execFileSync('git', ['config', 'user.name', 'Test User'], { cwd: repo });
@@ -17,11 +17,11 @@ function createRepo() {
 	return repo;
 }
 
-describe('ltsql-review CLI', () => {
+describe('reviewctl CLI', () => {
 	it('publishes and lists a worktree review', () => {
 		const repo = createRepo();
-		const home = mkdtempSync(path.join(os.tmpdir(), 'ltsql-review-cli-home-'));
-		const env = { ...process.env, LTSQL_REVIEW_HOME: home };
+		const home = mkdtempSync(path.join(os.tmpdir(), 'reviewloop-cli-home-'));
+		const env = { ...process.env, REVIEW_PLATFORM_HOME: home };
 
 		const publishOutput = execFileSync(
 			'node',
@@ -43,8 +43,8 @@ describe('ltsql-review CLI', () => {
 
 	it('adds and exports review comments in agent-friendly JSON', () => {
 		const repo = createRepo();
-		const home = mkdtempSync(path.join(os.tmpdir(), 'ltsql-review-cli-home-'));
-		const env = { ...process.env, LTSQL_REVIEW_HOME: home };
+		const home = mkdtempSync(path.join(os.tmpdir(), 'reviewloop-cli-home-'));
+		const env = { ...process.env, REVIEW_PLATFORM_HOME: home };
 		const publishOutput = execFileSync(
 			'node',
 			['--import', 'tsx', 'src/cli/main.ts', 'publish', '--repo', repo, '--type', 'worktree', '--title', 'comment smoke'],
@@ -103,11 +103,11 @@ describe('ltsql-review CLI', () => {
 	});
 
 	it('publishes markdown document reviews and exports line comments in agent-friendly JSON', () => {
-		const docDir = mkdtempSync(path.join(os.tmpdir(), 'ltsql-review-doc-'));
+		const docDir = mkdtempSync(path.join(os.tmpdir(), 'reviewloop-doc-'));
 		const docPath = path.join(docDir, 'design.md');
 		writeFileSync(docPath, '# Design\n\n## Scope\nReview this markdown.\n');
-		const home = mkdtempSync(path.join(os.tmpdir(), 'ltsql-review-cli-home-'));
-		const env = { ...process.env, LTSQL_REVIEW_HOME: home };
+		const home = mkdtempSync(path.join(os.tmpdir(), 'reviewloop-cli-home-'));
+		const env = { ...process.env, REVIEW_PLATFORM_HOME: home };
 
 		const publishOutput = execFileSync(
 			'node',

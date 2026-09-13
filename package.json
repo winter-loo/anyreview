@@ -1,5 +1,5 @@
 {
-	"name": "ltsql-review-platform",
+	"name": "reviewloop",
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
@@ -13,14 +13,12 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"test": "vitest run",
 		"install:global": "node scripts/install-global.mjs",
-		"build:cli": "esbuild src/cli/main.ts --bundle --platform=node --format=esm --target=node24 --outfile=dist-cli/reviewctl.js --banner:js='#!/usr/bin/env node' && chmod +x dist-cli/reviewctl.js && cp dist-cli/reviewctl.js dist-cli/ltsql-review.js",
-		"package:review-platform": "pnpm run check && pnpm test && pnpm run build && pnpm run build:cli && bash scripts/package-ltsql.sh",
-		"package:ltsql": "pnpm run package:review-platform"
+		"build:cli": "node scripts/build-cli.mjs",
+		"package:review-platform": "pnpm run check && pnpm test && pnpm run build && pnpm run build:cli && bash scripts/package-review-platform.sh"
 	},
 	"bin": {
 		"review": "./bin/review.js",
-		"reviewctl": "./bin/ltsql-review.js",
-		"ltsql-review": "./bin/ltsql-review.js"
+		"reviewctl": "./bin/reviewctl.js"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "^5.5.4",

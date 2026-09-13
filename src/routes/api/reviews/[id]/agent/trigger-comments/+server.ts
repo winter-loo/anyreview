@@ -110,7 +110,6 @@ export const POST: RequestHandler = async ({ params }) => {
 	const structuredComments = comments.map((comment) => commentWithAnchor(comment, reviewKind));
 	const payload = {
 		type: 'review.open_comments',
-		legacyType: 'ltsql_review.open_comments',
 		target,
 		message,
 		review: {

@@ -7,7 +7,7 @@ const config = {
 		runes: ({ filename }) => (filename.split(/[/\\]/).includes('node_modules') ? undefined : true)
 	},
 	kit: {
-		// adapter-node builds a plain Node.js server artifact that can be copied to ltsql
+		// adapter-node builds a plain Node.js server artifact for portable deployment
 		// and started without running pnpm install on the target host.
 		adapter: adapter()
 	}

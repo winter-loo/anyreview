@@ -4,8 +4,7 @@ import { firstEnv } from '../config/env';
 
 /** Root directory for durable review DB and artifact snapshots. Works in both SvelteKit and CLI contexts. */
 export function reviewHome() {
-	// Prefer the generic platform variable; keep LTSQL_REVIEW_HOME as a compatibility alias for existing deployments.
-	return firstEnv(['REVIEW_PLATFORM_HOME', 'LTSQL_REVIEW_HOME'], path.join(os.homedir(), '.review-platform'))!;
+	return firstEnv(['REVIEW_PLATFORM_HOME'], path.join(os.homedir(), '.review-platform'))!;
 }
 
 /** Directory containing immutable per-review/version artifacts. */

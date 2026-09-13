@@ -7,7 +7,7 @@ export default defineConfig({
 		allowedHosts: ['.ts.net']
 	},
 	ssr: {
-		// Bundle markdown-it into the portable ltsql tarball; the remote host does not run pnpm install.
+		// Bundle markdown-it into the portable ReviewLoop tarball; the remote host does not run pnpm install.
 		noExternal: ['markdown-it']
 	}
 });

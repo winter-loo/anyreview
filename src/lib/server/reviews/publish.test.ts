@@ -7,7 +7,7 @@ import { createReviewStore } from '../storage/db';
 import { publishReview } from './publish';
 
 function createGitRepo() {
-	const repo = mkdtempSync(path.join(os.tmpdir(), 'ltsql-review-repo-'));
+	const repo = mkdtempSync(path.join(os.tmpdir(), 'reviewloop-repo-'));
 	execFileSync('git', ['init'], { cwd: repo });
 	execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd: repo });
 	execFileSync('git', ['config', 'user.name', 'Test User'], { cwd: repo });
@@ -30,7 +30,7 @@ function commit(repo: string, filePath: string, content: string, message: string
 describe('publishReview', () => {
 	it('creates a durable worktree review snapshot without mutating the repo', async () => {
 		const repo = createGitRepo();
-		const home = mkdtempSync(path.join(os.tmpdir(), 'ltsql-review-home-'));
+		const home = mkdtempSync(path.join(os.tmpdir(), 'reviewloop-home-'));
 		mkdirSync(home, { recursive: true });
 		const store = createReviewStore(home);
 		const beforeStatus = execFileSync('git', ['status', '--short'], { cwd: repo }).toString();
@@ -78,7 +78,7 @@ describe('publishReview', () => {
 			'任务编号:T202604226103\n\n修改说明:统一SQL commit list should show this full body without truncating the sidebar context.'
 		);
 		const second = commit(repo, 'b.txt', 'bee\n', 'add b file');
-		const home = mkdtempSync(path.join(os.tmpdir(), 'ltsql-review-home-'));
+		const home = mkdtempSync(path.join(os.tmpdir(), 'reviewloop-home-'));
 		mkdirSync(home, { recursive: true });
 		const store = createReviewStore(home);
 

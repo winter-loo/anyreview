@@ -23,7 +23,6 @@ ReviewLoop provides that control point:
 - **Durable artifacts**: every review version stores a snapshot under the review home, including legacy files and a generic `manifest.json`.
 - **Generic review model**: code diffs and documents share the same review/comment infrastructure.
 - **Agent-readable comments**: comments are persisted once and exposed consistently through browser UI, HTTP API, and CLI JSON.
-- **Compatible migration path**: `reviewctl` is the primary CLI, while the older `ltsql-review` alias and `LTSQL_REVIEW_*` environment variables remain supported for existing deployments.
 
 ## What it can review
 
@@ -65,7 +64,6 @@ Publish a Markdown document as a review artifact with stable line anchors. Docum
 A review can include a Discord target when it is published. When humans add comments, the server can send the open comments to a configured Gateway endpoint. The payload includes:
 
 - `type: "review.open_comments"`;
-- `legacyType: "ltsql_review.open_comments"` for compatibility;
 - review metadata;
 - target channel/thread metadata;
 - structured comments with generic anchors such as `diff-line` or `document-line`.
@@ -73,7 +71,7 @@ A review can include a Discord target when it is published. When humans add comm
 ## Architecture
 
 ```text
-reviewctl / ltsql-review CLI
+reviewctl CLI
         │
         ├── publish Git diff snapshots
         ├── publish Markdown document snapshots
@@ -119,7 +117,7 @@ Register the CLI commands globally from this checkout:
 pnpm run install:global
 ```
 
-This creates `review`, `reviewctl`, and `ltsql-review` in pnpm's global bin directory. Run the command again after moving the checkout to a different path.
+This creates `review` and `reviewctl` in pnpm's global bin directory. Run the command again after moving the checkout to a different path.
 
 Build the CLI entry points:
 
@@ -130,8 +128,7 @@ pnpm run build:cli
 This creates:
 
 ```text
-dist-cli/reviewctl.js      # primary CLI
-dist-cli/ltsql-review.js   # compatibility alias
+dist-cli/reviewctl.js
 ```
 
 ### Legacy Word and PowerPoint previews
@@ -199,21 +196,6 @@ export REVIEW_PLATFORM_HERMES_GATEWAY_NOTIFY_URL="..."
 export REVIEW_PLATFORM_HERMES_GATEWAY_TOKEN="..."
 ```
 
-Compatibility aliases still work for older deployments:
-
-```bash
-export LTSQL_REVIEW_HOME="/path/to/review-home"
-export LTSQL_REVIEW_BASE_URL="http://localhost:5173"
-export LTSQL_REVIEW_PUBLIC_URL="http://localhost:5173"
-export LTSQL_REVIEW_DISCORD_CHANNEL_ID="..."
-export LTSQL_REVIEW_DISCORD_THREAD_ID="..."
-export LTSQL_REVIEW_EXECUTOR_MENTION="..."
-export LTSQL_REVIEW_HERMES_GATEWAY_NOTIFY_URL="..."
-export LTSQL_REVIEW_HERMES_GATEWAY_TOKEN="..."
-```
-
-Generic `REVIEW_PLATFORM_*` variables take precedence over `LTSQL_REVIEW_*` compatibility variables.
-
 ## Start the Web UI
 
 Development mode:
@@ -248,12 +230,6 @@ Show help:
 
 ```bash
 node dist-cli/reviewctl.js --help
-```
-
-The compatibility alias is equivalent:
-
-```bash
-node dist-cli/ltsql-review.js --help
 ```
 
 ### Publish a worktree review
@@ -428,19 +404,11 @@ Full package gate:
 pnpm run package:review-platform
 ```
 
-Compatibility package command:
-
-```bash
-pnpm run package:ltsql
-```
-
 The current portable tarball path is:
 
 ```text
-dist/ltsql-review-platform.tar.gz
+dist/review-platform.tar.gz
 ```
-
-The tarball name and some scripts still keep the historical LTSQL naming for deployment compatibility. The application, CLI, storage model, and environment variables are moving toward the generic ReviewLoop/Review Platform model.
 
 ## Deployment notes
 
@@ -448,28 +416,17 @@ Detailed deployment records:
 
 - [deeloo.cn ReviewLoop deployment for the cash-in-system research document](./docs/deployments/deeloo-cn-cash-in-system-research.md)
 
-The existing LTSQL deployment path is still supported as a compatibility deployment preset:
+Example portable deployment:
 
 ```bash
-scp dist/ltsql-review-platform.tar.gz \
-  ltsql:/data/ludd50155/tools/ltsql-review-platform.tar.gz
-
-ssh ltsql 'set -e
-cd /data/ludd50155/tools
-backup="ltsql-review-platform.backup.$(date +%Y%m%d%H%M%S)"
-[ -d ltsql-review-platform ] && mv ltsql-review-platform "$backup"
-tar -xzf ltsql-review-platform.tar.gz
-cd ltsql-review-platform
-export REVIEW_PLATFORM_HOME=/data/ludd50155/.review-platform
-export REVIEW_PLATFORM_BASE_URL=http://10.20.30.199:2067
-export REVIEW_PLATFORM_PUBLIC_URL=http://10.20.30.199:2067
+tar -xzf review-platform.tar.gz
+cd review-platform
+export REVIEW_PLATFORM_HOME="$HOME/.review-platform"
+export REVIEW_PLATFORM_BASE_URL=http://127.0.0.1:2067
 export HOST=0.0.0.0
 export PORT=2067
-nohup ./start-ltsql-review.sh > /data/ludd50155/tools/ltsql-review-platform.log 2>&1 &
-'
+nohup ./start-review-platform.sh > review-platform.log 2>&1 &
 ```
-
-Existing deployments may continue using `LTSQL_REVIEW_HOME=/data/ludd50155/.ltsql-review` to keep their old review database and artifacts.
 
 ## Recommended human/agent workflow
 
