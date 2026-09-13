@@ -6,7 +6,7 @@ import { execFileSync } from 'node:child_process';
 const url = process.argv[2];
 if (!url || !/^https?:\/\//.test(url)) throw new Error('Pass a long Markdown review URL');
 const session = `markdown-scroll-${process.pid}`;
-const cli = (...args) => execFileSync('npx', ['--yes', '--package', '@playwright/cli', 'playwright-cli', `-s=${session}`, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+const cli = (...args) => execFileSync('pnpm', ['--package', '@playwright/cli', 'dlx', 'playwright-cli', `-s=${session}`, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 const check = async page => {
  await page.locator('.md-content').first().waitFor();
  for (const viewport of [{ width: 1280, height: 720 }, { width: 390, height: 844 }]) {

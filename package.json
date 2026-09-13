@@ -3,21 +3,23 @@
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
+	"packageManager": "pnpm@11.15.1",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
-		"prepare": "svelte-kit sync || echo ''",
+		"prepare": "svelte-kit sync",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"test": "vitest run",
+		"install:global": "node scripts/install-global.mjs",
 		"build:cli": "esbuild src/cli/main.ts --bundle --platform=node --format=esm --target=node24 --outfile=dist-cli/reviewctl.js --banner:js='#!/usr/bin/env node' && chmod +x dist-cli/reviewctl.js && cp dist-cli/reviewctl.js dist-cli/ltsql-review.js",
-		"package:review-platform": "npm run check && npm test && npm run build && npm run build:cli && bash scripts/package-ltsql.sh",
-		"package:ltsql": "npm run package:review-platform"
+		"package:review-platform": "pnpm run check && pnpm test && pnpm run build && pnpm run build:cli && bash scripts/package-ltsql.sh",
+		"package:ltsql": "pnpm run package:review-platform"
 	},
 	"bin": {
 		"review": "./bin/review.js",
-		"reviewctl": "./bin/reviewctl.js",
+		"reviewctl": "./bin/ltsql-review.js",
 		"ltsql-review": "./bin/ltsql-review.js"
 	},
 	"devDependencies": {
@@ -25,7 +27,9 @@
 		"@sveltejs/kit": "^2.57.0",
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",
 		"@types/markdown-it": "^14.1.2",
+		"@types/node": "^22.20.2",
 		"esbuild": "^0.28.0",
+		"jszip": "^3.10.2",
 		"svelte": "^5.55.2",
 		"svelte-check": "^4.4.6",
 		"tsx": "^4.22.3",

@@ -20,7 +20,9 @@ review /home/ldd/path/document.md --long
 
 默认 URL 前缀为 `https://deeloo.cn/live`，可以通过 `ONLINE_REVIEW_BASE_URL` 更改。更改前缀只改变输出地址，不会自动配置 DNS、HTTPS、反向代理或隧道。
 
-添加 `--local` 可直接访问本机服务，例如 `review document.pdf --local`、`review paste --local`、`review --clipboard --local`。默认前缀为 `http://127.0.0.1:8787/live`（设置 `PORT` 时使用该端口），也可用 `ONLINE_REVIEW_LOCAL_BASE_URL=http://localhost:5173/live` 指定本地服务。此选项不启动服务、不经过隧道；回环地址需要在运行服务的电脑上打开。最新评审记录会保留本地 URL，所以不带参数的 `review feedback` 同样直连本地。
+添加 `--local` 会生成 `http://127.0.0.1:8787/live` 回环地址；添加 `--localnet` 会忽略 TUN 和 WSL 接口并自动查找局域网 IPv4，存在多个地址时列出剩余网卡供选择，脚本可用 `--localnet=<IP>` 指定。两者设置 `PORT` 时使用该端口，否则使用 8787，不再需要配置本地 Base URL。局域网模式要求服务监听 `0.0.0.0`。这些选项不启动服务、不经过隧道；最新评审记录会保留所选 URL，所以不带参数的 `review feedback` 同样直连该地址。
+
+添加 `--tailnet` 会先探测显式 `PORT`、5173 和 8787 上正在运行的 ReviewLoop，再执行 `tailscale funnel --bg --yes <PORT>`，把本机回环服务通过持久化的公网 HTTPS Funnel 暴露，并生成当前节点的 `https://<machine>.<tailnet>.ts.net/live/...` 地址。没有可连接的本地服务时命令直接失败，不会生成 502 链接。Tailscale 必须已连接且允许使用 Funnel；运行 `tailscale funnel reset` 可关闭该持久化入口。
 
 ## 2. 命令如何生成 URL
 
@@ -144,7 +146,7 @@ journalctl --user -u online-review-tunnel.service -n 80 --no-pager
 
 ```bash
 cd /home/ldd/reviewloop
-npm run build && systemctl --user restart online-review.service
+pnpm run build && systemctl --user restart online-review.service
 ```
 
 修改 systemd 单元后需执行 `systemctl --user daemon-reload`。只有隧道需要恢复时才重启它：

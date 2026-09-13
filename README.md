@@ -29,7 +29,9 @@ ReviewLoop provides that control point:
 
 ### Pasted AI responses
 
-Add `--local` to publish a direct local-service URL: `review file.md --local`, `review paste --local`, or `review --clipboard --local`. The default is `http://127.0.0.1:8787/live` (uses `PORT` if set); override it with `ONLINE_REVIEW_LOCAL_BASE_URL`, for example `http://localhost:5173/live`. The service must already be running. The URL opens on the machine running the service, and does not use the public tunnel. Default `review feedback` also remembers this local URL.
+Add `--local` to publish a loopback URL such as `http://127.0.0.1:8787/live`. Add `--localnet` to publish a LAN URL without configuring a base URL; ReviewLoop ignores TUN and WSL interfaces, then uses the only private IPv4 address or lists the remaining interfaces for selection. Scripts can select one with `--localnet=<IP>`. Both modes use `PORT` when set, otherwise port 8787. The service must already be running and must bind to `0.0.0.0` for LAN access. Default `review feedback` remembers the selected URL.
+
+Add `--tailnet` to configure a persistent public HTTPS [Tailscale Funnel](https://tailscale.com/docs/reference/tailscale-cli/funnel) for the local service and publish an `https://<machine>.<tailnet>.ts.net/live/...` URL. Tailscale must be installed, connected, and allowed to use Funnel. ReviewLoop probes the explicit `PORT`, then 5173 and 8787, and refuses to configure Funnel when no local service responds. Use `tailscale funnel reset` to remove the persistent Funnel configuration.
 
 Run `review feedback` without a URL to read submitted comments for the most recently published local review. Use `review feedback --wait` to wait for its feedback, or supply a URL to select a different document. This default applies across working directories on the same machine; a document without submitted feedback returns an empty batch list.
 
@@ -98,7 +100,7 @@ SvelteKit Web UI / HTTP API
 
 ## Requirements
 
-- Node.js 24+ / npm
+- Node.js 24+ / pnpm 11+
 - Git
 - LibreOffice Writer for legacy `.doc` previews and Impress for legacy `.ppt` previews on the server. Native `.docx` and `.pptx` previews do not require LibreOffice.
 - A writable review storage directory
@@ -108,13 +110,21 @@ ReviewLoop uses Node 24's built-in `node:sqlite`, so the packaged server does no
 Install dependencies:
 
 ```bash
-npm install
+pnpm install
 ```
+
+Register the CLI commands globally from this checkout:
+
+```bash
+pnpm run install:global
+```
+
+This creates `review`, `reviewctl`, and `ltsql-review` in pnpm's global bin directory. Run the command again after moving the checkout to a different path.
 
 Build the CLI entry points:
 
 ```bash
-npm run build:cli
+pnpm run build:cli
 ```
 
 This creates:
@@ -209,7 +219,7 @@ Generic `REVIEW_PLATFORM_*` variables take precedence over `LTSQL_REVIEW_*` comp
 Development mode:
 
 ```bash
-npm run dev -- --host 127.0.0.1 --port 5173
+pnpm run dev -- --host 127.0.0.1 --port 5173
 ```
 
 Then open:
@@ -218,10 +228,17 @@ Then open:
 http://localhost:5173/reviews
 ```
 
+For LAN access, bind the service to all interfaces and publish with the matching port:
+
+```bash
+pnpm run dev -- --host 0.0.0.0 --port 5173
+PORT=5173 review document.pdf --localnet
+```
+
 For a production build:
 
 ```bash
-npm run build
+pnpm run build
 node build/index.js
 ```
 
@@ -384,37 +401,37 @@ Expected notification behavior:
 Type and Svelte checks:
 
 ```bash
-npm run check
+pnpm run check
 ```
 
 Tests:
 
 ```bash
-npm test
+pnpm test
 ```
 
 Production build:
 
 ```bash
-npm run build
+pnpm run build
 ```
 
 Build CLI:
 
 ```bash
-npm run build:cli
+pnpm run build:cli
 ```
 
 Full package gate:
 
 ```bash
-npm run package:review-platform
+pnpm run package:review-platform
 ```
 
 Compatibility package command:
 
 ```bash
-npm run package:ltsql
+pnpm run package:ltsql
 ```
 
 The current portable tarball path is:
@@ -512,7 +529,7 @@ Markdown live reviews render top-level `mermaid` fenced blocks as SVG diagrams i
 ### HTML live reviews
 
 Run `review page.html` (or `.htm`) to preview an immutable HTML snapshot, select
-text for comments, or draw annotations. Use `--local` for the local service.
+text for comments, or draw annotations. Use `--local` for loopback access or `--localnet` for LAN access.
 Comments support the same **提交给 AI** and `review feedback --json` workflow.
 HTML files are limited to 5 MiB; publish one file per review.
 
@@ -526,7 +543,7 @@ dependencies.
 
 The video page’s **?** button opens the [video annotation help page](https://deeloo.cn/live/help/video), with a quick start, timeline diagram, gesture guide, and keyboard shortcuts.
 
-Run `review video.mp4` (or `review video.mp4 --local`) to review one local video up to 500 MiB. MP4 is the primary format; MOV and WebM work when their codecs are supported by the browser. The server requires `ffprobe` on PATH. Playback and time annotations are available as soon as the video metadata loads. Frame numbers initially use an estimated frame rate (temporarily 30 fps until the server returns the reported rate), clearly marked as estimated. A cached index of actual frames builds in the background and replaces the estimate without interrupting playback. Captured annotation times remain stable across that switch; the video is not transcoded.
+Run `review video.mp4` (or add `--local` / `--localnet`) to review one local video up to 500 MiB. MP4 is the primary format; MOV and WebM work when their codecs are supported by the browser. The server requires `ffprobe` on PATH. Playback and time annotations are available as soon as the video metadata loads. Frame numbers initially use an estimated frame rate (temporarily 30 fps until the server returns the reported rate), clearly marked as estimated. A cached index of actual frames builds in the background and replaces the estimate without interrupting playback. Captured annotation times remain stable across that switch; the video is not transcoded.
 
 Click the timeline track to add a point and open the comment panel. Click or drag above the track to move the playhead without adding a point. Further clicks add points to the same comment. Select **范围**, then click again to turn the last point and the new point into an ordered range; the option resets after one use. Points and ranges can share one comment. Drag the playhead to seek without adding a point, or use the frame buttons and **＋ 当前帧** for precise selection. Hold a −10 / −1 / +1 / +10 frame button to repeat after 350 ms; release or move outside to stop.
 

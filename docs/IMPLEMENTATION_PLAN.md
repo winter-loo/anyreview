@@ -41,7 +41,7 @@ pwd
 
 ```bash
 cd /home/ldd/projects/ltsql-review-platform
-npm create svelte@latest .
+pnpm create svelte@latest .
 ```
 
 Choose:
@@ -53,8 +53,8 @@ Choose:
 **Verification:**
 
 ```bash
-npm install
-npm run check
+pnpm install
+pnpm run check
 ```
 
 ### Task 0.3: Add baseline safety README
@@ -105,7 +105,7 @@ export function dbPath() {
 **Verification:**
 
 ```bash
-npm run check
+pnpm run check
 ```
 
 ### Task 1.2: Add SQLite schema

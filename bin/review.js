@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 
 import { createCipheriv, createHash, randomBytes } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
-import { homedir } from 'node:os';
+import { homedir, networkInterfaces } from 'node:os';
 import path from 'node:path';
+import { createInterface } from 'node:readline/promises';
+import { stdin, stderr } from 'node:process';
 import { DatabaseSync } from 'node:sqlite';
 import { readClipboard } from './clipboard.js';
 import { rememberReview } from './latest-review.js';
@@ -73,12 +76,88 @@ function createShortLink(token) {
 	}
 }
 
+function readEnvConfig(key) {
+	if (process.env[key]) return process.env[key];
+	try {
+		const env = readFileSync(path.join(homedir(), '.config/online-review.env'), 'utf8');
+		const line = env.split(/\r?\n/).find((value) => value.startsWith(`${key}=`));
+		if (line) return line.slice(line.indexOf('=') + 1);
+	} catch {}
+	return undefined;
+}
+
 function secret() {
-	if (process.env.ONLINE_REVIEW_URL_SECRET) return process.env.ONLINE_REVIEW_URL_SECRET;
-	const env = readFileSync(path.join(homedir(), '.config/online-review.env'), 'utf8');
-	const line = env.split(/\r?\n/).find((value) => value.startsWith('ONLINE_REVIEW_URL_SECRET='));
-	if (!line) throw new Error('ONLINE_REVIEW_URL_SECRET is not configured');
-	return line.slice(line.indexOf('=') + 1);
+	const val = readEnvConfig('ONLINE_REVIEW_URL_SECRET');
+	if (!val) throw new Error('ONLINE_REVIEW_URL_SECRET is not configured');
+	return val;
+}
+
+function localNetworkAddresses() {
+	const addresses = [];
+	for (const [name, entries] of Object.entries(networkInterfaces())) {
+		if (/tun|wsl/i.test(name)) continue;
+		for (const entry of entries ?? []) {
+			if (entry.family !== 'IPv4' || entry.internal) continue;
+			const octets = entry.address.split('.').map(Number);
+			const isPrivate = octets[0] === 10
+				|| (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31)
+				|| (octets[0] === 192 && octets[1] === 168);
+			if (isPrivate) addresses.push({ name, address: entry.address });
+		}
+	}
+	return addresses;
+}
+
+async function chooseLocalNetworkAddress(requested) {
+	const addresses = localNetworkAddresses();
+	if (!addresses.length) throw new Error('No private IPv4 network address was found.');
+	if (requested) {
+		const selected = addresses.find((entry) => entry.address === requested);
+		if (!selected) throw new Error(`Local network address is not assigned to this machine: ${requested}`);
+		return selected.address;
+	}
+	if (addresses.length === 1) return addresses[0].address;
+
+	const choices = addresses.map((entry, index) => `  ${index + 1}. ${entry.name} (${entry.address})`).join('\n');
+	if (!stdin.isTTY) throw new Error(`Multiple local network addresses found. Rerun with --localnet=<address>:\n${choices}`);
+
+	stderr.write(`Multiple local network addresses found:\n${choices}\n`);
+	const prompt = createInterface({ input: stdin, output: stderr });
+	try {
+		const answer = await prompt.question(`Select an address [1-${addresses.length}]: `);
+		const index = Number(answer) - 1;
+		if (!Number.isInteger(index) || index < 0 || index >= addresses.length) throw new Error('Invalid local network address selection.');
+		return addresses[index].address;
+	} finally {
+		prompt.close();
+	}
+}
+
+async function localServicePort() {
+	const candidates = [...new Set([process.env.PORT, '5173', '8787'].filter(Boolean))];
+	for (const port of candidates) {
+		try {
+			await fetch(`http://127.0.0.1:${port}/`, { signal: AbortSignal.timeout(1500) });
+			return port;
+		} catch {}
+	}
+	throw new Error(`ReviewLoop is not running on ${candidates.map((port) => `127.0.0.1:${port}`).join(' or ')}.`);
+}
+
+function tailscalePublicBase(port) {
+	const status = spawnSync('tailscale', ['status', '--json'], { encoding: 'utf8' });
+	if (status.error) throw new Error(`Cannot run Tailscale: ${status.error.message}`);
+	if (status.status !== 0) throw new Error(status.stderr.trim() || 'Cannot read Tailscale status.');
+	let details;
+	try { details = JSON.parse(status.stdout); } catch { throw new Error('Tailscale returned invalid status data.'); }
+	if (details.BackendState !== 'Running' || !details.Self?.Online) throw new Error('Tailscale is not connected.');
+	const dnsName = String(details.Self.DNSName ?? '').replace(/\.$/, '');
+	if (!dnsName) throw new Error('Tailscale MagicDNS is not available for this machine.');
+
+	const funnel = spawnSync('tailscale', ['funnel', '--bg', '--yes', String(port)], { encoding: 'utf8' });
+	if (funnel.error) throw new Error(`Cannot configure Tailscale Funnel: ${funnel.error.message}`);
+	if (funnel.status !== 0) throw new Error(funnel.stderr.trim() || funnel.stdout.trim() || 'Cannot configure Tailscale Funnel.');
+	return `https://${dnsName}/live`;
 }
 
 function latestMarkdown(directory) {
@@ -128,17 +207,19 @@ function resolveFiles(args) {
 	return args.map((arg) => path.resolve(arg));
 }
 
-function main(rawFiles) {
- const local = process.argv.slice(2).includes('--local');
- const base = new URL(local ? (process.env.ONLINE_REVIEW_LOCAL_BASE_URL || `http://127.0.0.1:${process.env.PORT || '8787'}/live`) : BASE_URL);
+async function main(rawFiles) {
+ const args = process.argv.slice(2);
+ const local = args.includes('--local');
+ const localNetOption = args.find((arg) => arg === '--localnet' || arg.startsWith('--localnet='));
+ const tailnet = args.includes('--tailnet');
+ const requestedAddress = localNetOption?.includes('=') ? localNetOption.slice(localNetOption.indexOf('=') + 1) : undefined;
+ const localHost = localNetOption ? await chooseLocalNetworkAddress(requestedAddress) : '127.0.0.1';
+ const port = process.env.PORT || '8787';
+ const base = new URL(tailnet ? tailscalePublicBase(await localServicePort()) : local || localNetOption ? `http://${localHost}:${port}/live` : (readEnvConfig('ONLINE_REVIEW_BASE_URL') || BASE_URL));
  if (!['http:', 'https:'].includes(base.protocol) || base.pathname.replace(/\/$/, '') !== '/live' || base.search || base.hash || base.username || base.password) throw new Error('Review base URL must be an HTTP(S) URL ending in /live');
 	const files = rawFiles.map((file) => realpathSync(file));
-	const home = realpathSync(homedir());
 
 	for (const file of files) {
-		if (!(file.startsWith(`${home}${path.sep}`) || file.startsWith(`/tmp${path.sep}`))) {
-			throw new Error(`File must be under HOME or /tmp: ${file}`);
-		}
 		const stats = statSync(file);
 		if (!stats.isFile()) {
 			throw new Error(`Not a regular file: ${file}`);
@@ -193,16 +274,18 @@ function main(rawFiles) {
 
 try {
  if (['--help','-h'].includes(process.argv[2]) || (process.argv[2] === 'paste' && ['--help','-h'].includes(process.argv[3]))) {
-  console.log('Usage: review <file-or-directory> [--long] [--local]\n       review paste [--long] [--local]\n       review --clipboard [--long] [--local]\n       review feedback [url-or-id] [--json] [--wait] [--after <cursor>] [--timeout <seconds>] [--out <new-directory>]\n\nFiles: Video (.mp4/.mov/.webm, up to 500 MiB), HTML (.html/.htm), Markdown, PDF, Word, PowerPoint, Excel, or images.\n\nPaste: paste text in a terminal, press Enter then Ctrl+D to publish; Ctrl+C cancels.\n       Or pipe UTF-8 text: cat response.md | review paste');
+  console.log('Usage: review <file-or-directory> [--long] [--local | --localnet[=<address>] | --tailnet]\n       review paste [--long] [--local | --localnet[=<address>] | --tailnet]\n       review --clipboard [--long] [--local | --localnet[=<address>] | --tailnet]\n       review feedback [url-or-id] [--json] [--wait] [--after <cursor>] [--timeout <seconds>] [--out <new-directory>]\n\nURL modes: default uses deeloo.cn; --local uses 127.0.0.1; --localnet selects a private IPv4 address; --tailnet enables a public HTTPS Funnel.\n\nFiles: Video (.mp4/.mov/.webm, up to 500 MiB), HTML (.html/.htm), Markdown, PDF, Word, PowerPoint, Excel, or images.\n\nPaste: paste text in a terminal, press Enter then Ctrl+D to publish; Ctrl+C cancels.\n       Or pipe UTF-8 text: cat response.md | review paste');
  } else if (process.argv[2] === 'feedback') {
   const { runFeedback } = await import('./feedback.js');
   await runFeedback(process.argv.slice(3));
  } else {
   const paste = process.argv[2] === 'paste';
   const args = process.argv.slice(paste ? 3 : 2);
-  const unknown = args.find(arg => arg.startsWith('--') && !['--long', '--clipboard', '--local'].includes(arg));
+  const unknown = args.find(arg => arg.startsWith('--') && !['--long', '--clipboard', '--local', '--localnet', '--tailnet'].includes(arg) && !arg.startsWith('--localnet='));
   if (unknown) throw new Error(`Unknown option: ${unknown}`);
-  const files = args.filter(arg => !['--long', '--clipboard', '--local'].includes(arg));
+  const urlModes = [args.includes('--local'), args.some((arg) => arg === '--localnet' || arg.startsWith('--localnet=')), args.includes('--tailnet')].filter(Boolean).length;
+  if (urlModes > 1) throw new Error('Choose only one of --local, --localnet, or --tailnet.');
+  const files = args.filter(arg => !['--long', '--clipboard', '--local', '--localnet', '--tailnet'].includes(arg) && !arg.startsWith('--localnet='));
   const clipboard = args.includes('--clipboard');
   if (paste && clipboard) throw new Error('Choose review paste or review --clipboard, not both.');
   if (paste || clipboard) {
@@ -214,9 +297,9 @@ try {
    try {
     const file = path.join(directory, clipboard ? 'clipboard.md' : 'paste.md');
     writeFileSync(file, text, {mode:0o600});
-    main([file]);
+    await main([file]);
    } finally { rmSync(directory, {recursive:true, force:true}); }
-  } else main(resolveFiles(files));
+  } else await main(resolveFiles(files));
  }
 } catch (error) {
 	console.error(error instanceof Error ? error.message : String(error));

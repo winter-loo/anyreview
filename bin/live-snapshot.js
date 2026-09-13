@@ -11,10 +11,9 @@ export function freezeReview(id,sources) {
  const directory=path.join(feedbackHome(),'snapshots',id),manifest=path.join(directory,'manifest.json');
  if(existsSync(manifest))return JSON.parse(readFileSync(manifest,'utf8'));
  if(!sources.length||sources.length>100)throw new Error('Invalid review files');
- const home=realpathSync(homedir());let total=0;
+ let total=0;
  const files=sources.map((source,index)=>{
   const resolved=realpathSync(source);
-  if(!resolved.startsWith(home+path.sep)&&!resolved.startsWith('/tmp/'))throw new Error('File is not publishable');
   const stat=statSync(resolved);total+=stat.size;
   const video=['.mp4','.mov','.webm'].includes(path.extname(resolved).toLowerCase());
   if(!stat.isFile()||stat.size>(video?500:50)*1024*1024||total>(video&&sources.length===1?500:200)*1024*1024)throw new Error('Review is too large');

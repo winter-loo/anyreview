@@ -8,7 +8,7 @@ const config = {
 	},
 	kit: {
 		// adapter-node builds a plain Node.js server artifact that can be copied to ltsql
-		// and started without running npm install on the target host.
+		// and started without running pnpm install on the target host.
 		adapter: adapter()
 	}
 };
