@@ -1,0 +1,168 @@
+<!-- 9:16 竖屏模板：手机端 AI Agent 审阅痛点与 ReviewLoop 解决方案 -->
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <script src="{{asset:gsap-runtime}}"></script>
+    <style>{{include:film-vertical.css}}</style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-width="{{width}}" data-height="{{height}}" data-duration="{{duration}}">
+      <div id="glow"></div>
+
+      <!-- 顶部状态栏与主题挂载 -->
+      <div class="header-bar">
+        <div class="brand">
+          <img src="{{asset:assets-logo-svg}}">ReviewLoop
+        </div>
+        <div class="topic-badge" id="topic-badge">人在手机 · 操控 Agent</div>
+      </div>
+
+      <!-- 主手机：全片核心聚焦视区 -->
+      <div id="phone" data-layout-allow-overflow>
+        <div id="screen">
+          <!-- 第一幕：在手机终端操控 AI Agent，与在 Discord 里接收文件/痛点 -->
+          <img id="screen-terminal" class="screen-content clip" src="{{clip:screen-terminal:src}}" data-start="{{clip:screen-terminal:start}}" data-duration="{{clip:screen-terminal:duration}}" data-track-index="{{clip:screen-terminal:track}}">
+          <img id="screen-discord" class="screen-content clip" src="{{clip:screen-discord:src}}" data-start="{{clip:screen-discord:start}}" data-duration="{{clip:screen-discord:duration}}" data-track-index="{{clip:screen-discord:track}}">
+
+          <!-- 第二幕：打开 ReviewLoop 独立审阅网页 -->
+          <div id="review-entry" class="screen-transition">
+            <img id="screen-read" class="screen-content clip" src="{{clip:screen-read:src}}" data-start="{{clip:screen-read:start}}" data-duration="{{clip:screen-read:duration}}" data-track-index="{{clip:screen-read:track}}">
+          </div>
+
+          <!-- 第三幕：阅读长回复与流程图放大 -->
+          <video id="screen-flowchart" class="screen-content clip" src="{{clip:screen-flowchart:src}}" data-start="{{clip:screen-flowchart:start}}" data-duration="{{clip:screen-flowchart:duration}}" data-track-index="{{clip:screen-flowchart:track}}" muted playsinline></video>
+          <!-- 点击放大指示器 -->
+          <div id="flowchart-tap-ring" class="tap-ring"></div>
+          <!-- 真实流程图放大预览弹窗 -->
+          <div id="flowchart-modal" class="screen-content clip" data-start="{{clip:flowchart-modal:start}}" data-duration="{{clip:flowchart-modal:duration}}" data-track-index="{{clip:flowchart-modal:track}}">
+            <div class="modal-header">
+              <span class="modal-title">流程图预览</span>
+              <div class="modal-close">✕</div>
+            </div>
+            <div class="modal-toolbar">
+              <button class="tool-btn" type="button">−</button>
+              <div class="tool-zoom" id="modal-zoom-display">150%</div>
+              <button class="tool-btn" type="button">+</button>
+              <button class="tool-btn" type="button">查看全图</button>
+              <button class="tool-btn active" id="modal-btn-clear" type="button">清晰阅读</button>
+            </div>
+            <div class="modal-viewport">
+              <div class="modal-canvas" id="modal-canvas-pan">
+                <img id="flowchart-expanded-img" src="{{asset:assets-diagram-nodes-png}}" alt="架构流程图">
+              </div>
+            </div>
+            <div class="modal-hint">拖动查看 · 双指缩放 · 可用 + / − 调整大小</div>
+          </div>
+
+          <!-- 第四幕：单手划词精准提批注 -->
+          <div id="annotation-transition" class="screen-transition">
+            <img id="screen-annotation-still" class="screen-content clip" src="{{clip:screen-annotation-still:src}}" data-start="{{clip:screen-annotation-still:start}}" data-duration="{{clip:screen-annotation-still:duration}}" data-track-index="{{clip:screen-annotation-still:track}}">
+            <video id="screen-text-annotation" class="screen-content clip" src="{{clip:screen-text-annotation:src}}" data-start="{{clip:screen-text-annotation:start}}" data-duration="{{clip:screen-text-annotation:duration}}" data-track-index="{{clip:screen-text-annotation:track}}" muted playsinline></video>
+          </div>
+          <!-- 点击保存手势指针 -->
+          <div id="save-pointer" class="mouse-pointer">
+            <svg width="42" height="42" viewBox="0 0 24 24" fill="none">
+              <path style="fill:#ffffff;fill-rule:evenodd;" d="m 9.197,1.865 c -0.344,-0.002 -0.691,0.077 -1.018,0.188 -0.689,0.232 -1.058,0.896 -1.146,1.326 -0.088,0.431 -0.02,0.789 -0.02,0.789 L 7,4 v 6.184 c -0.165,-0.046 -0.284,-0.166 -0.459,-0.17 -0.425,-0.047 -0.829,-0.042 -1.207,0.09 -0.407,0.141 -0.79,0.444 -0.99,0.841 -0.4,0.794 -0.093,1.615 0.387,2.193 0.571,0.688 1.602,2.578 2.35,3.807 C 7.906,18.302 9.215,19 10.5,19 H 15 c 1.105,0 2.018,-0.663 2.555,-1.457 0.537,-0.794 0.827,-1.732 1.025,-2.672 0.398,-1.88 0.395,-3.888 0.418,-4.316 0.051,-0.934 -0.16,-1.73 -0.73,-2.2 -0.571,-0.47 -1.188,-0.438 -1.488,-0.438 -0.006,0.003 -0.012,0.005 -0.018,0.008 C 16.499,7.244 16.029,6.77 16.029,6.77 15.87,6.671 15.687,6.619 15.5,6.619 h -1 l 0.055,0.002 C 14.283,6.606 13.953,6.671 13.688,6.848 13.658,6.867 13.656,6.898 13.629,6.92 13.551,6.769 13.571,6.532 13.457,6.418 13.277,6.238 13.068,6.124 12.895,6.066 12.721,6.009 12.5,6 12.5,6 h -1 c 0,0 -0.221,0.009 -0.395,0.066 C 11.073,6.077 11.035,6.118 11,6.133 10.993,5.096 11,4.014 11,4.014 11,4.009 11,4.005 11,4 11,3.343 10.838,2.605 10.201,2.17 9.883,1.952 9.541,1.868 9.197,1.865 Z" />
+              <path style="fill:#1e293b;fill-opacity:1;fill-rule:evenodd;" d="m 11.5,7 c 0,0 -0.5,0 -0.5,1 0,0 -0.002,1 -0.3,1 h -0.5 c -0.264,0 -0.2,-5 -0.2,-5 0,-1 -0.47,-1.347 -1.5,-1 -0.634,0.214 -0.5,1 -0.5,1 V 10.5 c 0,1 0.229,2 0,2 -0.5,0 -0.298,-1.5 -1.5,-1.5 -1.405,-0.187 -1.629,0.742 -1,1.5 0.732,0.882 1.718,2.75 2.434,3.926 C 8.617,17.548 9.523,18 10.5,18 h 4.5 c 3,0 2.94,-6.398 3,-7.5 0.084,-1.55 -0.658,-1.582 -1.22,-1.582 -0.175,0.17 -0.076,0.979 -0.28,1.582 -0.5,0.5 -0.5,-0.037 -0.5,-0.5 V 8.619 c 0.119,-0.615 -0.5,-1 -0.5,-1 h -1 c -0.424,-0.024 -0.522,0.396 -0.5,1 0,0 0.013,0.381 -0.219,0.381 h -0.5 c -0.281,0 -0.281,-1 -0.281,-1 0,-1 -0.5,-1 -0.5,-1 z" />
+            </svg>
+            <div class="pointer-tap-ring"></div>
+          </div>
+
+          <!-- 第五幕：图片与设计稿圈出位置 -->
+          <video id="screen-image-annotation" class="screen-content clip" src="{{clip:screen-image-annotation:src}}" data-start="{{clip:screen-image-annotation:start}}" data-duration="{{clip:screen-image-annotation:duration}}" data-track-index="{{clip:screen-image-annotation:track}}" muted playsinline></video>
+
+          <!-- 第六幕：提交反馈，远程终端 Agent 执行修改 -->
+          <video id="screen-submit" class="screen-content clip" src="{{clip:screen-submit:src}}" data-start="{{clip:screen-submit:start}}" data-duration="{{clip:screen-submit:duration}}" data-track-index="{{clip:screen-submit:track}}" muted playsinline></video>
+          <div id="agent-return" class="screen-content clip" data-start="{{clip:agent-return:start}}" data-duration="{{clip:agent-return:duration}}" data-track-index="{{clip:agent-return:track}}">
+            <img src="{{asset:assets-terminal-png}}">
+            <div class="agent-input">
+              <span class="chevron">❯</span>
+              <span>
+                <span class="prompt-char" id="prompt-char-0">用</span>
+                <span class="prompt-char" id="prompt-char-1">&nbsp;</span>
+                <span class="prompt-char" id="prompt-char-2">r</span>
+                <span class="prompt-char" id="prompt-char-3">e</span>
+                <span class="prompt-char" id="prompt-char-4">v</span>
+                <span class="prompt-char" id="prompt-char-5">i</span>
+                <span class="prompt-char" id="prompt-char-6">e</span>
+                <span class="prompt-char" id="prompt-char-7">w</span>
+                <span class="prompt-char" id="prompt-char-8">&nbsp;</span>
+                <span class="prompt-char" id="prompt-char-9">f</span>
+                <span class="prompt-char" id="prompt-char-10">e</span>
+                <span class="prompt-char" id="prompt-char-11">e</span>
+                <span class="prompt-char" id="prompt-char-12">d</span>
+                <span class="prompt-char" id="prompt-char-13">b</span>
+                <span class="prompt-char" id="prompt-char-14">a</span>
+                <span class="prompt-char" id="prompt-char-15">c</span>
+                <span class="prompt-char" id="prompt-char-16">k</span>
+                <span class="prompt-char" id="prompt-char-17">&nbsp;</span>
+                <span class="prompt-char" id="prompt-char-18">获</span>
+                <span class="prompt-char" id="prompt-char-19">取</span>
+                <span class="prompt-char" id="prompt-char-20">评</span>
+                <span class="prompt-char" id="prompt-char-21">论</span>
+                <span class="prompt-char" id="prompt-char-22">并</span>
+                <span class="prompt-char" id="prompt-char-23">解</span>
+                <span class="prompt-char" id="prompt-char-24">决</span>
+                <span class="prompt-char" id="prompt-char-25">。</span>
+                <b class="cursor"></b>
+              </span>
+            </div>
+          </div>
+
+          <!-- 第七幕：多格式支持 (保持在场) -->
+          <div id="ending-markdown" class="screen-transition">
+            <img id="ending-markdown-media" class="screen-content clip" src="{{clip:ending-markdown-media:src}}" data-start="{{clip:ending-markdown-media:start}}" data-duration="{{clip:ending-markdown-media:duration}}" data-track-index="{{clip:ending-markdown-media:track}}">
+          </div>
+
+          <!-- 手机圆角边框遮罩 -->
+          <svg id="screen-bezel" viewBox="0 0 658 1408" aria-hidden="true" data-layout-ignore>
+            <path fill="#080910" fill-rule="evenodd" d="M0 0H658V1408H0Z M46 0H612A46 46 0 0 1 658 46V1362A46 46 0 0 1 612 1408H46A46 46 0 0 1 0 1362V46A46 46 0 0 1 46 0Z"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- 第七幕多手机堆叠 -->
+      <div id="stack-0" class="stack-phone" style="z-index:2" data-layout-allow-overflow>
+        <div class="stack-screen">
+          <img id="stack-media-0" class="clip" src="{{clip:stack-media-0:src}}" data-start="{{clip:stack-media-0:start}}" data-duration="{{clip:stack-media-0:duration}}" data-track-index="{{clip:stack-media-0:track}}">
+          <svg class="stack-bezel" viewBox="0 0 658 1408" aria-hidden="true" data-layout-ignore>
+            <path fill="#080910" fill-rule="evenodd" d="M0 0H658V1408H0Z M46 0H612A46 46 0 0 1 658 46V1362A46 46 0 0 1 612 1408H46A46 46 0 0 1 0 1362V46A46 46 0 0 1 46 0Z"/>
+          </svg>
+        </div>
+      </div>
+      <div id="stack-1" class="stack-phone" style="z-index:3" data-layout-allow-overflow>
+        <div class="stack-screen">
+          <img id="stack-media-1" class="clip" src="{{clip:stack-media-1:src}}" data-start="{{clip:stack-media-1:start}}" data-duration="{{clip:stack-media-1:duration}}" data-track-index="{{clip:stack-media-1:track}}">
+          <svg class="stack-bezel" viewBox="0 0 658 1408" aria-hidden="true" data-layout-ignore>
+            <path fill="#080910" fill-rule="evenodd" d="M0 0H658V1408H0Z M46 0H612A46 46 0 0 1 658 46V1362A46 46 0 0 1 612 1408H46A46 46 0 0 1 0 1362V46A46 46 0 0 1 46 0Z"/>
+          </svg>
+        </div>
+      </div>
+      <div id="stack-2" class="stack-phone" style="z-index:4" data-layout-allow-overflow>
+        <div class="stack-screen">
+          <video id="stack-media-2" class="clip" src="{{clip:stack-media-2:src}}" data-start="{{clip:stack-media-2:start}}" data-duration="{{clip:stack-media-2:duration}}" data-track-index="{{clip:stack-media-2:track}}" muted playsinline></video>
+          <svg class="stack-bezel" viewBox="0 0 658 1408" aria-hidden="true" data-layout-ignore>
+            <path fill="#080910" fill-rule="evenodd" d="M0 0H658V1408H0Z M46 0H612A46 46 0 0 1 658 46V1362A46 46 0 0 1 612 1408H46A46 46 0 0 1 0 1362V46A46 46 0 0 1 46 0Z"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- 终幕品牌与转化卡片 -->
+      <div class="closing">
+        <img src="{{asset:assets-logo-svg}}">
+        <h1>让手机端 AI 审阅<br>彻底告别折磨</h1>
+        <div class="subtitle-text">你审阅结果 · AI 执行修改</div>
+        <div class="action-box">
+          <div class="cmd-badge">review feedback</div>
+          <div class="footer-note">独立网页 · 触控批注 · 结构化回传</div>
+        </div>
+      </div>
+
+      <!-- 字幕与音频轨 -->
+      {{include:captions-vertical.html.template}}
+      {{include:audio-vertical.html.template}}
+    </div>
+    <script>{{timeline}}</script>
+  </body>
+</html>

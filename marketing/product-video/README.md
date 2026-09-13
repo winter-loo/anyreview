@@ -1,25 +1,32 @@
 # ReviewLoop 视频工程
 
-当前正式内容以已批准的 v10 为基准，93.904 秒、1920×1080、30fps。构建从配置生成，不再调用 build-vN.py，也不读取历史 HTML 快照。当前仅保留正式构建依赖。
+包含横版（桌面/官网）与竖版（手机/短视频）两套可复现、配置驱动的宣发视频工程。构建完全由配置生成，不再调用历史临时脚本或依赖外部网络。
+
+## 规格一览
+
+| 版本 | 画幅 | 帧率 | 时长 | 定位与适用渠道 | 核心入口与配置 |
+|---|---|---|---|---|---|
+| **横版** | 1920×1080 | 30fps | 93.9s | 桌面端、官网展示、Bilibili/YouTube 横屏 | `config/project.json` |
+| **竖版** | 1080×1920 | 30fps | 53.2s | 手机端传播、微信视频号、抖音、小红书 | `config/project-vertical.json` |
 
 ## 文件职责
 
 | 位置 | 用途 |
 |---|---|
-| `config/project.json` | 画幅、帧率、工具版本、响度目标、输出名和检查时刻 |
-| `config/scenes.json` | 九幕顺序与时长，每幕的素材片段、字幕、音频、动画和分镜定格时刻 |
-| `config/assets.json` | 25 项当前依赖：相对路径、来源说明、大小、SHA-256、音视频参数 |
-| `templates/film.html.template` | 按幕注释、缩进的页面结构：主手机、页面、遮罩和尾声堆叠 |
-| `templates/film.css` | 独立可编辑样式，每条规则和声明分行 |
-| `templates/captions.html.template`、`audio.html.template` | 字幕和旁白轨的元素绑定 |
+| `config/project.json` / `project-vertical.json` | 画幅、帧率、工具版本、响度目标、输出名和检查时刻 |
+| `config/scenes.json` / `scenes-vertical.json` | 场景顺序与时长，每幕素材、字幕、音频、动画和分镜时刻 |
+| `config/assets.json` / `assets-vertical.json` | 素材依赖清单：相对路径、来源说明、大小、SHA-256、音视频参数 |
+| `templates/film*.html.template` | 按幕注释、缩进的页面结构：主手机、页面、遮罩和尾声堆叠 |
+| `templates/film*.css` | 独立可编辑样式，分横版与竖版响应式视觉层 |
+| `templates/captions*.html.template`、`audio*.html.template` | 字幕和旁白轨的元素绑定 |
 | `vendor/gsap.min.js` | 固定 GSAP 3.14.2，播放和渲染不再依赖 CDN 请求 |
-| `pipeline.py` | 唯一生产构建流程，Python 标准库即可运行 |
-| `tests/` | v10 迁移回归与配置错误检查；历史 fixture 只用于测试 |
+| `pipeline.py` | 统一生产构建流程，支持 `--config` 参数，Python 标准库即可运行 |
+| `tests/` | 回归与配置错误检查、横/竖版合法性校验 |
 | `index.html`、`captions.srt`、`timing.json` | 自动生成，不直接编辑 |
 | `ASSETS.md`、`SCENES.md` | 自动生成的可读素材清单与分镜旁白 |
 | `renders/` | 当前构建的检查报告、原始渲染、最终 MP4、字幕、证明帧和分镜网页 |
 
-现有 `assets/`、`volcano/`、`ending/` 里的素材继续原地使用，避免复制大文件或破坏来源记录。文件名中保留的版本号表示素材来源，不构成构建链依赖。
+现有 `assets/`、`volcano/`、`vertical-audio/`、`sfx/`、`ending/` 里的素材继续原地使用，避免复制大文件或破坏来源记录。文件名中保留的版本号表示素材来源，不构成构建链依赖。
 
 ## 日常命令
 
@@ -27,20 +34,36 @@
 
 在本目录运行，需要 Python 3.10+、Node 22+、pnpm 10.23.0、FFmpeg/ffprobe 和 Chrome/Chromium。
 
+### 横版视频命令
 ```sh
-pnpm run build       # 配置 → index.html、SRT、时间轴、素材表、分镜旁白
-pnpm run validate    # 配置与素材哈希检查
-pnpm test            # 迁移回归、越界、重复 ID、素材替换检查
-pnpm run check       # 构建后执行 HyperFrames 浏览器检查
-pnpm run dev         # 构建后启动 HyperFrames Studio
-pnpm run release     # 构建 → 检查 → 高质量渲染 → 响度处理 → 解码校验 → 分镜
+pnpm run build          # 配置 → index.html、SRT、时间轴、素材表、分镜旁白
+pnpm run validate       # 配置与素材哈希强校验
+pnpm test               # 迁移回归、越界、重复 ID、素材替换与竖版配置检查
+pnpm run check          # 构建后执行 HyperFrames 浏览器检查
+pnpm run dev            # 构建后启动 HyperFrames Studio 预览
+pnpm run release        # 构建 → 检查 → 高质量渲染 → 响度处理 → 解码校验 → 分镜导出
 ```
 
-也可直接使用 `python3 pipeline.py build|validate|check|preview|render|finish|release`，`python3 build.py` 仅是兼容入口。
+### 竖版短视频命令
+```sh
+pnpm run build:vertical    # 竖版构建：配置 → 页面/字幕/分镜
+pnpm run validate:vertical # 竖版配置与素材哈希校验
+pnpm run dev:vertical      # 竖版 HyperFrames Studio 预览
+pnpm run check:vertical    # 竖版浏览器渲染检查
+pnpm run release:vertical  # 竖版全流程导出（成片、SRT、分镜、关键证明帧）
+```
 
-默认使用 `pnpm dlx hyperframes@0.8.33`；版本固定在 project.json。首次使用 pnpm dlx 需要网络。可通过 `HYPERFRAMES_BIN` 指定已安装的 CLI，通过 `HYPERFRAMES_BROWSER_PATH` 指定浏览器。新环境不要把本机包管理器缓存绝对路径写进项目配置。
+也可直接使用 `python3 pipeline.py [--config <path>] build|validate|check|preview|render|finish|release`。
 
-输出：`renders/ReviewLoop.mp4`、`renders/captions.srt`、`renders/storyboard/index.html`。用 `review renders/ReviewLoop.mp4` 发起审阅；该步骤由你显式执行，不属于构建命令。
+默认使用 `pnpm dlx hyperframes@0.8.33`；版本固定在 project 配置文件中。首次使用 pnpm dlx 需要网络。可通过 `HYPERFRAMES_BIN` 指定已安装的 CLI，通过 `HYPERFRAMES_BROWSER_PATH` 指定浏览器。
+
+输出：
+- 横版：`renders/ReviewLoop.mp4`、`renders/captions.srt`、`renders/storyboard/index.html`
+- 竖版：`renders/ReviewLoop-Vertical.mp4`、`renders/ReviewLoop-Vertical.srt`、`renders/storyboard-ReviewLoop-Vertical/index.html`
+
+审阅命令：
+- `review renders/ReviewLoop.mp4 --local`
+- `review renders/ReviewLoop-Vertical.mp4 --local`
 
 ## 如何编辑
 

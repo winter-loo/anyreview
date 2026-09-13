@@ -1,0 +1,16 @@
+<!-- 竖屏音频系统：BGM + 旁白 + 交互音效 -->
+<audio id="bgm" src="{{clip:bgm:src}}" data-start="{{clip:bgm:start}}" data-duration="{{clip:bgm:duration}}" data-track-index="{{clip:bgm:track}}" data-volume="0.22"></audio>
+
+<audio id="voice-1" src="{{clip:voice-1:src}}" data-start="{{clip:voice-1:start}}" data-duration="{{clip:voice-1:duration}}" data-track-index="{{clip:voice-1:track}}" data-volume="1.0"></audio>
+<audio id="voice-2" src="{{clip:voice-2:src}}" data-start="{{clip:voice-2:start}}" data-duration="{{clip:voice-2:duration}}" data-track-index="{{clip:voice-2:track}}" data-volume="1.0"></audio>
+<audio id="voice-3" src="{{clip:voice-3:src}}" data-start="{{clip:voice-3:start}}" data-duration="{{clip:voice-3:duration}}" data-track-index="{{clip:voice-3:track}}" data-volume="1.0"></audio>
+<audio id="voice-4" src="{{clip:voice-4:src}}" data-start="{{clip:voice-4:start}}" data-duration="{{clip:voice-4:duration}}" data-track-index="{{clip:voice-4:track}}" data-volume="1.0"></audio>
+<audio id="voice-5" src="{{clip:voice-5:src}}" data-start="{{clip:voice-5:start}}" data-duration="{{clip:voice-5:duration}}" data-track-index="{{clip:voice-5:track}}" data-volume="1.0"></audio>
+<audio id="voice-6" src="{{clip:voice-6:src}}" data-start="{{clip:voice-6:start}}" data-duration="{{clip:voice-6:duration}}" data-track-index="{{clip:voice-6:track}}" data-volume="1.0"></audio>
+<audio id="voice-7" src="{{clip:voice-7:src}}" data-start="{{clip:voice-7:start}}" data-duration="{{clip:voice-7:duration}}" data-track-index="{{clip:voice-7:track}}" data-volume="1.0"></audio>
+
+<audio id="sfx-notif" src="{{clip:sfx-notif:src}}" data-start="{{clip:sfx-notif:start}}" data-duration="{{clip:sfx-notif:duration}}" data-track-index="{{clip:sfx-notif:track}}" data-volume="0.7"></audio>
+<audio id="sfx-whoosh" src="{{clip:sfx-whoosh:src}}" data-start="{{clip:sfx-whoosh:start}}" data-duration="{{clip:sfx-whoosh:duration}}" data-track-index="{{clip:sfx-whoosh:track}}" data-volume="0.6"></audio>
+<audio id="sfx-pop" src="{{clip:sfx-pop:src}}" data-start="{{clip:sfx-pop:start}}" data-duration="{{clip:sfx-pop:duration}}" data-track-index="{{clip:sfx-pop:track}}" data-volume="0.7"></audio>
+<audio id="sfx-pop-flowchart" src="{{clip:sfx-pop-flowchart:src}}" data-start="{{clip:sfx-pop-flowchart:start}}" data-duration="{{clip:sfx-pop-flowchart:duration}}" data-track-index="{{clip:sfx-pop-flowchart:track}}" data-volume="0.7"></audio>
+<audio id="sfx-chime" src="{{clip:sfx-chime:src}}" data-start="{{clip:sfx-chime:start}}" data-duration="{{clip:sfx-chime:duration}}" data-track-index="{{clip:sfx-chime:track}}" data-volume="0.8"></audio>

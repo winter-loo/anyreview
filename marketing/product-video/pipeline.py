@@ -2,6 +2,7 @@
 from pathlib import Path
 import argparse,hashlib,html,json,math,os,re,shlex,subprocess
 ROOT=Path(__file__).resolve().parent
+CONFIG_PATH=None
 
 def read(path):return json.loads(path.read_text())
 def digest(path):
@@ -12,8 +13,13 @@ def digest(path):
 def number(n):return f'{n:.6f}'
 def stamp(t):
  ms=round(t*1000);return f'{ms//3600000:02}:{ms//60000%60:02}:{ms//1000%60:02},{ms%1000:03}'
-def load():
- p=read(ROOT/'config/project.json');return p,read(ROOT/p['scenes']),read(ROOT/p['assets'])
+def get_config_path():
+ global CONFIG_PATH
+ return CONFIG_PATH or (ROOT/'config/project.json')
+def load(config=None):
+ p_path=(ROOT/config).resolve() if config else get_config_path()
+ p=read(p_path)
+ return p,read(ROOT/p['scenes']),read(ROOT/p['assets'])
 def validate(p,scenes,assets):
  if p['schema_version']!=1:raise ValueError('Unsupported project schema')
  for key in ['width','height','fps']:
@@ -63,14 +69,12 @@ def compile_film(p,scenes,assets):
  commands.append('window.__timelines=window.__timelines||{};window.__timelines.main=tl;');values['timeline']='\n'.join(commands)
  template_path=ROOT/p['template']
  template=template_path.read_text()
- # Local source includes keep authoring files readable; output remains self-contained.
  def include(m):
   path=(template_path.parent/m[1]).resolve()
   if not path.is_relative_to(template_path.parent.resolve()):
    raise ValueError('Template include outside templates: '+m[1])
   return path.read_text()
  template=re.sub(r'\{\{include:([^{}]+)\}\}',include,template)
- # Strip source comments/indentation without changing inline text or CSS values.
  template=re.sub(r'<!--.*?-->', '', template, flags=re.S)
  template=re.sub(r'/\*.*?\*/', '', template, flags=re.S)
  template=re.sub(r'\n[ \t]*', '', template).strip()
@@ -90,10 +94,10 @@ def compile_film(p,scenes,assets):
 def build():
  p,scenes,assets=load();doc,srt,timing,board=compile_film(p,scenes,assets)
  for path,data in [('index.html',doc),('captions.srt',srt),('timing.json',json.dumps(timing,ensure_ascii=False,indent=2)+'\n'),('SCENES.md',board)]: (ROOT/path).write_text(data)
- inventory=['# 当前渲染素材清单（从 config/assets.json 生成）\n','| ID | 文件 | 类型 / 来源 | 大小 | SHA-256 |','|---|---|---|---:|---|']
+ inventory=['# 当前渲染素材清单（从 '+p['assets']+' 生成）\n','| ID | 文件 | 类型 / 来源 | 大小 | SHA-256 |','|---|---|---|---:|---|']
  for key,a in assets.items():inventory.append(f"| {key} | [{a['path']}]({a['path']}) | {a['kind']} / {a['origin']} | {a['bytes']} | `{a['sha256']}` |")
  (ROOT/'ASSETS.md').write_text('\n'.join(inventory)+'\n')
- watch='<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ReviewLoop 当前构建</title><style>body{background:#111320;color:#eee;font:17px system-ui;max-width:1100px;margin:30px auto;padding:20px}video{width:100%}a{color:#b6acf5}</style><h1>ReviewLoop 当前构建</h1><video controls playsinline src="renders/'+html.escape(p['output_name'])+'.mp4"></video><p>'+str(round(timing['duration'],1))+' 秒 · 当前配置生成</p><a href="captions.srt">字幕</a> · <a href="renders/storyboard/index.html">当前分镜</a></html>'
+ watch='<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+html.escape(p['name'])+' 当前构建</title><style>body{background:#111320;color:#eee;font:17px system-ui;max-width:1100px;margin:30px auto;padding:20px}video{width:100%}a{color:#b6acf5}</style><h1>'+html.escape(p['name'])+' 当前构建</h1><video controls playsinline src="renders/'+html.escape(p['output_name'])+'.mp4"></video><p>'+str(round(timing['duration'],1))+' 秒 · 当前配置生成</p><a href="captions.srt">字幕</a> · <a href="renders/storyboard/index.html">当前分镜</a></html>'
  (ROOT/'watch.html').write_text(watch)
  print(f"Built {len(scenes)} scenes, {len(assets)} assets, {timing['duration']} seconds")
  return p
@@ -108,14 +112,15 @@ def check(p):
  if not report['ok']:raise ValueError('HyperFrames check failed')
  print('HyperFrames check passed; report: renders/check.json')
 def storyboard(p,final):
- out=ROOT/'renders/storyboard';out.mkdir(exist_ok=True);cards=[];start=0
+ sb_dir = 'storyboard' if p['output_name'] == 'ReviewLoop' else f"storyboard-{p['output_name']}"
+ out=ROOT/'renders'/sb_dir;out.mkdir(exist_ok=True);cards=[];start=0
  for i,scene in enumerate(load()[1]):
   at=start+scene['poster_offset'];name=f'{i+1:02}-{scene["id"]}.png'
   ff('-y','-v','error','-ss',at,'-i',final,'-frames:v','1',out/name)
   narration=''.join(c['text'] for c in scene['clips'] if 'text' in c)
   cards.append(f'<section><h2>{i+1}. {html.escape(scene["title"])} · {start:.3f}–{start+scene["duration"]:.3f}s</h2><img src="{name}"><p>{html.escape(narration)}</p></section>')
   start+=scene['duration']
- (out/'index.html').write_text('<!doctype html><meta charset="utf-8"><title>ReviewLoop 当前分镜</title><style>body{background:#111320;color:#eee;font:18px/1.6 system-ui;max-width:1100px;margin:auto;padding:24px}img{width:100%}section{margin-bottom:40px;break-after:page}@media print{body{background:white;color:black}}</style><h1>ReviewLoop · 从当前成片生成的分镜</h1>'+''.join(cards))
+ (out/'index.html').write_text('<!doctype html><meta charset="utf-8"><title>'+html.escape(p['name'])+' 当前分镜</title><style>body{background:#111320;color:#eee;font:18px/1.6 system-ui;max-width:1100px;margin:auto;padding:24px}img{width:100%}section{margin-bottom:40px;break-after:page}@media print{body{background:white;color:black}}</style><h1>'+html.escape(p['name'])+' · 从当前成片生成的分镜</h1>'+''.join(cards))
 
 def render_signature(p,assets):
  return hashlib.sha256(json.dumps({'fps':p['fps'],'hyperframes_version':p['hyperframes_version'],'asset_hashes':{k:a['sha256'] for k,a in assets.items()}},sort_keys=True).encode()).hexdigest()
@@ -123,20 +128,31 @@ def render_signature(p,assets):
 def finish(p):
  out=ROOT/'renders';src=out/(p['output_name']+'-render.mp4');final=out/(p['output_name']+'.mp4')
  if not src.is_file():raise ValueError('Render first')
- receipt=read(out/'render-receipt.json')
+ receipt_name = 'render-receipt.json' if p['output_name'] == 'ReviewLoop' else f"{p['output_name']}-receipt.json"
+ receipt=read(out/receipt_name)
  current,_,_,_=compile_film(*load())
  if receipt['composition_sha256']!=hashlib.sha256(current.encode()).hexdigest() or receipt['render_sha256']!=digest(src) or receipt['render_signature']!=render_signature(p,load()[2]):raise ValueError('Render is stale; run render again before finish')
  loud=p['loudness'];base=f"loudnorm=I={loud['integrated']}:TP={loud['true_peak']}:LRA={loud['range']}"
  result=ff('-hide_banner','-i',src,'-vn','-af',base+':print_format=json','-f','null','-',capture=True)
  m=json.JSONDecoder().raw_decode(result.stderr[result.stderr.rindex('{'):])[0]
- (out/'loudness.json').write_text(json.dumps(m,indent=2))
+ loud_name = 'loudness.json' if p['output_name'] == 'ReviewLoop' else f"loudness-{p['output_name']}.json"
+ (out/loud_name).write_text(json.dumps(m,indent=2))
  flt=base+f":measured_I={m['input_i']}:measured_TP={m['input_tp']}:measured_LRA={m['input_lra']}:measured_thresh={m['input_thresh']}:offset={m['target_offset']}:linear=true"
  ff('-y','-v','error','-i',src,'-map','0:v','-map','0:a','-c:v','copy','-af',flt,'-c:a','aac','-b:a','192k','-ar','48000','-movflags','+faststart',final)
  ff('-v','error','-i',final,'-f','null','-')
- for t in p['proof_times']:ff('-y','-v','error','-ss',t,'-i',final,'-frames:v','1',out/f'proof-{t:.3f}.png')
- (out/'captions.srt').write_bytes((ROOT/'captions.srt').read_bytes());storyboard(p,final);print('Verified delivery:',final)
+ proof_prefix = 'proof' if p['output_name'] == 'ReviewLoop' else f"proof-{p['output_name']}"
+ for t in p['proof_times']:ff('-y','-v','error','-ss',t,'-i',final,'-frames:v','1',out/f'{proof_prefix}-{t:.3f}.png')
+ srt_name = 'captions.srt' if p['output_name'] == 'ReviewLoop' else f"{p['output_name']}.srt"
+ (out/srt_name).write_bytes((ROOT/'captions.srt').read_bytes());storyboard(p,final);print('Verified delivery:',final)
+
 def main():
- parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('command',nargs='?',default='build',choices=['build','validate','check','preview','render','finish','release']);args=parser.parse_args()
+ global CONFIG_PATH
+ parser=argparse.ArgumentParser(description=__doc__)
+ parser.add_argument('command',nargs='?',default='build',choices=['build','validate','check','preview','render','finish','release'])
+ parser.add_argument('--config',default=None,help='Project config path relative to root')
+ args=parser.parse_args()
+ if args.config:
+  CONFIG_PATH=(ROOT/args.config).resolve()
  if args.command=='validate':p,s,a=load();validate(p,s,a);print('Config and asset hashes valid');return
  if args.command=='finish':finish(load()[0]);return
  p=build()
@@ -146,6 +162,8 @@ def main():
   out=ROOT/'renders';out.mkdir(exist_ok=True);src=out/(p['output_name']+'-render.mp4')
   composition_hash=digest(ROOT/'index.html');signature=render_signature(p,load()[2])
   hf(p,'render','--quality','high','--fps',str(p['fps']),'--output',str(src))
-  (out/'render-receipt.json').write_text(json.dumps({'composition_sha256':composition_hash,'render_sha256':digest(src),'render_signature':signature,'hyperframes_version':p['hyperframes_version']},indent=2))
+  receipt_name = 'render-receipt.json' if p['output_name'] == 'ReviewLoop' else f"{p['output_name']}-receipt.json"
+  (out/receipt_name).write_text(json.dumps({'composition_sha256':composition_hash,'render_sha256':digest(src),'render_signature':signature,'hyperframes_version':p['hyperframes_version']},indent=2))
  if args.command=='release':finish(p)
+
 if __name__=='__main__':main()

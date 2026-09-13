@@ -1,0 +1,1121 @@
+[
+  {
+    "id": "terminal",
+    "title": "手机操控痛点",
+    "duration": 6.5,
+    "poster_offset": 1.5,
+    "clips": [
+      {
+        "id": "bgm",
+        "offset": 0.0,
+        "duration": 53.2,
+        "track": 5,
+        "asset": "audio-bgm"
+      },
+      {
+        "id": "screen-terminal",
+        "offset": 0.0,
+        "duration": 3.4,
+        "track": 0,
+        "asset": "assets-terminal-png"
+      },
+      {
+        "id": "screen-discord",
+        "offset": 3.0,
+        "duration": 5.5,
+        "track": 1,
+        "asset": "assets-discord-png"
+      },
+      {
+        "id": "voice-1",
+        "offset": 0.1,
+        "duration": 6.05,
+        "track": 10,
+        "asset": "audio-v1"
+      },
+      {
+        "id": "sfx-notif",
+        "offset": 0.05,
+        "duration": 1.5,
+        "track": 15,
+        "asset": "sfx-notification"
+      },
+      {
+        "id": "caption-0",
+        "offset": 0.1,
+        "duration": 2.8,
+        "track": 20,
+        "text": "在手机终端操控 AI Agent，"
+      },
+      {
+        "id": "caption-1",
+        "offset": 2.9,
+        "duration": 3.3,
+        "track": 20,
+        "text": "或者在 Discord 收到文件，交付的文档和图片不方便审阅。"
+      }
+    ],
+    "motion": [
+      {
+        "order": 0,
+        "op": "set",
+        "target": "#phone",
+        "props": {
+          "scale": 1.0,
+          "y": 0,
+          "x": 0,
+          "rotation": 0,
+          "opacity": 1
+        },
+        "offset": 0
+      },
+      {
+        "order": 1,
+        "op": "set",
+        "target": "#screen-terminal",
+        "props": {
+          "x": 0
+        },
+        "offset": 0
+      },
+      {
+        "order": 2,
+        "op": "set",
+        "target": "#screen-discord",
+        "props": {
+          "x": 658
+        },
+        "offset": 0
+      },
+      {
+        "order": 3,
+        "op": "set",
+        "target": "#review-entry",
+        "props": {
+          "x": 658,
+          "opacity": 0
+        },
+        "offset": 0
+      },
+      {
+        "order": 4,
+        "op": "to",
+        "target": "#screen-terminal",
+        "props": {
+          "x": -658,
+          "duration": 0.45,
+          "ease": "power2.inOut"
+        },
+        "offset": 3.0
+      },
+      {
+        "order": 5,
+        "op": "to",
+        "target": "#screen-discord",
+        "props": {
+          "x": 0,
+          "duration": 0.45,
+          "ease": "power2.inOut"
+        },
+        "offset": 3.0
+      },
+      {
+        "order": 6,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "rotation": -1.2,
+          "duration": 2.8,
+          "ease": "sine.inOut"
+        },
+        "offset": 0.2
+      },
+      {
+        "order": 7,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "rotation": 1.0,
+          "duration": 2.8,
+          "ease": "sine.inOut"
+        },
+        "offset": 3.5
+      }
+    ]
+  },
+  {
+    "id": "review",
+    "title": "独立审阅页",
+    "duration": 6.8,
+    "poster_offset": 3.0,
+    "clips": [
+      {
+        "id": "screen-read",
+        "offset": 0.0,
+        "duration": 6.8,
+        "track": 0,
+        "asset": "assets-read-png"
+      },
+      {
+        "id": "voice-2",
+        "offset": 0.05,
+        "duration": 6.35,
+        "track": 10,
+        "asset": "audio-v2"
+      },
+      {
+        "id": "sfx-whoosh",
+        "offset": 0.0,
+        "duration": 0.5,
+        "track": 15,
+        "asset": "sfx-whoosh"
+      },
+      {
+        "id": "caption-2",
+        "offset": 0.05,
+        "duration": 2.2,
+        "track": 20,
+        "text": "其实，你只需要一个链接。"
+      },
+      {
+        "id": "caption-3",
+        "offset": 2.3,
+        "duration": 4.1,
+        "track": 20,
+        "text": "ReviewLoop 把 AI 吐出的内容，秒变手机端独立审阅页。"
+      }
+    ],
+    "motion": [
+      {
+        "order": 8,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "scale": 1.02,
+          "rotation": 0,
+          "y": -10,
+          "duration": 0.6,
+          "ease": "power2.out"
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 9,
+        "op": "set",
+        "target": "#topic-badge",
+        "props": {
+          "innerText": "独立审阅页 · 手机直接看"
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 10,
+        "op": "set",
+        "target": "#review-entry",
+        "props": {
+          "opacity": 1
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 11,
+        "op": "to",
+        "target": "#review-entry",
+        "props": {
+          "x": 0,
+          "duration": 0.85,
+          "ease": "power3.inOut"
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 12,
+        "op": "to",
+        "target": "#screen-discord",
+        "props": {
+          "x": -150,
+          "duration": 0.85,
+          "ease": "power3.inOut"
+        },
+        "offset": 0.0
+      }
+    ]
+  },
+  {
+    "id": "flowchart",
+    "title": "长文与流程图",
+    "duration": 7.2,
+    "poster_offset": 4.5,
+    "clips": [
+      {
+        "id": "screen-flowchart",
+        "offset": 0.0,
+        "duration": 2.8,
+        "track": 0,
+        "asset": "assets-reading-v2-volcano-mp4"
+      },
+      {
+        "id": "flowchart-modal",
+        "offset": 2.7,
+        "duration": 4.5,
+        "track": 1
+      },
+      {
+        "id": "voice-3",
+        "offset": 0.05,
+        "duration": 7.08,
+        "track": 10,
+        "asset": "audio-v3"
+      },
+      {
+        "id": "sfx-pop-flowchart",
+        "offset": 2.5,
+        "duration": 0.2,
+        "track": 15,
+        "asset": "sfx-pop"
+      },
+      {
+        "id": "caption-5",
+        "offset": 0.05,
+        "duration": 1.8,
+        "track": 20,
+        "text": "长回复顺畅读；"
+      },
+      {
+        "id": "caption-6",
+        "offset": 1.9,
+        "duration": 5.2,
+        "track": 20,
+        "text": "遇到复杂的架构图和流程图，点开放大，每一处细节都清清楚楚。"
+      }
+    ],
+    "motion": [
+      {
+        "order": 13,
+        "op": "set",
+        "target": "#topic-badge",
+        "props": {
+          "innerText": "长文顺畅读 · 架构流程图"
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 14,
+        "op": "set",
+        "target": "#flowchart-tap-ring",
+        "props": {
+          "left": 555,
+          "top": 245,
+          "opacity": 0,
+          "scale": 1.5
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 15,
+        "op": "set",
+        "target": "#flowchart-modal",
+        "props": {
+          "opacity": 0,
+          "scale": 0.92
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 16,
+        "op": "set",
+        "target": "#modal-canvas-pan",
+        "props": {
+          "x": 0
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 17,
+        "op": "to",
+        "target": "#flowchart-tap-ring",
+        "props": {
+          "opacity": 1,
+          "scale": 0.9,
+          "duration": 0.2,
+          "ease": "power2.out"
+        },
+        "offset": 2.2
+      },
+      {
+        "order": 18,
+        "op": "to",
+        "target": "#flowchart-tap-ring",
+        "props": {
+          "opacity": 0,
+          "scale": 0.7,
+          "duration": 0.15
+        },
+        "offset": 2.45
+      },
+      {
+        "order": 19,
+        "op": "set",
+        "target": "#flowchart-tap-ring",
+        "props": {
+          "opacity": 0
+        },
+        "offset": 2.7
+      },
+      {
+        "order": 20,
+        "op": "to",
+        "target": "#flowchart-modal",
+        "props": {
+          "opacity": 1,
+          "scale": 1.0,
+          "duration": 0.35,
+          "ease": "back.out(1.2)"
+        },
+        "offset": 2.7
+      },
+      {
+        "order": 21,
+        "op": "to",
+        "target": "#modal-btn-clear",
+        "props": {
+          "backgroundColor": "#1d4ed8",
+          "scale": 1.06,
+          "duration": 0.15,
+          "yoyo": true,
+          "repeat": 1
+        },
+        "offset": 3.2
+      },
+      {
+        "order": 22,
+        "op": "to",
+        "target": "#modal-canvas-pan",
+        "props": {
+          "x": -420,
+          "duration": 3.5,
+          "ease": "power1.inOut"
+        },
+        "offset": 3.4
+      },
+      {
+        "order": 23,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "scale": 1.14,
+          "y": 50,
+          "duration": 1.8,
+          "ease": "power2.out"
+        },
+        "offset": 2.7
+      }
+    ]
+  },
+  {
+    "id": "text-annotation",
+    "title": "单手划词批注",
+    "duration": 8.4,
+    "poster_offset": 3.5,
+    "clips": [
+      {
+        "id": "screen-annotation-still",
+        "offset": 0.0,
+        "duration": 0.3,
+        "track": 1,
+        "asset": "assets-annotation-entry-v10-png"
+      },
+      {
+        "id": "screen-text-annotation",
+        "offset": 0.2,
+        "duration": 8.2,
+        "track": 0,
+        "asset": "assets-interaction-v2-volcano-mp4"
+      },
+      {
+        "id": "voice-4",
+        "offset": 0.05,
+        "duration": 8.184,
+        "track": 10,
+        "asset": "audio-v4"
+      },
+      {
+        "id": "sfx-pop",
+        "offset": 1.8,
+        "duration": 0.2,
+        "track": 15,
+        "asset": "sfx-pop"
+      },
+      {
+        "id": "caption-7",
+        "offset": 0.05,
+        "duration": 3.6,
+        "track": 20,
+        "text": "在手机上提意见，不用再复制粘贴上下文！"
+      },
+      {
+        "id": "caption-8",
+        "offset": 3.7,
+        "duration": 4.6,
+        "track": 20,
+        "text": "选中文字直接写批注，对着内容直接提，精准到字句。"
+      }
+    ],
+    "motion": [
+      {
+        "order": 24,
+        "op": "set",
+        "target": "#topic-badge",
+        "props": {
+          "innerText": "触控批注 · 哪里不对划哪里"
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 25,
+        "op": "set",
+        "target": "#flowchart-modal",
+        "props": {
+          "opacity": 0
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 26,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "scale": 1.14,
+          "y": -30,
+          "duration": 0.8,
+          "ease": "power2.out"
+        },
+        "offset": 0.0
+      },
+      {
+        "op": "set",
+        "target": "#save-pointer",
+        "props": {
+          "x": 30,
+          "y": 60,
+          "opacity": 0,
+          "scale": 1.0
+        },
+        "offset": 0.0,
+        "order": 27
+      },
+      {
+        "op": "set",
+        "target": "#save-pointer .pointer-tap-ring",
+        "props": {
+          "opacity": 0,
+          "scale": 0.5
+        },
+        "offset": 0.0,
+        "order": 28
+      },
+      {
+        "op": "to",
+        "target": "#save-pointer",
+        "props": {
+          "x": 0,
+          "y": 0,
+          "opacity": 1,
+          "duration": 0.5,
+          "ease": "power2.out"
+        },
+        "offset": 5.5,
+        "order": 29
+      },
+      {
+        "op": "to",
+        "target": "#save-pointer",
+        "props": {
+          "scale": 0.85,
+          "duration": 0.12,
+          "ease": "power1.inOut"
+        },
+        "offset": 6.2,
+        "order": 30
+      },
+      {
+        "op": "to",
+        "target": "#save-pointer .pointer-tap-ring",
+        "props": {
+          "opacity": 1,
+          "scale": 1.4,
+          "duration": 0.25,
+          "ease": "power2.out"
+        },
+        "offset": 6.2,
+        "order": 31
+      },
+      {
+        "op": "to",
+        "target": "#save-pointer",
+        "props": {
+          "scale": 1.0,
+          "duration": 0.12
+        },
+        "offset": 6.32,
+        "order": 32
+      },
+      {
+        "op": "to",
+        "target": "#save-pointer .pointer-tap-ring",
+        "props": {
+          "opacity": 0,
+          "duration": 0.15
+        },
+        "offset": 6.45,
+        "order": 33
+      },
+      {
+        "op": "to",
+        "target": "#save-pointer",
+        "props": {
+          "opacity": 0,
+          "duration": 0.2
+        },
+        "offset": 6.55,
+        "order": 34
+      }
+    ]
+  },
+  {
+    "id": "image-annotation",
+    "title": "画笔圈出位置",
+    "duration": 7.1,
+    "poster_offset": 3.0,
+    "clips": [
+      {
+        "id": "screen-image-annotation",
+        "offset": 0.0,
+        "duration": 7.1,
+        "track": 0,
+        "asset": "assets-image-volcano-mp4"
+      },
+      {
+        "id": "voice-5",
+        "offset": 0.05,
+        "duration": 6.984,
+        "track": 10,
+        "asset": "audio-v5"
+      },
+      {
+        "id": "caption-9",
+        "offset": 0.05,
+        "duration": 3.2,
+        "track": 20,
+        "text": "图片和设计稿，也能圈出具体位置。"
+      },
+      {
+        "id": "caption-10",
+        "offset": 3.3,
+        "duration": 3.7,
+        "track": 20,
+        "text": "用画笔指着画面说清楚，省去反复解释。"
+      }
+    ],
+    "motion": [
+      {
+        "order": 35,
+        "op": "set",
+        "target": "#topic-badge",
+        "props": {
+          "innerText": "画笔圈选 · 精准定位修改"
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 36,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "scale": 1.25,
+          "y": -120,
+          "duration": 0.8,
+          "ease": "power2.out"
+        },
+        "offset": 0.2
+      }
+    ]
+  },
+  {
+    "id": "submit-and-agent",
+    "title": "一键提交闭环",
+    "duration": 7.9,
+    "poster_offset": 3.0,
+    "clips": [
+      {
+        "id": "screen-submit",
+        "offset": 0.0,
+        "duration": 3.2,
+        "track": 0,
+        "asset": "assets-submit-volcano-mp4"
+      },
+      {
+        "id": "agent-return",
+        "offset": 3.2,
+        "duration": 4.7,
+        "track": 0
+      },
+      {
+        "id": "voice-6",
+        "offset": 0.05,
+        "duration": 7.728,
+        "track": 10,
+        "asset": "audio-v6"
+      },
+      {
+        "id": "sfx-chime",
+        "offset": 2.2,
+        "duration": 1.0,
+        "track": 15,
+        "asset": "sfx-chime"
+      },
+      {
+        "id": "caption-11",
+        "offset": 0.05,
+        "duration": 2.8,
+        "track": 20,
+        "text": "标注完成，一键提交给 AI。"
+      },
+      {
+        "id": "caption-12",
+        "offset": 2.9,
+        "duration": 4.9,
+        "track": 20,
+        "text": "远程 Agent 自动拉取带坐标和原文的精确意见，继续干活。"
+      }
+    ],
+    "motion": [
+      {
+        "order": 37,
+        "op": "set",
+        "target": "#topic-badge",
+        "props": {
+          "innerText": "一键提交 · AI 终端修改"
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 38,
+        "op": "to",
+        "target": "#phone",
+        "props": {
+          "scale": 1.0,
+          "y": 0,
+          "duration": 0.8,
+          "ease": "power2.out"
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 39,
+        "op": "set",
+        "target": "#prompt-char-0",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 3.4
+      },
+      {
+        "order": 40,
+        "op": "set",
+        "target": "#prompt-char-1",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 3.5
+      },
+      {
+        "order": 41,
+        "op": "set",
+        "target": "#prompt-char-2",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 3.6
+      },
+      {
+        "order": 42,
+        "op": "set",
+        "target": "#prompt-char-3",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 3.7
+      },
+      {
+        "order": 43,
+        "op": "set",
+        "target": "#prompt-char-4",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 3.8
+      },
+      {
+        "order": 44,
+        "op": "set",
+        "target": "#prompt-char-5",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 3.9
+      },
+      {
+        "order": 45,
+        "op": "set",
+        "target": "#prompt-char-6",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 4.0
+      },
+      {
+        "order": 46,
+        "op": "set",
+        "target": "#prompt-char-7",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 4.1
+      },
+      {
+        "order": 47,
+        "op": "set",
+        "target": "#prompt-char-8",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 4.2
+      },
+      {
+        "order": 48,
+        "op": "set",
+        "target": "#prompt-char-9",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 4.3
+      },
+      {
+        "order": 49,
+        "op": "set",
+        "target": "#prompt-char-10",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 4.4
+      },
+      {
+        "order": 50,
+        "op": "set",
+        "target": "#prompt-char-11",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 4.5
+      },
+      {
+        "order": 51,
+        "op": "set",
+        "target": "#prompt-char-12",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 4.6
+      },
+      {
+        "order": 52,
+        "op": "set",
+        "target": "#prompt-char-13",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 4.7
+      },
+      {
+        "order": 53,
+        "op": "set",
+        "target": "#prompt-char-14",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 4.8
+      },
+      {
+        "order": 54,
+        "op": "set",
+        "target": "#prompt-char-15",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 4.9
+      },
+      {
+        "order": 55,
+        "op": "set",
+        "target": "#prompt-char-16",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 5.0
+      },
+      {
+        "order": 56,
+        "op": "set",
+        "target": "#prompt-char-17",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 5.1
+      },
+      {
+        "order": 57,
+        "op": "set",
+        "target": "#prompt-char-18",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 5.2
+      },
+      {
+        "order": 58,
+        "op": "set",
+        "target": "#prompt-char-19",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 5.3
+      },
+      {
+        "order": 59,
+        "op": "set",
+        "target": "#prompt-char-20",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 5.4
+      },
+      {
+        "order": 60,
+        "op": "set",
+        "target": "#prompt-char-21",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 5.5
+      },
+      {
+        "order": 61,
+        "op": "set",
+        "target": "#prompt-char-22",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 5.6
+      },
+      {
+        "order": 62,
+        "op": "set",
+        "target": "#prompt-char-23",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 5.7
+      },
+      {
+        "order": 63,
+        "op": "set",
+        "target": "#prompt-char-24",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 5.8
+      },
+      {
+        "order": 64,
+        "op": "set",
+        "target": "#prompt-char-25",
+        "props": {
+          "display": "inline"
+        },
+        "offset": 5.9
+      }
+    ]
+  },
+  {
+    "id": "explore-closing",
+    "title": "多格式生态与转化",
+    "duration": 9.3,
+    "poster_offset": 6.5,
+    "clips": [
+      {
+        "id": "ending-markdown-media",
+        "offset": 0.0,
+        "duration": 5.4,
+        "track": 0,
+        "asset": "ending-word-png"
+      },
+      {
+        "id": "stack-media-0",
+        "offset": 0.7,
+        "duration": 4.7,
+        "track": 30,
+        "asset": "ending-excel-png"
+      },
+      {
+        "id": "stack-media-1",
+        "offset": 1.3,
+        "duration": 4.1,
+        "track": 31,
+        "asset": "ending-ppt-png"
+      },
+      {
+        "id": "stack-media-2",
+        "offset": 2.2,
+        "duration": 3.2,
+        "track": 32,
+        "asset": "ending-video-stable-v10-mp4"
+      },
+      {
+        "id": "voice-7",
+        "offset": 0.05,
+        "duration": 9.096,
+        "track": 10,
+        "asset": "audio-v7"
+      },
+      {
+        "id": "caption-13",
+        "offset": 0.05,
+        "duration": 4.6,
+        "track": 20,
+        "text": "文档、表格、PPT，甚至视频都能在手机端逐帧审阅。"
+      },
+      {
+        "id": "caption-14",
+        "offset": 4.7,
+        "duration": 4.5,
+        "track": 20,
+        "text": "ReviewLoop，让手机端 AI 审阅，彻底告别折磨！"
+      }
+    ],
+    "motion": [
+      {
+        "order": 65,
+        "op": "set",
+        "target": "#topic-badge",
+        "props": {
+          "innerText": "多格式支持 · 告别折磨"
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 66,
+        "op": "set",
+        "target": "#stack-0",
+        "props": {
+          "x": 80,
+          "y": 60,
+          "scale": 0.94,
+          "rotation": 3,
+          "opacity": 0
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 67,
+        "op": "to",
+        "target": "#stack-0",
+        "props": {
+          "opacity": 1,
+          "duration": 0.45,
+          "ease": "back.out(1.2)"
+        },
+        "offset": 0.7
+      },
+      {
+        "order": 68,
+        "op": "set",
+        "target": "#stack-1",
+        "props": {
+          "x": 160,
+          "y": 120,
+          "scale": 0.88,
+          "rotation": 6,
+          "opacity": 0
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 69,
+        "op": "to",
+        "target": "#stack-1",
+        "props": {
+          "opacity": 1,
+          "duration": 0.45,
+          "ease": "back.out(1.2)"
+        },
+        "offset": 1.3
+      },
+      {
+        "order": 70,
+        "op": "set",
+        "target": "#stack-2",
+        "props": {
+          "x": 60,
+          "y": 30,
+          "scale": 0.98,
+          "rotation": 1,
+          "opacity": 0
+        },
+        "offset": 0.0
+      },
+      {
+        "order": 71,
+        "op": "to",
+        "target": "#stack-2",
+        "props": {
+          "opacity": 1,
+          "duration": 0.45,
+          "ease": "back.out(1.2)"
+        },
+        "offset": 2.2
+      },
+      {
+        "order": 74,
+        "op": "to",
+        "target": "#phone, .stack-phone",
+        "props": {
+          "opacity": 0,
+          "duration": 0.7
+        },
+        "offset": 5.4
+      },
+      {
+        "order": 75,
+        "op": "to",
+        "target": ".header-bar",
+        "props": {
+          "opacity": 0,
+          "duration": 0.5
+        },
+        "offset": 5.4
+      },
+      {
+        "order": 76,
+        "op": "to",
+        "target": ".closing",
+        "props": {
+          "opacity": 1,
+          "duration": 0.8,
+          "ease": "power2.out"
+        },
+        "offset": 5.6
+      }
+    ]
+  }
+]

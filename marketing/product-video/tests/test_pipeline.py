@@ -45,4 +45,9 @@ class MigrationTests(unittest.TestCase):
   _,_,t,_=p.compile_film(self.project,self.scenes,self.assets)
   self.assertAlmostEqual(t['scene_starts'][1],10.916)
   self.assertAlmostEqual(t['captions'][3]['start'],11.266)
+ def test_vertical_project_valid(self):
+  vproj,vscenes,vassets=p.load('config/project-vertical.json')
+  p.validate(vproj,vscenes,vassets)
+  self.assertEqual(vproj['width'],1080)
+  self.assertEqual(vproj['height'],1920)
 if __name__=='__main__':unittest.main()

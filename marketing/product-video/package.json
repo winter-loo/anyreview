@@ -10,7 +10,13 @@
     "check": "python3 pipeline.py check",
     "render": "python3 pipeline.py render",
     "finish": "python3 pipeline.py finish",
-    "release": "python3 pipeline.py release"
+    "release": "python3 pipeline.py release",
+    "build:vertical": "python3 pipeline.py --config config/project-vertical.json build",
+    "validate:vertical": "python3 pipeline.py --config config/project-vertical.json validate",
+    "dev:vertical": "python3 pipeline.py --config config/project-vertical.json preview",
+    "check:vertical": "python3 pipeline.py --config config/project-vertical.json check",
+    "render:vertical": "python3 pipeline.py --config config/project-vertical.json render",
+    "release:vertical": "python3 pipeline.py --config config/project-vertical.json release"
   },
   "packageManager": "pnpm@10.23.0"
 }

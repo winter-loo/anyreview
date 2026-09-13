@@ -4,8 +4,8 @@
     "kind": "image",
     "origin": "real-browser-capture",
     "provenance": "PROVENANCE.md",
-    "bytes": 87592,
-    "sha256": "e6bea083f109260102ff9d659e027a1166671825eab2365288bea6d4dbe30b14"
+    "bytes": 97262,
+    "sha256": "f6e64094b77a57cdb91bdb5e302a8915e459105d7af68d8b31db36654add9a28"
   },
   "assets-discord-png": {
     "path": "assets/discord.png",
@@ -50,8 +50,8 @@
     "kind": "video",
     "origin": "real-browser-capture",
     "provenance": "PROVENANCE.md",
-    "bytes": 208184,
-    "sha256": "188575650daca4253b66e7e0e9563d23fe97abf09e453aee28f5b4d6bd102882",
+    "bytes": 210632,
+    "sha256": "2da71bf775820a3d608e1a5e499f9390f0be1e0b376aa0b10825f909f90a03cb",
     "media": {
       "programs": [],
       "stream_groups": [],
@@ -63,7 +63,7 @@
         }
       ],
       "format": {
-        "duration": "13.366667"
+        "duration": "12.600000"
       }
     }
   },
