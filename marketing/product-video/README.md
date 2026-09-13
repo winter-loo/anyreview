@@ -51,6 +51,7 @@ pnpm run validate:vertical # 竖版配置与素材哈希校验
 pnpm run dev:vertical      # 竖版 HyperFrames Studio 预览
 pnpm run check:vertical    # 竖版浏览器渲染检查
 pnpm run release:vertical  # 竖版全流程导出（成片、SRT、分镜、关键证明帧）
+pnpm run pack:vertical     # 竖版全渠道发布物料一键打包（成片、字幕、多尺寸封面、文案库与 ZIP）
 ```
 
 也可直接使用 `python3 pipeline.py [--config <path>] build|validate|check|preview|render|finish|release`。

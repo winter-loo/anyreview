@@ -16,7 +16,8 @@
     "dev:vertical": "python3 pipeline.py --config config/project-vertical.json preview",
     "check:vertical": "python3 pipeline.py --config config/project-vertical.json check",
     "render:vertical": "python3 pipeline.py --config config/project-vertical.json render",
-    "release:vertical": "python3 pipeline.py --config config/project-vertical.json release"
+    "release:vertical": "python3 pipeline.py --config config/project-vertical.json release",
+    "pack:vertical": "python3 tools/package-release.py"
   },
   "packageManager": "pnpm@10.23.0"
 }
