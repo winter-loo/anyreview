@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 import { createCipheriv, createHash, randomBytes } from 'node:crypto';
-import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
+import { spawn, spawnSync } from 'node:child_process';
+import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, rmSync, writeFileSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { homedir, networkInterfaces } from 'node:os';
 import path from 'node:path';
 import { createInterface } from 'node:readline/promises';
@@ -159,6 +159,71 @@ function tailscalePublicBase(port) {
 	return `https://${dnsName}/live`;
 }
 
+function runningProcess(pid) {
+	if (!Number.isSafeInteger(pid) || pid <= 0) return false;
+	try { process.kill(pid, 0); return true; } catch { return false; }
+}
+
+function cloudflaredCommand() {
+	if (process.env.CLOUDFLARED_BIN) return process.env.CLOUDFLARED_BIN;
+	if (process.platform === 'win32') {
+		const candidates = [
+			process.env.ProgramFiles && path.join(process.env.ProgramFiles, 'cloudflared', 'cloudflared.exe'),
+			process.env['ProgramFiles(x86)'] && path.join(process.env['ProgramFiles(x86)'], 'cloudflared', 'cloudflared.exe')
+		].filter(Boolean);
+		const installed = candidates.find((candidate) => existsSync(candidate));
+		if (installed) return installed;
+	}
+	return 'cloudflared';
+}
+
+async function cloudflarePublicBase(port) {
+	const stateDirectory = path.join(homedir(), '.config');
+	const stateFile = path.join(stateDirectory, 'online-review-cloudflare.json');
+	try {
+		const state = JSON.parse(readFileSync(stateFile, 'utf8'));
+		if (state.port === String(port) && /^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/i.test(state.url) && runningProcess(state.pid)) {
+			return `${state.url}/live`;
+		}
+	} catch {}
+
+	mkdirSync(stateDirectory, { recursive: true });
+	const logFile = path.join(stateDirectory, `online-review-cloudflare-${Date.now()}.log`);
+	const log = openSync(logFile, 'a');
+	let tunnel;
+	try {
+		tunnel = spawn(cloudflaredCommand(), ['tunnel', '--url', `http://127.0.0.1:${port}`, '--no-autoupdate'], {
+			detached: true,
+			stdio: ['ignore', log, log],
+			windowsHide: true
+		});
+	} catch (error) {
+		closeSync(log);
+		throw new Error(`Cannot run cloudflared: ${error instanceof Error ? error.message : String(error)}`);
+	}
+	closeSync(log);
+	let spawnError;
+	tunnel.once('error', (error) => { spawnError = error; });
+	tunnel.unref();
+
+	const deadline = Date.now() + 30_000;
+	while (Date.now() < deadline) {
+		await new Promise((resolve) => setTimeout(resolve, 250));
+		if (spawnError) throw new Error(`Cannot run cloudflared: ${spawnError.message}`);
+		let output = '';
+		try { output = readFileSync(logFile, 'utf8'); } catch {}
+		const match = output.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/i);
+		if (match) {
+			writeFileSync(stateFile, JSON.stringify({ pid: tunnel.pid, port: String(port), url: match[0], logFile }, null, 2), { mode: 0o600 });
+			return `${match[0]}/live`;
+		}
+		if (tunnel.exitCode !== null) throw new Error(output.trim() || `cloudflared exited with code ${tunnel.exitCode}.`);
+	}
+
+	try { tunnel.kill(); } catch {}
+	throw new Error(`Timed out waiting for a Cloudflare Quick Tunnel URL. See ${logFile}`);
+}
+
 function latestMarkdown(directory) {
 	const candidates = readdirSync(directory, { withFileTypes: true })
 		.filter((entry) => entry.isFile() && isMarkdownFile(entry.name))
@@ -211,10 +276,11 @@ async function main(rawFiles) {
  const local = args.includes('--local');
  const localNetOption = args.find((arg) => arg === '--localnet' || arg.startsWith('--localnet='));
  const tailnet = args.includes('--tailnet');
+ const cloudflare = args.includes('--cloudflare');
  const requestedAddress = localNetOption?.includes('=') ? localNetOption.slice(localNetOption.indexOf('=') + 1) : undefined;
  const localHost = localNetOption ? await chooseLocalNetworkAddress(requestedAddress) : '127.0.0.1';
  const port = process.env.PORT || '8787';
- const base = new URL(tailnet ? tailscalePublicBase(await localServicePort()) : local || localNetOption ? `http://${localHost}:${port}/live` : (readEnvConfig('ONLINE_REVIEW_BASE_URL') || `http://127.0.0.1:${port}/live`));
+ const base = new URL(tailnet ? tailscalePublicBase(await localServicePort()) : cloudflare ? await cloudflarePublicBase(await localServicePort()) : local || localNetOption ? `http://${localHost}:${port}/live` : (readEnvConfig('ONLINE_REVIEW_BASE_URL') || `http://127.0.0.1:${port}/live`));
  if (!['http:', 'https:'].includes(base.protocol) || base.pathname.replace(/\/$/, '') !== '/live' || base.search || base.hash || base.username || base.password) throw new Error('Review base URL must be an HTTP(S) URL ending in /live');
 	const files = rawFiles.map((file) => realpathSync(file));
 
@@ -273,18 +339,18 @@ async function main(rawFiles) {
 
 try {
  if (['--help','-h'].includes(process.argv[2]) || (process.argv[2] === 'paste' && ['--help','-h'].includes(process.argv[3]))) {
-  console.log('Usage: review <file-or-directory> [--long] [--local | --localnet[=<address>] | --tailnet]\n       review paste [--long] [--local | --localnet[=<address>] | --tailnet]\n       review --clipboard [--long] [--local | --localnet[=<address>] | --tailnet]\n       review feedback [url-or-id] [--json] [--wait] [--after <cursor>] [--timeout <seconds>] [--out <new-directory>]\n\nURL modes: default and --local use 127.0.0.1; --localnet selects a private IPv4 address; --tailnet enables a public HTTPS Funnel. ONLINE_REVIEW_BASE_URL overrides the default.\n\nFiles: Video (.mp4/.mov/.webm, up to 500 MiB), HTML (.html/.htm), Markdown, PDF, Word, PowerPoint, Excel, or images.\n\nPaste: paste text in a terminal, press Enter then Ctrl+D to publish; Ctrl+C cancels.\n       Or pipe UTF-8 text: cat response.md | review paste');
+  console.log('Usage: review <file-or-directory> [--long] [--local | --localnet[=<address>] | --tailnet | --cloudflare]\n       review paste [--long] [--local | --localnet[=<address>] | --tailnet | --cloudflare]\n       review --clipboard [--long] [--local | --localnet[=<address>] | --tailnet | --cloudflare]\n       review feedback [url-or-id] [--json] [--wait] [--after <cursor>] [--timeout <seconds>] [--out <new-directory>]\n\nURL modes: default and --local use 127.0.0.1; --localnet selects a private IPv4 address; --tailnet enables a public HTTPS Funnel; --cloudflare starts a Cloudflare Quick Tunnel. ONLINE_REVIEW_BASE_URL overrides the default.\n\nFiles: Video (.mp4/.mov/.webm, up to 500 MiB), HTML (.html/.htm), Markdown, PDF, Word, PowerPoint, Excel, or images.\n\nPaste: paste text in a terminal, press Enter then Ctrl+D to publish; Ctrl+C cancels.\n       Or pipe UTF-8 text: cat response.md | review paste');
  } else if (process.argv[2] === 'feedback') {
   const { runFeedback } = await import('./feedback.js');
   await runFeedback(process.argv.slice(3));
  } else {
   const paste = process.argv[2] === 'paste';
   const args = process.argv.slice(paste ? 3 : 2);
-  const unknown = args.find(arg => arg.startsWith('--') && !['--long', '--clipboard', '--local', '--localnet', '--tailnet'].includes(arg) && !arg.startsWith('--localnet='));
+  const unknown = args.find(arg => arg.startsWith('--') && !['--long', '--clipboard', '--local', '--localnet', '--tailnet', '--cloudflare'].includes(arg) && !arg.startsWith('--localnet='));
   if (unknown) throw new Error(`Unknown option: ${unknown}`);
-  const urlModes = [args.includes('--local'), args.some((arg) => arg === '--localnet' || arg.startsWith('--localnet=')), args.includes('--tailnet')].filter(Boolean).length;
-  if (urlModes > 1) throw new Error('Choose only one of --local, --localnet, or --tailnet.');
-  const files = args.filter(arg => !['--long', '--clipboard', '--local', '--localnet', '--tailnet'].includes(arg) && !arg.startsWith('--localnet='));
+  const urlModes = [args.includes('--local'), args.some((arg) => arg === '--localnet' || arg.startsWith('--localnet=')), args.includes('--tailnet'), args.includes('--cloudflare')].filter(Boolean).length;
+  if (urlModes > 1) throw new Error('Choose only one of --local, --localnet, --tailnet, or --cloudflare.');
+  const files = args.filter(arg => !['--long', '--clipboard', '--local', '--localnet', '--tailnet', '--cloudflare'].includes(arg) && !arg.startsWith('--localnet='));
   const clipboard = args.includes('--clipboard');
   if (paste && clipboard) throw new Error('Choose review paste or review --clipboard, not both.');
   if (paste || clipboard) {
