@@ -412,10 +412,6 @@ dist/review-platform.tar.gz
 
 ## Deployment notes
 
-Detailed deployment records:
-
-- [deeloo.cn ReviewLoop deployment for the cash-in-system research document](./docs/deployments/deeloo-cn-cash-in-system-research.md)
-
 Example portable deployment:
 
 ```bash
@@ -445,10 +441,6 @@ nohup ./start-review-platform.sh > review-platform.log 2>&1 &
 - Gateway tokens and API keys must come from environment/configuration, not source code.
 - Server errors returned from Gateway notification paths are sanitized before they are exposed to the client.
 - This project is still a local/private review tool; the Web/API layer does not yet provide full multi-tenant production authentication or authorization.
-
-### Live review public URLs
-
-See [How `review` generates public URLs and serves local files](docs/deployments/live-review-public-url.md) for token generation, snapshots, short-link storage, the deeloo.cn reverse proxy, SSH tunnel, service configuration and troubleshooting.
 
 ### Live document and image feedback
 
@@ -498,7 +490,7 @@ dependencies.
 
 ### Video live reviews
 
-The video page’s **?** button opens the [video annotation help page](https://deeloo.cn/live/help/video), with a quick start, timeline diagram, gesture guide, and keyboard shortcuts.
+The video page’s **?** button opens the built-in video annotation help page, with a quick start, timeline diagram, gesture guide, and keyboard shortcuts.
 
 Run `review video.mp4` (or add `--local` / `--localnet`) to review one local video up to 500 MiB. MP4 is the primary format; MOV and WebM work when their codecs are supported by the browser. The server requires `ffprobe` on PATH. Playback and time annotations are available as soon as the video metadata loads. Frame numbers initially use an estimated frame rate (temporarily 30 fps until the server returns the reported rate), clearly marked as estimated. A cached index of actual frames builds in the background and replaces the estimate without interrupting playback. Captured annotation times remain stable across that switch; the video is not transcoded.
 

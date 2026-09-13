@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { liveOrigin } from './origin';
-const url=new URL('https://deeloo.cn/live/test/feedback');
+const url=new URL('https://review.example/live/test/feedback');
 it('keeps direct loopback attachments local despite a public adapter ORIGIN',()=>{
  for(const host of ['127.0.0.1:8787','localhost:8787','[::1]:8787']){
   expect(liveOrigin(url,new Headers({host}))).toBe(`http://${host}`);

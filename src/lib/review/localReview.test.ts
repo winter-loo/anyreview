@@ -21,6 +21,18 @@ it('publishes local links for files, paste and clipboard and remembers the local
  } finally {rmSync(dir,{recursive:true,force:true});}
 });
 
+it('uses loopback when no URL mode or public base URL is configured',()=>{
+ const dir=mkdtempSync(path.join(tmpdir(),'default-review-'));
+ try {
+  const file=path.join(dir,'sample.md');writeFileSync(file,'# Default');
+  const inheritedEnv: NodeJS.ProcessEnv={...process.env};
+  delete inheritedEnv.ONLINE_REVIEW_BASE_URL;
+  const env={...inheritedEnv,HOME:dir,PORT:'9876',ONLINE_REVIEW_URL_SECRET:'default-test',ONLINE_REVIEW_FEEDBACK_HOME:path.join(dir,'feedback'),ONLINE_REVIEW_SHORT_LINKS_DB:path.join(dir,'links.db')};
+  const url=execFileSync(process.execPath,['bin/review.js',file],{env,encoding:'utf8'}).trim();
+  expect(url).toMatch(/^http:\/\/127\.0\.0\.1:9876\/live\//);
+ } finally {rmSync(dir,{recursive:true,force:true});}
+});
+
 it('publishes with an explicitly selected local network address',()=>{
  const lanAddress=Object.entries(networkInterfaces()).filter(([name])=>!/tun|wsl/i.test(name)).flatMap(([,entries])=>entries??[]).find((entry)=>entry.family==='IPv4'&&!entry.internal&&(/^(10\.|192\.168\.)/.test(entry.address)||/^172\.(1[6-9]|2\d|3[01])\./.test(entry.address)))?.address;
  if(!lanAddress)return;

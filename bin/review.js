@@ -13,7 +13,6 @@ import { rememberReview } from './latest-review.js';
 import { readPaste } from './paste.js';
 import { digest, freezeReview } from './live-snapshot.js';
 
-const BASE_URL = process.env.ONLINE_REVIEW_BASE_URL || 'https://deeloo.cn/live';
 const MAX_MARKDOWN_BYTES = 5 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_PDF_BYTES = 50 * 1024 * 1024;
@@ -215,7 +214,7 @@ async function main(rawFiles) {
  const requestedAddress = localNetOption?.includes('=') ? localNetOption.slice(localNetOption.indexOf('=') + 1) : undefined;
  const localHost = localNetOption ? await chooseLocalNetworkAddress(requestedAddress) : '127.0.0.1';
  const port = process.env.PORT || '8787';
- const base = new URL(tailnet ? tailscalePublicBase(await localServicePort()) : local || localNetOption ? `http://${localHost}:${port}/live` : (readEnvConfig('ONLINE_REVIEW_BASE_URL') || BASE_URL));
+ const base = new URL(tailnet ? tailscalePublicBase(await localServicePort()) : local || localNetOption ? `http://${localHost}:${port}/live` : (readEnvConfig('ONLINE_REVIEW_BASE_URL') || `http://127.0.0.1:${port}/live`));
  if (!['http:', 'https:'].includes(base.protocol) || base.pathname.replace(/\/$/, '') !== '/live' || base.search || base.hash || base.username || base.password) throw new Error('Review base URL must be an HTTP(S) URL ending in /live');
 	const files = rawFiles.map((file) => realpathSync(file));
 
@@ -274,7 +273,7 @@ async function main(rawFiles) {
 
 try {
  if (['--help','-h'].includes(process.argv[2]) || (process.argv[2] === 'paste' && ['--help','-h'].includes(process.argv[3]))) {
-  console.log('Usage: review <file-or-directory> [--long] [--local | --localnet[=<address>] | --tailnet]\n       review paste [--long] [--local | --localnet[=<address>] | --tailnet]\n       review --clipboard [--long] [--local | --localnet[=<address>] | --tailnet]\n       review feedback [url-or-id] [--json] [--wait] [--after <cursor>] [--timeout <seconds>] [--out <new-directory>]\n\nURL modes: default uses deeloo.cn; --local uses 127.0.0.1; --localnet selects a private IPv4 address; --tailnet enables a public HTTPS Funnel.\n\nFiles: Video (.mp4/.mov/.webm, up to 500 MiB), HTML (.html/.htm), Markdown, PDF, Word, PowerPoint, Excel, or images.\n\nPaste: paste text in a terminal, press Enter then Ctrl+D to publish; Ctrl+C cancels.\n       Or pipe UTF-8 text: cat response.md | review paste');
+  console.log('Usage: review <file-or-directory> [--long] [--local | --localnet[=<address>] | --tailnet]\n       review paste [--long] [--local | --localnet[=<address>] | --tailnet]\n       review --clipboard [--long] [--local | --localnet[=<address>] | --tailnet]\n       review feedback [url-or-id] [--json] [--wait] [--after <cursor>] [--timeout <seconds>] [--out <new-directory>]\n\nURL modes: default and --local use 127.0.0.1; --localnet selects a private IPv4 address; --tailnet enables a public HTTPS Funnel. ONLINE_REVIEW_BASE_URL overrides the default.\n\nFiles: Video (.mp4/.mov/.webm, up to 500 MiB), HTML (.html/.htm), Markdown, PDF, Word, PowerPoint, Excel, or images.\n\nPaste: paste text in a terminal, press Enter then Ctrl+D to publish; Ctrl+C cancels.\n       Or pipe UTF-8 text: cat response.md | review paste');
  } else if (process.argv[2] === 'feedback') {
   const { runFeedback } = await import('./feedback.js');
   await runFeedback(process.argv.slice(3));

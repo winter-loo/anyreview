@@ -20,7 +20,7 @@ export async function runFeedback(args) {
  }
  if(!Number.isSafeInteger(cursor)||cursor<0||!Number.isFinite(timeout)||timeout<0)throw new Error('Invalid cursor or timeout');
  const target=explicitTarget || latestReview();
- const base=process.env.ONLINE_REVIEW_BASE_URL||'https://deeloo.cn/live';
+ const base=process.env.ONLINE_REVIEW_BASE_URL||`http://127.0.0.1:${process.env.PORT||'8787'}/live`;
  const review=new URL(/^https?:\/\//.test(target)?target:`${base.replace(/\/$/,'')}/${target}`);
  if(!['https:','http:'].includes(review.protocol)||!/^\/live\/[^/]+\/?$/.test(review.pathname))throw new Error('Expected a /live/<token> review URL');
  const endpoint=new URL(`${review.pathname.replace(/\/$/,'')}/feedback`,review.origin);

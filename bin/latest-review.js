@@ -35,7 +35,7 @@ export function latestReview() {
   try {
    const row=db.prepare('SELECT id FROM short_links ORDER BY created_at DESC, rowid DESC LIMIT 1').get();
    if(row && typeof row.id==='string') {
-    const base=process.env.ONLINE_REVIEW_BASE_URL||'https://deeloo.cn/live';
+    const base=process.env.ONLINE_REVIEW_BASE_URL||`http://127.0.0.1:${process.env.PORT||'8787'}/live`;
     return `${base.replace(/\/$/,'')}/${row.id}`;
    }
   } finally {db.close();}

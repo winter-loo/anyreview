@@ -33,10 +33,10 @@ may not have preview images; the UI and agent payload disclose that limitation.
 Run the repository's `review` entry point (Node with built-in SQLite support):
 
 ```sh
-node bin/review.js feedback 'https://deeloo.cn/live/<token>' --json
-node bin/review.js feedback 'https://deeloo.cn/live/<token>' --wait --timeout 1800 --json
-node bin/review.js feedback 'https://deeloo.cn/live/<token>' --after 42 --json
-node bin/review.js feedback 'https://deeloo.cn/live/<token>' --json --out ./review-feedback-001
+node bin/review.js feedback 'http://127.0.0.1:8787/live/<token>' --json
+node bin/review.js feedback 'http://127.0.0.1:8787/live/<token>' --wait --timeout 1800 --json
+node bin/review.js feedback 'http://127.0.0.1:8787/live/<token>' --after 42 --json
+node bin/review.js feedback 'http://127.0.0.1:8787/live/<token>' --json --out ./review-feedback-001
 ```
 
 `--wait` polls until a submitted batch is available or the timeout expires (default
