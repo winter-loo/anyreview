@@ -120,6 +120,17 @@ review feedback "<review URL>" --wait --json --out ./paste-feedback
 
 No system clipboard access, terminal bridge, agent restart or conversation parsing is required.
 
+## Markdown figures
+
+In a Markdown review, 标注 mode adds a 画笔 button to every rendered image and Mermaid diagram. It opens that figure full screen with the brush, zoom and comment tools used by image reviews; the comment text is optional. Saved strokes stay visible on the figure in the document.
+
+These comments use `anchor.type: "drawing"` with `coordinateSpace: "normalized"` relative to the figure, `blockId` (`L<first source line>`), `figureIndex` (0-based, in rendered order within the block) and `figure`, which the server resolves from the immutable snapshot:
+
+- Image: `{ "kind": "image", "src": "images/flow.png", "alt": "Flow" }`, with `src` exactly as written in the Markdown.
+- Mermaid: `{ "kind": "mermaid", "source": "graph TD\n A-->B\n" }`.
+
+The PNG preview crops the figure around the strokes. A browser cannot capture an image served from another origin, so such comments carry `previewError`; use the anchor and `src` instead.
+
 ## Video anchors
 
 Video comments use `anchor.type: "video"` and a `locations` array that can mix points and ranges. `frameIndexBase` is 0, `timeUnit` is `seconds`, and times follow the media playback timeline. `sourceStartTime` gives the source timestamp offset. These are positions in the immutable reviewed export, not the editing project's frame numbers. New annotations preserve captured time anchors; frame-only annotations from older clients remain supported. `framePrecision` is `estimated` while the actual-frame index is building and `exact` once it is available. Treat timestamps as the stable location and estimated frame numbers as advisory. When an estimated submission is read again after indexing, its frame numbers are resolved against the actual index without changing its captured times. An agent that already consumed a batch will not receive a new batch solely for this correction; it can reread the original batch if precise frames are needed.

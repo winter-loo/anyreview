@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { openFeedbackDb,applyOperations,submitFeedback,agentFeedback,feedbackState } from './feedback';
@@ -65,6 +65,25 @@ it('returns submitted Markdown quotes and offsets to the agent',()=>{
   expect(agentFeedback(db,md,'/feedback').batches).toHaveLength(0);
   submitFeedback(db,md,'submit');
   expect(agentFeedback(db,md,'/feedback').batches[0].comments[0].anchor).toMatchObject({type:'document-text',filename:'paste.md',blockId:'block-1',selectedText:'hello',startOffset:2,endOffset:7});
+ } finally {db.close();}
+});
+
+it('validates Markdown figure drawings against the snapshot and returns the figure to the agent',()=>{
+ const db=database(),dir=mkdtempSync(path.join(tmpdir(),'feedback-markdown-'));dirs.push(dir);
+ const file=path.join(dir,'doc.md');writeFileSync(file,'# Title\n\n![Flow](flow.png)\n\n```mermaid\ngraph TD\n A-->B\n```\n');
+ const md={...snapshot,kind:'markdown',files:[{...snapshot.files[0],filename:'doc.md',snapshotPath:file}]};
+ const image={id:'image',type:'figure',blockId:'L3',figureIndex:0,body:'Crop the legend',createdAt:new Date().toISOString(),strokes:annotation.strokes,badgePosition:annotation.badgePosition};
+ try {
+  expect(()=>applyOperations(db,md,'v1',[{operationId:'missing',type:'add',annotation:{...image,id:'missing',figureIndex:1}}])).toThrow();
+  expect(()=>applyOperations(db,md,'v1',[{operationId:'text-block',type:'add',annotation:{...image,id:'text-block',blockId:'L1'}}])).toThrow();
+  expect(()=>applyOperations(db,md,'v1',[{operationId:'empty',type:'add',annotation:{...image,id:'empty',strokes:[]}}])).toThrow();
+  applyOperations(db,md,'v1',[{operationId:'image',type:'add',annotation:image},{operationId:'diagram',type:'add',annotation:{...image,id:'diagram',blockId:'L5',body:''}}]);
+  expect(()=>submitFeedback(db,md,'early')).toThrow();
+  applyOperations(db,md,'v1',[{operationId:'p1',type:'preview',id:'image',previewError:'Unavailable'},{operationId:'p2',type:'preview',id:'diagram',previewError:'Unavailable'}]);
+  submitFeedback(db,md,'submit');
+  const [drawing,diagram]=agentFeedback(db,md,'/feedback').batches[0].comments;
+  expect(drawing.anchor).toMatchObject({type:'drawing',filename:'doc.md',coordinateSpace:'normalized',blockId:'L3',figureIndex:0,figure:{kind:'image',src:'flow.png',alt:'Flow'},strokes:annotation.strokes,badgePosition:annotation.badgePosition});
+  expect(diagram.anchor).toMatchObject({blockId:'L5',figureIndex:0,figure:{kind:'mermaid',source:'graph TD\n A-->B\n'}});
  } finally {db.close();}
 });
 

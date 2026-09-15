@@ -4,7 +4,9 @@ import html2canvas from 'html2canvas';
 /** Capture the document region, not the browser chrome or the open composer. */
 export async function capturePreview(kind:string,annotation:Annotation):Promise<string> {
  const selector:Record<string,string>={pdf:'.pdf-canvas',image:'.image-wrapper img',ppt:'.slide-viewport-wrapper',word:'.docx-render-container',excel:'.sheet-content-wrapper'};
- const element = kind === 'html' ? document.querySelector<HTMLIFrameElement>('.docx-render-container iframe')?.contentDocument?.documentElement : document.querySelector(selector[kind]) as HTMLElement|null;
+ // Markdown drawings belong to one figure image in the document, not to the whole page.
+ const target = kind === 'markdown' ? `img[data-review-figure="${CSS.escape(`${annotation.blockId}:${annotation.figureIndex}`)}"]` : selector[kind];
+ const element = kind === 'html' ? document.querySelector<HTMLIFrameElement>('.docx-render-container iframe')?.contentDocument?.documentElement : document.querySelector(target) as HTMLElement|null;
  if(!element) throw new Error('文档尚未加载，无法生成截图');
  const rect=element.getBoundingClientRect();
  const strokes=annotation.strokes as {color:string;size:number;points:{x:number;y:number}[]}[]|undefined;

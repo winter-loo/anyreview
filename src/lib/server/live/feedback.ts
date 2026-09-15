@@ -2,12 +2,21 @@ import { readVideoIndex, readVideoMetadata } from './video';
 import { estimatedIndex, resolveLocation, frameEnd, type VideoLocation } from '$lib/video/model';
 import { MAX_PREVIEW_BYTES } from '$lib/feedback/limits';
 import { DatabaseSync } from 'node:sqlite';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { error } from '@sveltejs/kit';
+import { renderMarkdownDocument } from '$lib/server/markdown/render';
 import { feedbackHome, type Snapshot } from './snapshots';
 import type { Annotation, FeedbackOperation } from '../../feedback/types';
+
+/** Resolve a Markdown figure from the frozen snapshot, so a drawing cannot point at content the reviewer never saw. */
+function markdownFigure(snapshot: Snapshot, a: Annotation) {
+ const block=renderMarkdownDocument(readFileSync(snapshot.files[0].snapshotPath,'utf8')).find(b=>b.id===a.blockId);
+ const figure=block?.figures[Number(a.figureIndex)];
+ if(!figure) throw error(400,'Markdown figure not found');
+ return figure;
+}
 
 export function openFeedbackDb(filename = path.join(feedbackHome(),'feedback.db')) {
  mkdirSync(path.dirname(filename),{recursive:true});
@@ -22,7 +31,8 @@ export function openFeedbackDb(filename = path.join(feedbackHome(),'feedback.db'
 type Row = { id: string; data: string; submitted: string | null; preview: Uint8Array | null; preview_error: string | null; imported: number };
 function validAnnotation(a: Annotation, kind: string) {
  if (!a || typeof a!=='object' || typeof a.id!=='string' || !a.id || a.id.length>200 || typeof a.body!=='string' || a.body.length>20000 || typeof a.createdAt!=='string' || !Number.isFinite(Date.parse(a.createdAt))) throw error(400,'Invalid annotation');
- if (kind==='markdown' && (typeof a.blockId!=='string' || !a.blockId || typeof a.selectedText!=='string' || !a.selectedText.trim() || a.selectedText.length>10000 || typeof a.prefix!=='string' || typeof a.suffix!=='string' || !Number.isInteger(a.startOffset) || !Number.isInteger(a.endOffset) || Number(a.startOffset)<0 || Number(a.endOffset)<=Number(a.startOffset) || Number(a.endOffset)-Number(a.startOffset)!==a.selectedText.length)) throw error(400,'Invalid Markdown text anchor');
+ if (kind==='markdown' && a.type==='figure' && (typeof a.blockId!=='string' || !a.blockId || !Number.isInteger(a.figureIndex) || Number(a.figureIndex)<0 || !Array.isArray(a.strokes) || !a.strokes.length)) throw error(400,'Invalid Markdown figure anchor');
+ if (kind==='markdown' && a.type!=='figure' && (a.type!==undefined || typeof a.blockId!=='string' || !a.blockId || typeof a.selectedText!=='string' || !a.selectedText.trim() || a.selectedText.length>10000 || typeof a.prefix!=='string' || typeof a.suffix!=='string' || !Number.isInteger(a.startOffset) || !Number.isInteger(a.endOffset) || Number(a.startOffset)<0 || Number(a.endOffset)<=Number(a.startOffset) || Number(a.endOffset)-Number(a.startOffset)!==a.selectedText.length)) throw error(400,'Invalid Markdown text anchor');
  if (kind==='html' && a.type==='text' && (typeof a.selectedText!=='string' || !a.selectedText.trim() || a.selectedText.length>5000)) throw error(400,'Invalid HTML text anchor');
  const strokes = a.strokes as {color:string;size:number;points:{x:number;y:number}[]}[] | undefined;
  if (strokes !== undefined) {
@@ -61,6 +71,7 @@ export function applyOperations(db: DatabaseSync,snapshot: Snapshot,version: str
    if (op.type==='add') {
     validAnnotation(op.annotation!,snapshot.kind);
     if (snapshot.kind==='video') validateVideoAnnotation(op.annotation!, snapshot);
+    if (snapshot.kind==='markdown' && op.annotation!.type==='figure') markdownFigure(snapshot,op.annotation!);
     if (snapshot.kind==='image' && Number(op.annotation!.imageIndex)>=snapshot.files.length) throw error(400,'Invalid image index');
     db.prepare('INSERT OR IGNORE INTO live_annotations(review,id,version,data,imported,preview_error) VALUES(?,?,?,?,?,?)').run(snapshot.id,op.annotation!.id,version,JSON.stringify(op.annotation),op.imported?1:0,Array.isArray(op.annotation!.strokes)&&!op.imported?'pending':null);
    } else if (op.type==='delete') {
@@ -115,6 +126,7 @@ export function annotationAnchor(a: Annotation,snapshot: Snapshot) {
      : {type:'range',startFrameIndex:p.startFrameIndex,endFrameIndex:p.endFrameIndex,startTime:p.startTime ?? index.timestamps[p.startFrameIndex],endTimeExclusive:p.endTimeExclusive ?? frameEnd(index,p.endFrameIndex),frameEndpoints:'inclusive'};
    })};
  }
+ if(snapshot.kind==='markdown' && a.type==='figure') return {...base,type:'drawing',coordinateSpace:'normalized',blockId:a.blockId,figureIndex:a.figureIndex,figure:markdownFigure(snapshot,a),strokes:a.strokes,badgePosition:a.badgePosition};
  if(snapshot.kind==='markdown') return {...base,type:'document-text',blockId:a.blockId,startOffset:a.startOffset,endOffset:a.endOffset,selectedText:a.selectedText,prefix:a.prefix,suffix:a.suffix};
  if(a.type==='cell') return {...base,type:'sheet-range',sheet:a.sheetName,range:a.cellRef,value:a.cellValue,formula:a.formula};
  if(a.type==='text') return {...base,type:'document-text',selectedText:a.selectedText,prefix:a.prefix,suffix:a.suffix};

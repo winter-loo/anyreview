@@ -9,8 +9,17 @@ describe('renderMarkdownDocument', () => {
 		expect(markdownImageSources(source)).toEqual(['image.png']);
 		expect(rewritten.map(b => [b.id, b.lineStart, b.lineEnd, b.text])).toEqual(original.map(b => [b.id, b.lineStart, b.lineEnd, b.text]));
 		expect(rewritten[1].html).toContain('href="https://example.com"');
-		expect(rewritten[1].html).toContain('src="/live/token/assets/image" alt="Alt" title="Caption"');
+		expect(rewritten[1].html).toContain('src="/live/token/assets/image" alt="Alt" title="Caption" data-review-figure="L3:0"');
+		expect(rewritten[1].figures).toEqual([{ kind: 'image', src: 'image.png', alt: 'Alt' }]);
 		expect(rewritten[2].html).toContain('![Example](code.png)');
+		expect(rewritten[2].figures).toEqual([]);
+	});
+
+	it('indexes every image in a block in rendered order', () => {
+		const [block] = renderMarkdownDocument('![One](a.png) and ![Two](b.png)\n');
+		expect(block.figures).toEqual([{ kind: 'image', src: 'a.png', alt: 'One' }, { kind: 'image', src: 'b.png', alt: 'Two' }]);
+		expect(block.html).toContain('data-review-figure="L1:0"');
+		expect(block.html).toContain('data-review-figure="L1:1"');
 	});
 
 	it('renders real markdown blocks while preserving source line anchors', () => {
@@ -46,7 +55,7 @@ describe('renderMarkdownDocument', () => {
 it('keeps Mermaid source and annotation anchors while identifying diagrams', () => {
  const [block] = renderMarkdownDocument('```mermaid\ngraph TD\n A-->B\n```\n');
  expect(block).toMatchObject({ id: 'L1', lineStart: 1, lineEnd: 4,
-  text: 'graph TD\n A-->B\n\n', diagram: { language: 'mermaid', source: 'graph TD\n A-->B\n' } });
+  text: 'graph TD\n A-->B\n\n', figures: [{ kind: 'mermaid', source: 'graph TD\n A-->B\n' }] });
  expect(block.html).toContain('language-mermaid');
- expect(renderMarkdownDocument('```text\ngraph TD\n```')[0].diagram).toBeUndefined();
+ expect(renderMarkdownDocument('```text\ngraph TD\n```')[0].figures).toEqual([]);
 });

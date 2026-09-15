@@ -1,7 +1,11 @@
 <script lang="ts">
 	import MermaidPreview from '$lib/components/review/MermaidPreview.svelte';
+	import FigureAnnotator from '$lib/components/review/FigureAnnotator.svelte';
+	import FigureMarks from '$lib/components/review/FigureMarks.svelte';
+	import paintIcon from '$lib/assets/review-icons/paint.svg?url';
 	import { onMount } from 'svelte';
 	import { createLiveFeedback } from '$lib/feedback/client.svelte';
+	import type { Point, Stroke } from '$lib/review/strokes';
 	import type { RenderedMarkdownBlock } from '$lib/server/markdown/render';
 
 	let { data }: {data: {kind:'markdown';token:string;filename:string;lineCount:number;renderedBlocks:RenderedMarkdownBlock[]}} = $props();
@@ -14,7 +18,11 @@
 		prefix: string;
 		suffix: string;
 	};
-	type Annotation = Anchor & { id: string; body: string; createdAt: string };
+	type TextAnnotation = Anchor & { id: string; type?: undefined; body: string; createdAt: string };
+	/** Strokes are normalized to one figure: an image or a Mermaid diagram within a block. */
+	type FigureAnnotation = { id: string; type: 'figure'; blockId: string; figureIndex: number; strokes: Stroke[]; badgePosition: Point; body: string; createdAt: string };
+	type Annotation = TextAnnotation | FigureAnnotation;
+	type FigureBox = { index: number; left: number; top: number; width: number; height: number };
 
 	let annotationMode = $state(false);
 	let headerHeight = $state(65);
@@ -23,6 +31,8 @@
 	let draft = $state<Anchor | null>(null);
 	let draftBody = $state('');
 	let notice = $state('');
+	let figureBoxes = $state<Record<string, FigureBox[]>>({});
+	let openFigure = $state<{ blockId: string; index: number; src: string; selected: string | null } | null>(null);
 	let selectionTimer: ReturnType<typeof setTimeout> | undefined;
 	let noticeTimer: ReturnType<typeof setTimeout> | undefined;
 	let storageKey = '';
@@ -142,7 +152,7 @@
 
 	function saveDraft() {
 		if (!draft || !draftBody.trim()) return null;
-		const next: Annotation = {
+		const next: TextAnnotation = {
 			id: crypto.randomUUID(),
 			...draft,
 			body: draftBody.trim(),
@@ -159,13 +169,68 @@
 		showNotice('标注已删除');
 	}
 
+	function mermaidFigure(block: RenderedMarkdownBlock) {
+		const [figure] = block.figures;
+		return figure?.kind === 'mermaid' ? figure : null;
+	}
+
+	function figureLabel(blockId: string, index: number) {
+		const figure = data.renderedBlocks.find((block) => block.id === blockId)?.figures[index];
+		if (figure?.kind === 'mermaid') return 'Mermaid 图表';
+		const name = figure?.alt || figure?.src.split(/[?#]/, 1)[0].split('/').pop();
+		return name ? `图片 · ${name}` : '图片';
+	}
+
+	function figureMarks(blockId: string, index: number) {
+		return annotations.filter((annotation): annotation is FigureAnnotation => annotation.type === 'figure' && annotation.blockId === blockId && annotation.figureIndex === index);
+	}
+
+	function showFigure(blockId: string, index: number, selected: string | null = null) {
+		const image = document.querySelector<HTMLImageElement>(`img[data-review-figure="${CSS.escape(`${blockId}:${index}`)}"]`);
+		if (!image?.naturalWidth) {
+			showNotice('图片未加载成功，暂时无法标注');
+			return;
+		}
+		clearTimeout(selectionTimer);
+		selectionCandidate = null;
+		openFigure = { blockId, index, src: image.currentSrc || image.src, selected };
+	}
+
+	function saveFigure(mark: { strokes: Stroke[]; badgePosition: Point; body: string }) {
+		if (!openFigure) return;
+		persist([...annotations, { id: crypto.randomUUID(), type: 'figure', blockId: openFigure.blockId, figureIndex: openFigure.index, ...mark, createdAt: new Date().toISOString() }]);
+	}
+
+	/** Server HTML cannot host Svelte markup, so drawing overlays follow each image's box within its block. */
+	function trackFigures(node: HTMLElement, blockId: string) {
+		const images = [...node.querySelectorAll<HTMLImageElement>('.md-content img[data-review-figure]')];
+		if (!images.length) return;
+		const measure = () => {
+			const base = node.getBoundingClientRect();
+			figureBoxes[blockId] = images.map((image) => {
+				const box = image.getBoundingClientRect();
+				return { index: Number(image.dataset.reviewFigure!.split(':').pop()), left: box.left - base.left, top: box.top - base.top, width: box.width, height: box.height };
+			});
+		};
+		const observer = new ResizeObserver(measure);
+		observer.observe(node);
+		for (const image of images) observer.observe(image);
+		// Images inside horizontally scrolling tables move without resizing.
+		node.addEventListener('scroll', measure, true);
+		return { destroy() { observer.disconnect(); node.removeEventListener('scroll', measure, true); } };
+	}
+
 	function shareText(items: Annotation[]) {
 		const filename = data.kind === 'markdown' ? data.filename : 'review';
 		return [
 			`Review: ${filename}`,
 			location.href,
 			'',
-			...items.flatMap((item, index) => [`${index + 1}. “${item.selectedText}”`, item.body, ''])
+			...items.flatMap((item, index) => [
+				item.type === 'figure' ? `${index + 1}. [${figureLabel(item.blockId, item.figureIndex)}]` : `${index + 1}. “${item.selectedText}”`,
+				item.body || '（仅画笔标记）',
+				''
+			])
 		].join('\n');
 	}
 
@@ -208,6 +273,7 @@
 		if (!registry || !HighlightClass) return;
 		registry.delete('live-review-annotations');
 		const ranges = annotations.flatMap((annotation) => {
+			if (annotation.type === 'figure') return [];
 			const root = document.querySelector<HTMLElement>(`.md-content[data-block-id="${CSS.escape(annotation.blockId)}"]`);
 			if (!root || (root.textContent ?? '').slice(annotation.startOffset, annotation.endOffset) !== annotation.selectedText) return [];
 			const range = rangeWithin(root, annotation.startOffset, annotation.endOffset);
@@ -226,8 +292,14 @@
 
 <svelte:document onselectionchange={captureSelection} />
 
-
-
+{#snippet figureOverlay(blockId: string, index: number)}
+	<FigureMarks marks={figureMarks(blockId, index)} onselect={(id) => showFigure(blockId, index, id)} />
+	{#if annotationMode}
+		<button class="annotate-figure" type="button" aria-label={`画笔标注：${figureLabel(blockId, index)}`} onclick={() => showFigure(blockId, index)}>
+			<img src={paintIcon} alt="" width="18" height="18" />画笔
+		</button>
+	{/if}
+{/snippet}
 
 	<header bind:clientHeight={headerHeight}>
 		<div class="file-meta">
@@ -276,26 +348,41 @@
 	{/if}
 
 	{#if annotationMode}
-		<div class="annotation-hint" style:top={`${headerHeight}px`} role="status">长按选择文字，调整好范围后点“添加批注”</div>
+		<div class="annotation-hint" style:top={`${headerHeight}px`} role="status">长按选择文字添加批注，或点图片上的“画笔”圈出问题</div>
 	{/if}
 	{#if notice}<div class="notice" role="status">{notice}</div>{/if}
 
 	<main class:annotating={annotationMode}>
 		{#each data.renderedBlocks as block (block.id)}
-			<div class="review-block">
+			{@const diagram = mermaidFigure(block)}
+			<div class="review-block" use:trackFigures={block.id}>
 				<!-- Safe: server-side markdown-it disables embedded HTML. -->
-				{#if block.diagram}
-					<MermaidPreview source={block.diagram.source}>
+				{#if diagram}
+					<MermaidPreview source={diagram.source} figure={`${block.id}:0`}>
+						{#snippet overlay()}{@render figureOverlay(block.id, 0)}{/snippet}
 						<section class="md-content" data-block-id={block.id}>{@html block.html}</section>
 					</MermaidPreview>
 				{:else}
 					<section class="md-content" data-block-id={block.id}>{@html block.html}</section>
+					{#each figureBoxes[block.id] ?? [] as box (box.index)}
+						{#if box.width && box.height}
+							<div class="figure-layer" style:left={`${box.left}px`} style:top={`${box.top}px`} style:width={`${box.width}px`} style:height={`${box.height}px`}>
+								{@render figureOverlay(block.id, box.index)}
+							</div>
+						{/if}
+					{/each}
 				{/if}
 				{#each annotationsForBlock(block.id) as annotation (annotation.id)}
 					<article class="annotation-card">
-						<blockquote>{annotation.selectedText}</blockquote>
-						<p>{annotation.body}</p>
-						<button type="button" aria-label="删除标注" onclick={() => removeAnnotation(annotation.id)}>删除</button>
+						{#if annotation.type === 'figure'}
+							<button class="figure-anchor" type="button" onclick={() => showFigure(block.id, annotation.figureIndex, annotation.id)}>
+								{figureLabel(block.id, annotation.figureIndex)} · 标注 {figureMarks(block.id, annotation.figureIndex).findIndex((mark) => mark.id === annotation.id) + 1}
+							</button>
+						{:else}
+							<blockquote>{annotation.selectedText}</blockquote>
+						{/if}
+						<p>{annotation.body || '仅画笔标记，未添加文字意见'}</p>
+						<button class="delete-annotation" type="button" aria-label="删除标注" onclick={() => removeAnnotation(annotation.id)}>删除</button>
 					</article>
 				{/each}
 			</div>
@@ -323,6 +410,18 @@
 		</div>
 	</div>
 {/if}
+
+{#if openFigure}
+	<FigureAnnotator
+		src={openFigure.src}
+		label={figureLabel(openFigure.blockId, openFigure.index)}
+		marks={figureMarks(openFigure.blockId, openFigure.index)}
+		selected={openFigure.selected}
+		onsave={saveFigure}
+		ondelete={removeAnnotation}
+		onclose={() => openFigure = null}
+	/>
+{/if}
 <style>
  .feedback-error { display:flex; align-items:center; justify-content:flex-end; gap:12px; padding:10px 14px; background:#fff1f2; color:#9f1239; font-size:14px; }
  .feedback-error span { overflow-wrap:anywhere; }
@@ -347,6 +446,9 @@
 	.selection-action { position: fixed; z-index: 18; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); left: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(37, 99, 235, .28); text-overflow: ellipsis; white-space: nowrap; }
 	main { width: min(860px, calc(100% - 32px)); margin: 28px auto 80px; padding: 44px 52px; border: 1px solid #e1e1dc; border-radius: 12px; background: white; box-shadow: 0 10px 35px rgba(0, 0, 0, .04); }
 	main.annotating .md-content { cursor: text; user-select: text; -webkit-user-select: text; }
+	.review-block { position: relative; }
+	.figure-layer { position: absolute; z-index: 1; pointer-events: none; }
+	.annotate-figure { position: absolute; z-index: 3; top: 8px; left: 8px; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 12px; border-color: #2563eb; color: #1d4ed8; box-shadow: 0 4px 14px rgba(15, 23, 42, .18); pointer-events: auto; }
 	.md-content { overflow-wrap: anywhere; }
 	.md-content :global(img) { max-width: 100%; height: auto; }
 	.md-content :global(h1), .md-content :global(h2), .md-content :global(h3) { margin: 1.4em 0 .55em; line-height: 1.2; }
@@ -362,7 +464,8 @@
 	.annotation-card { position: relative; margin: 10px 0 18px; padding: 12px 56px 12px 14px; border-left: 4px solid #eab308; border-radius: 10px; background: #fefce8; }
 	.annotation-card blockquote { margin: 0 0 7px; color: #71620b; font-size: 13px; }
 	.annotation-card p { margin: 0; white-space: pre-wrap; }
-	.annotation-card button { position: absolute; top: 6px; right: 6px; min-height: 36px; border: 0; background: transparent; padding: 0 8px; color: #92400e; font-size: 12px; }
+	.annotation-card .figure-anchor { display: block; min-height: 32px; margin: -6px 0 4px; padding: 0; border: 0; background: transparent; color: #71620b; font-size: 13px; text-align: left; }
+	.annotation-card .delete-annotation { position: absolute; top: 6px; right: 6px; min-height: 36px; border: 0; background: transparent; padding: 0 8px; color: #92400e; font-size: 12px; }
 	.backdrop { position: fixed; z-index: 19; inset: 0; width: 100%; height: 100%; border: 0; border-radius: 0; background: rgba(15, 23, 42, .3); }
 	.composer { position: fixed; z-index: 20; left: 50%; bottom: 16px; display: grid; width: min(520px, calc(100% - 24px)); max-height: calc(100dvh - 24px); overflow-y: auto; transform: translateX(-50%); gap: 10px; padding: 14px; border: 1px solid #d5d5ce; border-radius: 18px; background: white; box-shadow: 0 24px 70px rgba(0,0,0,.26); }
 	.grabber { display: none; width: 42px; height: 4px; margin: -3px auto 2px; border-radius: 999px; background: #d4d4d4; }

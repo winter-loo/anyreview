@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { tick, type Snippet } from 'svelte';
 	import { renderMermaid } from '$lib/markdown/mermaid';
-	let { source, children }: { source: string; children: Snippet } = $props();
+	let { source, figure, overlay, children }: { source: string; figure?: string; overlay?: Snippet; children: Snippet } = $props();
 	let imageUrl = $state('');
 	let error = $state('');
 	let sourceOpen = $state(true);
@@ -77,11 +77,16 @@
 			if (disposed) return;
 			const root = new DOMParser().parseFromString(svg, 'image/svg+xml').documentElement;
 			const bounds = root.getAttribute('viewBox')?.trim().split(/[\s,]+/).map(Number);
+			let image = svg;
 			if (bounds?.length === 4 && bounds.every(Number.isFinite) && bounds[2] > 0 && bounds[3] > 0) {
 				diagramWidth = bounds[2]; diagramHeight = bounds[3];
+				// An intrinsic size gives canvas previews and drawing annotations the diagram's real proportions.
+				root.setAttribute('width', String(bounds[2]));
+				root.setAttribute('height', String(bounds[3]));
+				image = new XMLSerializer().serializeToString(root);
 			}
 			// An image isolates SVG content and keeps diagram text out of annotation offsets.
-			url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+			url = URL.createObjectURL(new Blob([image], { type: 'image/svg+xml' }));
 			imageUrl = url;
 			sourceOpen = false;
 		}).catch(reason => {
@@ -93,7 +98,12 @@
 
 <div class="diagram-preview">
 	{#if imageUrl}
-		<div class="diagram-scroll"><img src={imageUrl} alt="Mermaid 图表" /></div>
+		<div class="diagram-scroll">
+			<div class="diagram-figure">
+				<img src={imageUrl} alt="Mermaid 图表" data-review-figure={figure} />
+				{@render overlay?.()}
+			</div>
+		</div>
 		<button class="expand-button" type="button" aria-label="放大查看" title="放大查看" onclick={openPreview}>
 			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 				<path d="M15 3h6v6M21 3l-7 7M9 21H3v-6M3 21l7-7" />
@@ -138,10 +148,12 @@
 <style>
 	.diagram-preview { position: relative; margin: 1em 0; padding: 12px; border: 1px solid #deded8; border-radius: 9px; background: white; min-width: 0; }
 	.diagram-scroll { overflow: auto; }
+	/* Drawing overlays share this box, so they stay aligned while the diagram scrolls. */
+	.diagram-figure { position: relative; min-width: 600px; }
 	.expand-button { position: absolute; z-index: 1; top: 8px; right: 8px; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; margin: 0; background: white; }
 	.expand-button:hover, .close-button:hover { background: #f0f0ed; }
 	.expand-button:focus-visible, .close-button:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
-	.diagram-scroll img { display: block; width: 100%; min-width: 600px; height: auto; }
+	.diagram-scroll img { display: block; width: 100%; height: auto; }
 	button { padding: 8px 12px; margin: 8px 0; border: 1px solid #d3d3cc; border-radius: 6px; background: #f7f7f5; color: #171717; cursor: pointer; }
 	summary { padding: 10px 0; cursor: pointer; }
 	p { overflow-wrap: anywhere; }

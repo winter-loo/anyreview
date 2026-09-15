@@ -1,9 +1,13 @@
 import MarkdownIt from 'markdown-it';
 import type Token from 'markdown-it/lib/token.mjs';
 
+/** Something a reviewer can draw on: an inline image, or a block's whole Mermaid diagram. */
+export type MarkdownFigure = { kind: 'image'; src: string; alt: string } | { kind: 'mermaid'; source: string };
+
 export interface RenderedMarkdownBlock {
 	id: string;
-	diagram?: { language: 'mermaid'; source: string };
+	/** In rendered order; each image element carries `data-review-figure="<block id>:<index>"`. */
+	figures: MarkdownFigure[];
 	lineStart: number;
 	lineEnd: number;
 	html: string;
@@ -91,10 +95,6 @@ export function markdownImageSources(source: string): string[] {
 
 export function renderMarkdownDocument(source: string, resolveImage?: (src: string) => string): RenderedMarkdownBlock[] {
 	const tokens = markdown.parse(source, {});
-	if (resolveImage) visitImages(tokens, token => {
-		const src = token.attrGet('src');
-		if (src) token.attrSet('src', resolveImage(src));
-	});
 	const blocks: RenderedMarkdownBlock[] = [];
 	let index = 0;
 
@@ -109,11 +109,22 @@ export function renderMarkdownDocument(source: string, resolveImage?: (src: stri
 		const group = tokens.slice(index, end + 1);
 		const { lineStart, lineEnd } = tokenLineRange(tokens, index, end);
 		const { headingLevel, headingText } = tokenHeading(tokens, index, end);
+		const id = `L${lineStart}`;
+		const figures: MarkdownFigure[] = [];
+		if (token.type === 'fence' && token.info.trim().toLowerCase() === 'mermaid') {
+			figures.push({ kind: 'mermaid', source: token.content });
+		} else {
+			visitImages(group, image => {
+				const src = image.attrGet('src') ?? '';
+				image.attrSet('data-review-figure', `${id}:${figures.length}`);
+				figures.push({ kind: 'image', src, alt: image.content });
+				if (resolveImage && src) image.attrSet('src', resolveImage(src));
+			});
+		}
 		const html = markdown.renderer.render(group, markdown.options, {});
 		blocks.push({
-			id: `L${lineStart}`,
-			...(token.type === 'fence' && token.info.trim().toLowerCase() === 'mermaid'
-				? { diagram: { language: 'mermaid' as const, source: token.content } } : {}),
+			id,
+			figures,
 			lineStart,
 			lineEnd,
 			html,
