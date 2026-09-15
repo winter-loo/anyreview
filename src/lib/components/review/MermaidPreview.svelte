@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { tick, type Snippet } from 'svelte';
 	import { renderMermaid } from '$lib/markdown/mermaid';
-	let { source, figure, overlay, children }: { source: string; figure?: string; overlay?: Snippet; children: Snippet } = $props();
+	let { source, figure, overlay, onannotate, children }: { source: string; figure?: string; overlay?: Snippet; onannotate?: () => void; children: Snippet } = $props();
 	let imageUrl = $state('');
 	let error = $state('');
 	let sourceOpen = $state(true);
@@ -132,6 +132,10 @@
 		<button type="button" aria-label="放大图表" disabled={zoom >= MAX_ZOOM} onclick={() => zoomAt(zoom * 1.25)}>+</button>
 		<button type="button" onclick={fitDiagram}>查看全图</button>
 		<button type="button" onclick={() => zoomAt(1.5)}>清晰阅读</button>
+		{#if onannotate}
+			<!-- Drawing happens on the document's diagram image, so leave this viewer first. -->
+			<button type="button" onclick={() => { closePreview(); onannotate(); }}>画笔</button>
+		{/if}
 	</div>
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex a11y_no_static_element_interactions -->
 	<div class="expanded" class:dragging bind:this={viewport} tabindex="0" role="region" aria-label="图表画布，可拖动或双指缩放"
@@ -162,7 +166,7 @@
 	dialog::backdrop { background:#0009; }
 	.viewer-header { display:flex; align-items:center; justify-content:space-between; flex:none; padding:8px 12px; border-bottom:1px solid #e5e5e0; }
 	.close-button { display:grid; place-items:center; width:44px; height:44px; margin:0; padding:0; background:transparent; border-color:transparent; }
-	.viewer-tools { display:flex; align-items:center; justify-content:center; flex:none; gap:6px; padding:8px; border-bottom:1px solid #e5e5e0; }
+	.viewer-tools { display:flex; align-items:center; justify-content:center; flex:none; flex-wrap:wrap; gap:6px; padding:8px; border-bottom:1px solid #e5e5e0; }
 	.viewer-tools button { min-width:44px; min-height:44px; padding:0 10px; margin:0; font-size:14px; white-space:nowrap; }
 	.viewer-tools button:disabled { opacity:.4; cursor:default; }
 	.viewer-tools output { min-width:48px; text-align:center; font:13px ui-sans-serif,system-ui,sans-serif; font-variant-numeric:tabular-nums; }

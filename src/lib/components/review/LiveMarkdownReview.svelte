@@ -358,7 +358,7 @@
 			<div class="review-block" use:trackFigures={block.id}>
 				<!-- Safe: server-side markdown-it disables embedded HTML. -->
 				{#if diagram}
-					<MermaidPreview source={diagram.source} figure={`${block.id}:0`}>
+					<MermaidPreview source={diagram.source} figure={`${block.id}:0`} onannotate={() => showFigure(block.id, 0)}>
 						{#snippet overlay()}{@render figureOverlay(block.id, 0)}{/snippet}
 						<section class="md-content" data-block-id={block.id}>{@html block.html}</section>
 					</MermaidPreview>
