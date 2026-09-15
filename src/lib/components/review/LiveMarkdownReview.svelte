@@ -295,8 +295,8 @@
 {#snippet figureOverlay(blockId: string, index: number)}
 	<FigureMarks marks={figureMarks(blockId, index)} onselect={(id) => showFigure(blockId, index, id)} />
 	{#if annotationMode}
-		<button class="annotate-figure" type="button" aria-label={`画笔标注：${figureLabel(blockId, index)}`} onclick={() => showFigure(blockId, index)}>
-			<img src={paintIcon} alt="" width="18" height="18" />画笔
+		<button class="annotate-figure" type="button" aria-label={`画笔标注：${figureLabel(blockId, index)}`} title="画笔标注" onclick={() => showFigure(blockId, index)}>
+			<img src={paintIcon} alt="" width="20" height="20" />
 		</button>
 	{/if}
 {/snippet}
@@ -448,7 +448,18 @@
 	main.annotating .md-content { cursor: text; user-select: text; -webkit-user-select: text; }
 	.review-block { position: relative; }
 	.figure-layer { position: absolute; z-index: 1; pointer-events: none; }
-	.annotate-figure { position: absolute; z-index: 3; top: 8px; left: 8px; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 12px; border-color: #2563eb; color: #1d4ed8; box-shadow: 0 4px 14px rgba(15, 23, 42, .18); pointer-events: auto; }
+	/* A frosted floating control stays legible on light and dark figures without hiding much of them. */
+	.annotate-figure {
+		position: absolute; z-index: 3; top: 8px; left: 8px; display: grid; place-items: center; width: 40px; height: 40px; min-height: 0; padding: 0;
+		border: 1px solid rgba(255, 255, 255, .7); border-radius: 50%; background: rgba(255, 255, 255, .72);
+		-webkit-backdrop-filter: blur(10px) saturate(1.4); backdrop-filter: blur(10px) saturate(1.4);
+		box-shadow: 0 4px 16px rgba(15, 23, 42, .18), 0 0 0 .5px rgba(15, 23, 42, .1); pointer-events: auto;
+		transition: background-color .15s ease, transform .15s ease;
+	}
+	.annotate-figure::after { content: ''; position: absolute; inset: -2px; border-radius: 50%; }
+	.annotate-figure:hover { background: rgba(255, 255, 255, .92); }
+	.annotate-figure:active { transform: scale(.94); }
+	.annotate-figure:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
 	.md-content { overflow-wrap: anywhere; }
 	.md-content :global(img) { max-width: 100%; height: auto; }
 	.md-content :global(h1), .md-content :global(h2), .md-content :global(h3) { margin: 1.4em 0 .55em; line-height: 1.2; }
