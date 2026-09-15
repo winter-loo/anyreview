@@ -12,6 +12,7 @@ import { readClipboard } from './clipboard.js';
 import { rememberReview } from './latest-review.js';
 import { readPaste } from './paste.js';
 import { digest, freezeReview } from './live-snapshot.js';
+import { locateFile } from './locate-file.js';
 
 const MAX_MARKDOWN_BYTES = 5 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -241,7 +242,13 @@ function allImages(directory) {
 		.sort((a, b) => a.localeCompare(b));
 }
 
-function resolveFiles(args) {
+async function resolveArgument(arg) {
+	const target = path.resolve(arg);
+	if (existsSync(target) || path.basename(arg) !== arg) return target;
+	return locateFile(arg);
+}
+
+async function resolveFiles(args) {
 	if (!args.length) {
 		const md = latestMarkdown(process.cwd());
 		if (md) return [md];
@@ -250,25 +257,17 @@ function resolveFiles(args) {
 		throw new Error(`No Markdown or Image file in ${process.cwd()}`);
 	}
 
-	if (args.length === 1) {
-		const target = path.resolve(args[0]);
-		try {
-			const stat = statSync(target);
-			if (stat.isDirectory()) {
-				const images = allImages(target);
-				if (images.length) return images;
-				const md = latestMarkdown(target);
-				if (md) return [md];
-				throw new Error(`No Markdown or Image file in directory ${target}`);
-			}
-		} catch (err) {
-			if (err instanceof Error && 'code' in err && err.code === 'ENOENT') throw err;
-			throw err;
-		}
-		return [target];
-	}
+	const targets = [];
+	for (const arg of args) targets.push(await resolveArgument(arg));
 
-	return args.map((arg) => path.resolve(arg));
+	if (targets.length === 1 && statSync(targets[0]).isDirectory()) {
+		const images = allImages(targets[0]);
+		if (images.length) return images;
+		const md = latestMarkdown(targets[0]);
+		if (md) return [md];
+		throw new Error(`No Markdown or Image file in directory ${targets[0]}`);
+	}
+	return targets;
 }
 
 async function main(rawFiles) {
@@ -339,7 +338,7 @@ async function main(rawFiles) {
 
 try {
  if (['--help','-h'].includes(process.argv[2]) || (process.argv[2] === 'paste' && ['--help','-h'].includes(process.argv[3]))) {
-  console.log('Usage: review <file-or-directory> [--long] [--local | --localnet[=<address>] | --tailnet | --cloudflare]\n       review paste [--long] [--local | --localnet[=<address>] | --tailnet | --cloudflare]\n       review --clipboard [--long] [--local | --localnet[=<address>] | --tailnet | --cloudflare]\n       review feedback [url-or-id] [--json] [--wait] [--after <cursor>] [--timeout <seconds>] [--out <new-directory>]\n\nURL modes: default and --local use 127.0.0.1; --localnet selects a private IPv4 address; --tailnet enables a public HTTPS Funnel; --cloudflare starts a Cloudflare Quick Tunnel. ONLINE_REVIEW_BASE_URL overrides the default.\n\nFiles: Video (.mp4/.mov/.webm, up to 500 MiB), HTML (.html/.htm), Markdown, PDF, Word, PowerPoint, Excel, or images.\n\nPaste: paste text in a terminal, press Enter then Ctrl+D to publish; Ctrl+C cancels.\n       Or pipe UTF-8 text: cat response.md | review paste');
+  console.log('Usage: review <file-or-directory> [--long] [--local | --localnet[=<address>] | --tailnet | --cloudflare]\n       review paste [--long] [--local | --localnet[=<address>] | --tailnet | --cloudflare]\n       review --clipboard [--long] [--local | --localnet[=<address>] | --tailnet | --cloudflare]\n       review feedback [url-or-id] [--json] [--wait] [--after <cursor>] [--timeout <seconds>] [--out <new-directory>]\n\nURL modes: default and --local use 127.0.0.1; --localnet selects a private IPv4 address; --tailnet enables a public HTTPS Funnel; --cloudflare starts a Cloudflare Quick Tunnel. ONLINE_REVIEW_BASE_URL overrides the default.\n\nFiles: Video (.mp4/.mov/.webm, up to 500 MiB), HTML (.html/.htm), Markdown, PDF, Word, PowerPoint, Excel, or images.\n       A bare file name that does not exist here is searched for below the current directory with fd; pick among several matches with the arrow keys.\n\nPaste: paste text in a terminal, press Enter then Ctrl+D to publish; Ctrl+C cancels.\n       Or pipe UTF-8 text: cat response.md | review paste');
  } else if (process.argv[2] === 'feedback') {
   const { runFeedback } = await import('./feedback.js');
   await runFeedback(process.argv.slice(3));
@@ -364,7 +363,7 @@ try {
     writeFileSync(file, text, {mode:0o600});
     await main([file]);
    } finally { rmSync(directory, {recursive:true, force:true}); }
-  } else await main(resolveFiles(files));
+  } else await main(await resolveFiles(files));
  }
 } catch (error) {
 	console.error(error instanceof Error ? error.message : String(error));

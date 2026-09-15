@@ -37,6 +37,7 @@
 	},
 	"dependencies": {
 		"@aiden0z/pptx-renderer": "^1.2.4",
+		"@inquirer/select": "^5.2.5",
 		"docx-preview": "^0.4.0",
 		"html2canvas": "^1.4.1",
 		"markdown-it": "^14.2.0",

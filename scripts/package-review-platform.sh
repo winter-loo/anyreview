@@ -14,7 +14,7 @@ cp "$repo_root/package.json" "$package_root/package.json"
 cp "$repo_root/README.md" "$package_root/README.md"
 cp "$repo_root/scripts/start-review-platform.sh" "$package_root/start-review-platform.sh"
 mkdir -p "$package_root/bin" "$package_root/docs"
-cp "$repo_root/bin/review.js" "$repo_root/bin/reviewctl.js" "$repo_root/bin/paste.js" "$repo_root/bin/clipboard.js" "$repo_root/bin/feedback.js" "$repo_root/bin/latest-review.js" "$repo_root/bin/live-snapshot.js" "$package_root/bin/"
+cp "$repo_root/bin/review.js" "$repo_root/bin/reviewctl.js" "$repo_root/bin/paste.js" "$repo_root/bin/clipboard.js" "$repo_root/bin/feedback.js" "$repo_root/bin/latest-review.js" "$repo_root/bin/live-snapshot.js" "$repo_root/bin/locate-file.js" "$package_root/bin/"
 cp "$repo_root/docs/live-feedback.md" "$package_root/docs/"
 chmod +x "$package_root/start-review-platform.sh" "$package_root/bin/review.js" "$package_root/bin/reviewctl.js" "$package_root/dist-cli/reviewctl.js"
 

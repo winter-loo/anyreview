@@ -44,6 +44,8 @@ ReviewLoop saves the text as a Markdown snapshot and prints a review URL. Select
 
 The CLI and web server must share the configured snapshot storage, just like file-based live reviews. Temporary paste files are deleted after publication; durable snapshots remain. No agent conversation files are read, and feedback does not automatically wake an agent session.
 
+When `review <name>` receives a bare file name that does not exist in the current directory, it searches below the current directory with [`fd`](https://github.com/sharkdp/fd), which must be installed. fd's defaults apply: hidden and gitignored files are skipped, and an all-lowercase name matches case-insensitively. A single match is used directly. Several matches are listed for selection with the up/down arrow keys and Enter; Ctrl+C cancels. Without a terminal, the matches are printed and the command fails so a script can rerun with a path.
+
 Repository test fixtures and preview commands are documented in [samples/README.md](samples/README.md).
 
 ### Code reviews
