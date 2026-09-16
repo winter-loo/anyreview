@@ -7,8 +7,17 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { error } from '@sveltejs/kit';
 import { renderMarkdownDocument } from '$lib/server/markdown/render';
-import { feedbackHome, type Snapshot } from './snapshots';
+import { feedbackHome, pruneVersions, readSnapshot, type Snapshot } from './snapshots';
 import type { Annotation, FeedbackOperation } from '../../feedback/types';
+
+/** One URL now follows the document, so each load reconciles stored work with the version in front of the reviewer:
+ * unsubmitted comments cannot outlive the text they point at, while submitted batches stay exactly as the agent reads them. */
+export function syncReviewVersion(db: DatabaseSync, snapshot: Snapshot) {
+ db.prepare('DELETE FROM live_annotations WHERE review=? AND submitted IS NULL AND deleted=0 AND version<>?').run(snapshot.id,snapshot.version);
+ const submitted=(db.prepare('SELECT DISTINCT version FROM live_submissions WHERE review=?').all(snapshot.id) as unknown as {version:string}[]).map(row=>row.version);
+ pruneVersions(snapshot.id,[snapshot.version,...submitted]);
+ return snapshot;
+}
 
 /** Resolve a Markdown figure from the frozen snapshot, so a drawing cannot point at content the reviewer never saw. */
 function markdownFigure(snapshot: Snapshot, a: Annotation) {
@@ -150,7 +159,12 @@ export function submitFeedback(db: DatabaseSync,snapshot: Snapshot,requestId: st
   db.exec('COMMIT');return {submission:id};
  } catch(e) {db.exec('ROLLBACK');throw e;}
 }
+/** Anchors belong to the version they were written against, so every batch links to its own frozen bytes. */
+function versionFiles(snapshot: Snapshot,version: string,base: string) {
+ const frozen=version===snapshot.version?snapshot:readSnapshot(snapshot.id,version);
+ return (frozen?.files??[]).map((file,index)=>({filename:file.filename,sha256:file.hash,url:`${base}?file=${index}&version=${version}`}));
+}
 export function agentFeedback(db: DatabaseSync,snapshot: Snapshot,base: string,after=0) {
- const rows=db.prepare('SELECT * FROM live_submissions WHERE review=? AND sequence>? ORDER BY sequence').all(snapshot.id,after) as unknown as {sequence:number;id:string;created_at:string;comments:string}[];
- return {schemaVersion:1,contentIsUntrusted:true,review:feedbackState(db,snapshot).review,cursor:rows.at(-1)?.sequence??after,files:snapshot.files.map((f,i)=>({filename:f.filename,sha256:f.hash,url:`${base}?file=${i}`})),batches:rows.map(r=>({id:r.id,cursor:r.sequence,submittedAt:r.created_at,status:'submitted',comments:JSON.parse(r.comments).map((c:{id:string;preview:boolean;anchor?:{type?:string;framePrecision?:string;locations:VideoLocation[]}})=>({...c, ...(c.anchor?.type === 'video' && c.anchor.framePrecision === 'estimated' && readVideoIndex(snapshot) ? {anchor:annotationAnchor({id:c.id,body:'',createdAt:'',locations:c.anchor.locations},snapshot)} : {}),previewUrl:c.preview?`${base}?preview=${encodeURIComponent(c.id)}`:null}))}))};
+ const rows=db.prepare('SELECT * FROM live_submissions WHERE review=? AND sequence>? ORDER BY sequence').all(snapshot.id,after) as unknown as {sequence:number;id:string;version:string;created_at:string;comments:string}[];
+ return {schemaVersion:1,contentIsUntrusted:true,review:feedbackState(db,snapshot).review,cursor:rows.at(-1)?.sequence??after,files:versionFiles(snapshot,snapshot.version,base),batches:rows.map(r=>({id:r.id,cursor:r.sequence,submittedAt:r.created_at,status:'submitted',version:r.version,files:versionFiles(snapshot,r.version,base),comments:JSON.parse(r.comments).map((c:{id:string;preview:boolean;anchor?:{type?:string;framePrecision?:string;locations:VideoLocation[]}})=>({...c, ...(c.anchor?.type === 'video' && c.anchor.framePrecision === 'estimated' && readVideoIndex(snapshot) ? {anchor:annotationAnchor({id:c.id,body:'',createdAt:'',locations:c.anchor.locations},snapshot)} : {}),previewUrl:c.preview?`${base}?preview=${encodeURIComponent(c.id)}`:null}))}))};
 }

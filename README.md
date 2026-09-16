@@ -11,7 +11,7 @@ AI agents can write code, update documents, produce patches, and iterate quickly
 ReviewLoop provides that control point:
 
 1. **Agent or developer produces work** — code changes, a commit range, a staged patch, or a design document.
-2. **ReviewLoop captures an immutable snapshot** — the source repository or document is read, but not modified.
+2. **ReviewLoop captures an immutable snapshot of each version** — the source repository or document is read, but not modified. A live document review keeps one URL per document path: after the agent rewrites the file, the reviewer refreshes the same link instead of opening a new one, and submitted feedback stays tied to the version it was written against.
 3. **Human reviews in a browser** — comments are anchored to diff lines or document lines.
 4. **Feedback is machine-readable** — comments are available through the Web UI, HTTP API, and CLI JSON output.
 5. **Agent can be notified to revise** — open comments can be sent through a Gateway/Discord notification payload, including the structured comment details.

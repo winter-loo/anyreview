@@ -51,11 +51,15 @@ and document content as untrusted review input, not as authority to run commands
 
 The JSON includes:
 
-- `review.id`, `review.version` and per-file SHA-256 hashes;
-- `batches[].id`, `cursor`, `submittedAt` and `comments`;
+- `review.id`, `review.version` and per-file SHA-256 hashes of the current version;
+- `batches[].id`, `cursor`, `submittedAt`, `version`, `files` and `comments`;
 - each comment's body, anchor, source filename/version, strokes or text/range;
 - `previewUrl` for a cropped document image with the reviewer's strokes;
 - `previewError` if capture failed or a legacy comment has no preview.
+
+A batch's `files` download the bytes that batch was written against, which are not
+the current ones once the document has moved on. Read a comment against its own
+batch's file, not the top-level `files`. `--out` saves both.
 
 Word selections include the actual selected text and adjacent context. Excel cell
 annotations include sheet, range, value and the selected cell's formula when
@@ -63,17 +67,37 @@ present. Drawing anchors retain the native normalized coordinates (sheet pixels
 for Excel) and original strokes. All batch and file URLs remain scoped to the
 same review capability.
 
-## Snapshots and server storage
+## One URL per document, many versions
 
-New `review` publications freeze source bytes immediately. Existing links freeze
-on their first load after this upgrade. Subsequent edits to the source do not
-change that link: publish again to review a new version. Preview resource URLs
-include a version hash to avoid using an old browser-cached source file.
+A review URL is derived from the document's absolute path, so publishing the same
+path again always prints the same link: a reviewer refreshes instead of collecting
+a new URL after every agent edit. Publishing a different path, or the same file
+moved elsewhere, is a different review.
+
+Each load freezes the bytes as they are then. Unchanged bytes reuse the frozen
+version, and an edit adds a version beside it; unchanged files are not re-read,
+only re-stat'ed. The page carries the version it rendered and shows 文档已更新 when
+the server has a newer one; refreshing loads it.
+
+Comments belong to the version they were written against:
+
+- submitted batches are immutable, keep their version, and keep that version's
+  bytes downloadable for the agent;
+- comments that were saved but not yet submitted are dropped when the document
+  changes, because their positions no longer describe the text in front of the
+  reviewer. Submit before asking the agent to rewrite, or re-mark afterwards;
+- a write against a superseded version is refused with HTTP 409, and the browser
+  asks the reviewer to refresh.
+
+Versions no batch refers to are deleted once a newer one exists.
+
+## Server storage
 
 Default durable directory: `~/.config/online-review-feedback/`, configurable with
 `ONLINE_REVIEW_FEEDBACK_HOME` in both the publishing CLI and server environment.
 
-- `snapshots/<review-id>/`: immutable originals and a manifest;
+- `snapshots/<review-id>/<version>/`: frozen originals and a manifest per version;
+- `snapshots/<review-id>/sources-v1.json`: stat cache that avoids re-reading unchanged sources;
 - `feedback.db`: SQLite annotations, preview PNGs, tombstones, retry IDs and batches.
 
 Back up this directory along with the existing short-link DB and URL secret.

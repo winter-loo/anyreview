@@ -8,7 +8,9 @@ import { digest } from '../../../bin/live-snapshot.js';
 function environment(dir:string){return {...process.env,HOME:dir,ONLINE_REVIEW_URL_SECRET:'paste-test',ONLINE_REVIEW_BASE_URL:'https://example.test/live',ONLINE_REVIEW_FEEDBACK_HOME:path.join(dir,'feedback')};}
 function publishedText(dir:string,url:string){
  const token=url.trim().split('/').at(-1)!;
- const snapshot=JSON.parse(readFileSync(path.join(dir,'feedback/snapshots',digest(token),'manifest.json'),'utf8'));
+ const review=path.join(dir,'feedback/snapshots',digest(token));
+ const [version]=readdirSync(review).filter(name=>/^[a-f\d]{64}$/.test(name));
+ const snapshot=JSON.parse(readFileSync(path.join(review,version,'manifest.json'),'utf8'));
  expect(snapshot.kind).toBe('markdown');expect(snapshot.files[0].filename).toBe('paste.md');
  return readFileSync(snapshot.files[0].snapshotPath,'utf8');
 }

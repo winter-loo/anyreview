@@ -21,6 +21,22 @@ it('publishes local links for files, paste and clipboard and remembers the local
  } finally {rmSync(dir,{recursive:true,force:true});}
 });
 
+it('gives one document one URL, across edits, and a different document another',()=>{
+ const dir=mkdtempSync(path.join(tmpdir(),'stable-url-'));
+ try {
+  const file=path.join(dir,'doc.md');writeFileSync(file,'# One');
+  const other=path.join(dir,'other.md');writeFileSync(other,'# Two');
+  const env={...process.env,HOME:dir,PORT:'8787',ONLINE_REVIEW_URL_SECRET:'stable-url-test',ONLINE_REVIEW_FEEDBACK_HOME:path.join(dir,'feedback'),ONLINE_REVIEW_SHORT_LINKS_DB:path.join(dir,'links.db')};
+  const publish=(target:string,...args:string[])=>execFileSync(process.execPath,['bin/review.js',target,'--local',...args],{env,encoding:'utf8'}).trim();
+  const url=publish(file);
+  expect(publish(file)).toBe(url);
+  writeFileSync(file,'# One, rewritten by the agent');
+  expect(publish(file)).toBe(url);
+  expect(publish(other)).not.toBe(url);
+  expect(publish(file,'--long')).toBe(publish(file,'--long'));
+ } finally {rmSync(dir,{recursive:true,force:true});}
+});
+
 it('uses loopback when no URL mode or public base URL is configured',()=>{
  const dir=mkdtempSync(path.join(tmpdir(),'default-review-'));
  try {

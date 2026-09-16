@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { createCipheriv, createHash, randomBytes } from 'node:crypto';
+import { createCipheriv, createHash, createHmac, randomBytes } from 'node:crypto';
 import { spawn, spawnSync } from 'node:child_process';
 import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, rmSync, writeFileSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { homedir, networkInterfaces } from 'node:os';
@@ -67,6 +67,9 @@ function getShortLinksDb() {
 function createShortLink(token) {
 	try {
 		const db = getShortLinksDb();
+		// One document keeps one link, so the reviewer refreshes instead of collecting a new URL.
+		const existing = db.prepare('SELECT id FROM short_links WHERE token = ? ORDER BY created_at LIMIT 1').get(token);
+		if (existing && typeof existing.id === 'string') return existing.id;
 		const id = randomBytes(6).toString('base64url');
 		const stmt = db.prepare('INSERT OR REPLACE INTO short_links (id, token, created_at) VALUES (?, ?, ?)');
 		stmt.run(id, token, new Date().toISOString());
@@ -324,8 +327,11 @@ async function main(rawFiles) {
 
 	const payload = files.length === 1 ? files[0] : JSON.stringify(files);
 
-	const iv = randomBytes(12);
-	const cipher = createCipheriv('aes-256-gcm', createHash('sha256').update(secret()).digest(), iv);
+	const key = createHash('sha256').update(secret()).digest();
+	// A nonce derived from the path keeps one document on one URL: the same plaintext reuses the nonce only
+	// with itself, so nothing else is ever encrypted under that pair.
+	const iv = createHmac('sha256', key).update(payload).digest().subarray(0, 12);
+	const cipher = createCipheriv('aes-256-gcm', key, iv);
 	const encrypted = Buffer.concat([cipher.update(payload, 'utf8'), cipher.final()]);
 	const token = Buffer.concat([iv, cipher.getAuthTag(), encrypted]).toString('base64url');
 

@@ -28,7 +28,9 @@ it('publishes clipboard text through the CLI and cleans its temporary source',()
   writeFileSync(path.join(bin,'wl-paste'),`#!${process.execPath}\nprocess.stdout.write(${JSON.stringify(text)});`,{mode:0o700});
   const env={...process.env,HOME:dir,PATH:bin,WAYLAND_DISPLAY:'test',WSL_INTEROP:'',WSL_DISTRO_NAME:'',ONLINE_REVIEW_URL_SECRET:'clipboard-test',ONLINE_REVIEW_FEEDBACK_HOME:path.join(dir,'feedback')};
   const url=execFileSync(process.execPath,['bin/review.js','--clipboard','--long'],{env,encoding:'utf8'}).trim();
-  const snapshot=JSON.parse(readFileSync(path.join(dir,'feedback/snapshots',digest(url.split('/').at(-1)!),'manifest.json'),'utf8'));
+  const review=path.join(dir,'feedback/snapshots',digest(url.split('/').at(-1)!));
+  const [version]=readdirSync(review).filter(name=>/^[a-f\d]{64}$/.test(name));
+  const snapshot=JSON.parse(readFileSync(path.join(review,version,'manifest.json'),'utf8'));
   expect(snapshot.files[0].filename).toBe('clipboard.md');
   expect(readFileSync(snapshot.files[0].snapshotPath,'utf8')).toBe(text);
   expect(readdirSync(path.join(dir,'.config/online-review-paste'))).toEqual([]);

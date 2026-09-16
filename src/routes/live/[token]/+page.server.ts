@@ -1,4 +1,4 @@
-import { liveSnapshot, feedbackHome } from '$lib/server/live/snapshots';
+import { liveSnapshot, latestSnapshot, reviewId, feedbackHome } from '$lib/server/live/snapshots';
 import { createDecipheriv, createHash } from 'node:crypto';
 import { readFileSync, realpathSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
@@ -84,6 +84,7 @@ export const load: PageServerLoad = ({ params, setHeaders }) => {
 	if (!filePaths.length) throw error(404, 'Review not found');
 
 	const home = realpathSync(process.env.HOME || homedir());
+	const frozen = latestSnapshot(reviewId(params.token));
 	const resolvedPaths: string[] = [];
 
 	for (const p of filePaths) {
@@ -91,7 +92,11 @@ export const load: PageServerLoad = ({ params, setHeaders }) => {
 		try {
 			resolved = realpathSync(p);
 		} catch {
-			throw error(404, 'Review not found');
+			// An agent may move or replace the file; the stable link keeps showing the last frozen version.
+			if (!frozen) throw error(404, 'Review not found');
+			resolvedPaths.length = 0;
+			resolvedPaths.push(...frozen.files.map((file) => file.snapshotPath));
+			break;
 		}
 		if (!(resolved.startsWith(`${home}${path.sep}`) || resolved.startsWith(`/tmp${path.sep}`) || resolved.startsWith(`${realpathSync(feedbackHome())}${path.sep}`))) {
 			throw error(403, 'File is not publishable');
@@ -117,15 +122,16 @@ export const load: PageServerLoad = ({ params, setHeaders }) => {
 	}
 
 	setHeaders({ 'cache-control': 'no-store' });
+ // The URL is stable, so every page carries the version it rendered: the banner compares it while the reader works.
  const revision = liveSnapshot(params.token, secret).version;
 
  if (isVideo) {
-  return {kind: 'video' as const, token: params.token, filename: path.basename(resolvedPaths[0]), src: `/live/${params.token}/video?v=${revision}`};
+  return {kind: 'video' as const, token: params.token, version: revision, filename: path.basename(resolvedPaths[0]), src: `/live/${params.token}/video?v=${revision}`};
  }
  if (isHtml) {
   const resolved = resolvedPaths[0], stats = statSync(resolved);
   if (stats.size > 5 * 1024 * 1024) throw error(413, 'HTML exceeds 5 MiB');
-  return {kind: 'html' as const, token: params.token, filename: path.basename(resolved), size: stats.size, updatedAt: stats.mtime.toISOString(), src: `/live/${params.token}/html?v=${revision}`};
+  return {kind: 'html' as const, token: params.token, version: revision, filename: path.basename(resolved), size: stats.size, updatedAt: stats.mtime.toISOString(), src: `/live/${params.token}/html?v=${revision}`};
  }
 	if (isExcel) {
 		const resolved = resolvedPaths[0];
@@ -134,6 +140,7 @@ export const load: PageServerLoad = ({ params, setHeaders }) => {
 		return {
 			kind: 'excel' as const,
 			token: params.token,
+			version: revision,
 			filename: path.basename(resolved),
 			size: stats.size,
 			updatedAt: stats.mtime.toISOString(),
@@ -148,6 +155,7 @@ export const load: PageServerLoad = ({ params, setHeaders }) => {
 		return {
 			kind: 'ppt' as const,
 			token: params.token,
+			version: revision,
 			filename: path.basename(resolved),
 			size: stats.size,
 			updatedAt: stats.mtime.toISOString(),
@@ -162,6 +170,7 @@ export const load: PageServerLoad = ({ params, setHeaders }) => {
 		return {
 			kind: 'word' as const,
 			token: params.token,
+			version: revision,
 			filename: path.basename(resolved),
 			size: stats.size,
 			updatedAt: stats.mtime.toISOString(),
@@ -176,6 +185,7 @@ export const load: PageServerLoad = ({ params, setHeaders }) => {
 		return {
 			kind: 'pdf' as const,
 			token: params.token,
+			version: revision,
 			filename: path.basename(resolved),
 			size: stats.size,
 			updatedAt: stats.mtime.toISOString(),
@@ -191,6 +201,7 @@ export const load: PageServerLoad = ({ params, setHeaders }) => {
 		return {
 			kind: 'markdown' as const,
 			token: params.token,
+			version: revision,
 			filename: path.basename(resolved),
 			updatedAt: stats.mtime.toISOString(),
 			lineCount: markdown.split('\n').length,
@@ -216,6 +227,7 @@ export const load: PageServerLoad = ({ params, setHeaders }) => {
 	return {
 		kind: 'image' as const,
 		token: params.token,
+		version: revision,
 		images
 	};
 };

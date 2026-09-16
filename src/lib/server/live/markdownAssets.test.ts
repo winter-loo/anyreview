@@ -64,10 +64,15 @@ describe('Markdown local images', () => {
   response = await get('image.png');
   expect(Buffer.from(await response.arrayBuffer()).equals(updated)).toBe(true);
  });
- it('does not grant access to unreferenced images, including references added after publication', async () => {
-  writeFileSync(path.join(source, 'private.png'), png); publish('# No images');
-  writeFileSync(document, '![New](private.png)');
+ it('follows the document: an image referenced later is served, one it never references is not', async () => {
+  writeFileSync(path.join(source, 'private.png'), png);
+  writeFileSync(path.join(source, 'unused.png'), png);
+  publish('# No images');
   await expect(get('private.png')).rejects.toMatchObject({ status: 404 });
+  // The link is stable, so the next version of the same document decides what it may read.
+  publish('![New](private.png)');
+  expect(Buffer.from(await (await get('private.png')).arrayBuffer()).equals(png)).toBe(true);
+  await expect(get('unused.png')).rejects.toMatchObject({ status: 404 });
  });
  it.each(['../outside.png', '%2e%2e/outside.png', 'escape.png'])('blocks traversal or symlink escape: %s', async src => {
   const outside = path.join(directory, 'outside.png'); writeFileSync(outside, png);

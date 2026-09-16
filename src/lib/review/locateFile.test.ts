@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { digest } from '../../../bin/live-snapshot.js';
@@ -9,7 +9,9 @@ const reviewBin=path.resolve('bin/review.js');
 function environment(dir:string,extra:NodeJS.ProcessEnv={}){return {...process.env,HOME:dir,ONLINE_REVIEW_URL_SECRET:'locate-test',ONLINE_REVIEW_BASE_URL:'https://example.test/live',ONLINE_REVIEW_FEEDBACK_HOME:path.join(dir,'feedback'),...extra};}
 function publishedText(dir:string,url:string){
  const token=url.trim().split('/').at(-1)!;
- const snapshot=JSON.parse(readFileSync(path.join(dir,'feedback/snapshots',digest(token),'manifest.json'),'utf8'));
+ const review=path.join(dir,'feedback/snapshots',digest(token));
+ const [version]=readdirSync(review).filter(name=>/^[a-f\d]{64}$/.test(name));
+ const snapshot=JSON.parse(readFileSync(path.join(review,version,'manifest.json'),'utf8'));
  return readFileSync(snapshot.files[0].snapshotPath,'utf8');
 }
 function workspace(prefix:string){

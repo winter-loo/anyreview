@@ -37,7 +37,9 @@ export async function runFeedback(args) {
  }while(true);
  if(out){
   await mkdir(out,{recursive:false});
-  const resources=[...result.files.map(f=>({url:f.url,name:`original-${f.sha256.slice(0,12)}-${path.basename(f.filename)}`})),...result.batches.flatMap(b=>b.comments.filter(c=>c.previewUrl).map(c=>({url:c.previewUrl,name:`annotation-${String(c.id).replace(/[^a-zA-Z0-9_-]/g,'_')}.png`})) )];
+  // Each batch also brings the bytes it was written against, which are no longer the current ones.
+  const original=f=>({url:f.url,name:`original-${f.sha256.slice(0,12)}-${path.basename(f.filename)}`});
+  const resources=[...result.files.map(original),...result.batches.flatMap(b=>[...(b.files||[]).map(original),...b.comments.filter(c=>c.previewUrl).map(c=>({url:c.previewUrl,name:`annotation-${String(c.id).replace(/[^a-zA-Z0-9_-]/g,'_')}.png`}))])];
   const downloaded=new Set();
   for(const resource of resources){
    if(downloaded.has(resource.name))continue;downloaded.add(resource.name);

@@ -63,7 +63,11 @@ export function createLiveFeedback<T extends {id:string;body:string;createdAt:st
      queue=queue.filter(o=>o.operationId!==operation.operationId);accept(next);stash();
     }
     accept(await request());status='已同步';
-   }catch(e){status='未同步';error=e instanceof Error?e.message:'同步失败';stash();}
+   }catch(e){
+    // The document moved on. Queued work points at bytes nobody is reading any more, so it cannot be sent.
+    if(e instanceof FeedbackRequestError&&e.status===409){queue=[];status='文档已更新';error='文档已更新，请刷新页面查看最新版本';stash();}
+    else{status='未同步';error=e instanceof Error?e.message:'同步失败';stash();}
+   }
    finally{running=null;}
   })();
   return running;

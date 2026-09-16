@@ -18,6 +18,9 @@ export function getShortLinksDb(): DatabaseSync {
 
 export function createShortLink(token: string): string {
 	const db = getShortLinksDb();
+	// One document keeps one link, so a reviewer can refresh instead of collecting new URLs.
+	const existing = db.prepare('SELECT id FROM short_links WHERE token = ? ORDER BY created_at LIMIT 1').get(token) as { id: string } | undefined;
+	if (existing?.id) return existing.id;
 	const id = randomBytes(6).toString('base64url');
 	const stmt = db.prepare('INSERT OR REPLACE INTO short_links (id, token, created_at) VALUES (?, ?, ?)');
 	stmt.run(id, token, new Date().toISOString());

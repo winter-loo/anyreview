@@ -3,25 +3,30 @@ import { MAX_FEEDBACK_REQUEST_BYTES } from '$lib/feedback/limits';
 import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import { error, json } from '@sveltejs/kit';
-import { liveSnapshot } from '$lib/server/live/snapshots';
-import { openFeedbackDb, feedbackState, applyOperations, submitFeedback, agentFeedback } from '$lib/server/live/feedback';
+import { liveSnapshot, liveSnapshotVersion } from '$lib/server/live/snapshots';
+import { openFeedbackDb, feedbackState, applyOperations, submitFeedback, agentFeedback, syncReviewVersion } from '$lib/server/live/feedback';
 import type { FeedbackOperation } from '$lib/feedback/types';
 import type { RequestHandler } from './$types';
 
 const headers = {'cache-control':'no-store','x-content-type-options':'nosniff'};
 export const GET: RequestHandler = ({params,url,request}) => {
- const snapshot=liveSnapshot(params.token),db=openFeedbackDb();
+ const db=openFeedbackDb();
  try {
   if (url.searchParams.has('file')) {
+   // A download serves the version its anchors were written against, not whatever the document says now.
+   const requested=url.searchParams.get('version');
+   const snapshot=requested?liveSnapshotVersion(params.token,requested):liveSnapshot(params.token);
    const index=Number(url.searchParams.get('file'));
    if(!Number.isInteger(index)||index<0||index>=snapshot.files.length) throw error(404,'File not found');
    const file=snapshot.files[index];return new Response(Readable.toWeb(createReadStream(file.snapshotPath)) as ReadableStream<Uint8Array>,{headers:{...headers,'content-type':'application/octet-stream','content-disposition':`attachment; filename*=UTF-8''${encodeURIComponent(file.filename)}`}});
   }
+  const snapshot=liveSnapshot(params.token);
   if (url.searchParams.has('preview')) {
    const row=db.prepare('SELECT preview FROM live_annotations WHERE review=? AND id=?').get(snapshot.id,url.searchParams.get('preview')!) as {preview:Uint8Array}|undefined;
    if(!row?.preview) throw error(404,'Preview not available');
    return new Response(Buffer.from(row.preview),{headers:{...headers,'content-type':'image/png'}});
   }
+  syncReviewVersion(db,snapshot);
   if(url.searchParams.get('format')==='agent') {
    const after=Number(url.searchParams.get('after')||0);if(!Number.isSafeInteger(after)||after<0) throw error(400,'Invalid cursor');
    return json(agentFeedback(db,snapshot,`${liveOrigin(url,request.headers)}${url.pathname}`,after),{headers});
@@ -41,6 +46,7 @@ export const POST: RequestHandler = async ({params,request,url}) => {
  if(!body||typeof body!=='object'||Array.isArray(body))throw error(400,'Invalid request body');
  const snapshot=liveSnapshot(params.token),db=openFeedbackDb();
  try {
+  syncReviewVersion(db,snapshot);
   if(body.version!==snapshot.version) throw error(409,'Review version has changed');
   if(body.operations) applyOperations(db,snapshot,body.version,body.operations);
   const result=body.submit?submitFeedback(db,snapshot,body.submit):{};

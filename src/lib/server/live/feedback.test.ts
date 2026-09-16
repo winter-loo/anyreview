@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { openFeedbackDb,applyOperations,submitFeedback,agentFeedback,feedbackState } from './feedback';
+import { openFeedbackDb,applyOperations,submitFeedback,agentFeedback,feedbackState,syncReviewVersion } from './feedback';
 import type { Snapshot } from './snapshots';
 const dirs:string[]=[];
 afterEach(()=>{for(const dir of dirs.splice(0))rmSync(dir,{recursive:true,force:true});});
@@ -53,6 +53,29 @@ describe('durable live feedback',()=>{
    expect(feedbackState(db,snapshot).annotations).toHaveLength(0);
   }finally{db.close();}
  });
+});
+
+it('drops unsubmitted comments when the document changes and keeps submitted batches with their own version',()=>{
+ const db=database(),dir=mkdtempSync(path.join(tmpdir(),'feedback-version-'));dirs.push(dir);
+ const home=process.env.ONLINE_REVIEW_FEEDBACK_HOME;process.env.ONLINE_REVIEW_FEEDBACK_HOME=dir;
+ const preview='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+ try {
+  applyOperations(db,snapshot,'v1',[{operationId:'add',type:'add',annotation},{operationId:'png',type:'preview',id:'a',preview}]);
+  submitFeedback(db,snapshot,'submit');
+  applyOperations(db,snapshot,'v1',[{operationId:'pending',type:'add',annotation:{...annotation,id:'pending'}}]);
+  expect(feedbackState(db,snapshot).pendingCount).toBe(1);
+
+  const edited={...snapshot,version:'v2'};
+  syncReviewVersion(db,edited);
+  const state=feedbackState(db,edited);
+  expect(state.pendingCount).toBe(0);
+  expect(state.annotations.map(a=>a.id)).toEqual(['a']);
+  const [batch]=agentFeedback(db,edited,'/feedback').batches;
+  expect(batch).toMatchObject({version:'v1'});
+  expect(batch.comments[0].previewUrl).toBe('/feedback?preview=a');
+  // Writing against the old version is refused; the reviewer reloads and starts from the new one.
+  expect(()=>applyOperations(db,edited,'v1',[{operationId:'stale',type:'add',annotation:{...annotation,id:'stale'}}])).toThrow();
+ } finally {db.close();if(home===undefined)delete process.env.ONLINE_REVIEW_FEEDBACK_HOME;else process.env.ONLINE_REVIEW_FEEDBACK_HOME=home;}
 });
 
 it('returns submitted Markdown quotes and offsets to the agent',()=>{

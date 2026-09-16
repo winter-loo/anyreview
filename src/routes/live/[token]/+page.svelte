@@ -6,9 +6,11 @@
  import LiveWordReview from '$lib/components/review/LiveWordReview.svelte';
  import LivePptReview from '$lib/components/review/LivePptReview.svelte';
  import LiveExcelReview from '$lib/components/review/LiveExcelReview.svelte';
+ import ReviewVersionBanner from '$lib/components/review/ReviewVersionBanner.svelte';
  let {data} = $props();
 </script>
 <svelte:head><title>{data.kind === 'image' ? (data.images[0]?.filename ?? '图片评审') : data.filename} · Live Review</title><meta name="robots" content="noindex,nofollow" /></svelte:head>
+<ReviewVersionBanner token={data.token} version={data.version} />
 {#key data.token}
  {#if data.kind === 'video'}<LiveVideoReview {data} />
  {:else if data.kind === 'markdown'}<LiveMarkdownReview {data} />
