@@ -36,7 +36,11 @@ export const GET: RequestHandler = ({params,url,request}) => {
 };
 export const POST: RequestHandler = async ({params,request,url}) => {
  const origin=request.headers.get('origin');
- if(origin && origin!==url.origin && origin!==liveOrigin(url,request.headers)) throw error(403,'Cross-origin feedback writes are not allowed');
+ // Browsers set this forbidden header from the actual public URL, even when
+ // adapter-node uses a fixed ORIGIN behind a different tunnel. Page scripts
+ // cannot forge it. Older clients retain the explicit origin comparison.
+ const sameOrigin=request.headers.get('sec-fetch-site')==='same-origin';
+ if(!sameOrigin && origin && origin!==url.origin && origin!==liveOrigin(url,request.headers)) throw error(403,'Cross-origin feedback writes are not allowed');
  if(!request.headers.get('content-type')?.startsWith('application/json')) throw error(415,'JSON body required');
  const reader=request.body?.getReader();if(!reader) throw error(400,'Missing body');
  let size=0;const chunks:Uint8Array[]=[];

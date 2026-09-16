@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 import { createCipheriv, createHash, createHmac, randomBytes } from 'node:crypto';
-import { spawn, spawnSync } from 'node:child_process';
-import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, rmSync, writeFileSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { homedir, networkInterfaces } from 'node:os';
 import path from 'node:path';
 import { createInterface } from 'node:readline/promises';
@@ -12,6 +12,7 @@ import { readClipboard } from './clipboard.js';
 import { rememberReview } from './latest-review.js';
 import { readPaste } from './paste.js';
 import { digest, freezeReview } from './live-snapshot.js';
+import { cloudflarePublicBase } from './cloudflare.js';
 import { locateFile } from './locate-file.js';
 
 const MAX_MARKDOWN_BYTES = 5 * 1024 * 1024;
@@ -163,70 +164,6 @@ function tailscalePublicBase(port) {
 	return `https://${dnsName}/live`;
 }
 
-function runningProcess(pid) {
-	if (!Number.isSafeInteger(pid) || pid <= 0) return false;
-	try { process.kill(pid, 0); return true; } catch { return false; }
-}
-
-function cloudflaredCommand() {
-	if (process.env.CLOUDFLARED_BIN) return process.env.CLOUDFLARED_BIN;
-	if (process.platform === 'win32') {
-		const candidates = [
-			process.env.ProgramFiles && path.join(process.env.ProgramFiles, 'cloudflared', 'cloudflared.exe'),
-			process.env['ProgramFiles(x86)'] && path.join(process.env['ProgramFiles(x86)'], 'cloudflared', 'cloudflared.exe')
-		].filter(Boolean);
-		const installed = candidates.find((candidate) => existsSync(candidate));
-		if (installed) return installed;
-	}
-	return 'cloudflared';
-}
-
-async function cloudflarePublicBase(port) {
-	const stateDirectory = path.join(homedir(), '.config');
-	const stateFile = path.join(stateDirectory, 'online-review-cloudflare.json');
-	try {
-		const state = JSON.parse(readFileSync(stateFile, 'utf8'));
-		if (state.port === String(port) && /^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/i.test(state.url) && runningProcess(state.pid)) {
-			return `${state.url}/live`;
-		}
-	} catch {}
-
-	mkdirSync(stateDirectory, { recursive: true });
-	const logFile = path.join(stateDirectory, `online-review-cloudflare-${Date.now()}.log`);
-	const log = openSync(logFile, 'a');
-	let tunnel;
-	try {
-		tunnel = spawn(cloudflaredCommand(), ['tunnel', '--url', `http://127.0.0.1:${port}`, '--no-autoupdate'], {
-			detached: true,
-			stdio: ['ignore', log, log],
-			windowsHide: true
-		});
-	} catch (error) {
-		closeSync(log);
-		throw new Error(`Cannot run cloudflared: ${error instanceof Error ? error.message : String(error)}`);
-	}
-	closeSync(log);
-	let spawnError;
-	tunnel.once('error', (error) => { spawnError = error; });
-	tunnel.unref();
-
-	const deadline = Date.now() + 30_000;
-	while (Date.now() < deadline) {
-		await new Promise((resolve) => setTimeout(resolve, 250));
-		if (spawnError) throw new Error(`Cannot run cloudflared: ${spawnError.message}`);
-		let output = '';
-		try { output = readFileSync(logFile, 'utf8'); } catch {}
-		const match = output.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/i);
-		if (match) {
-			writeFileSync(stateFile, JSON.stringify({ pid: tunnel.pid, port: String(port), url: match[0], logFile }, null, 2), { mode: 0o600 });
-			return `${match[0]}/live`;
-		}
-		if (tunnel.exitCode !== null) throw new Error(output.trim() || `cloudflared exited with code ${tunnel.exitCode}.`);
-	}
-
-	try { tunnel.kill(); } catch {}
-	throw new Error(`Timed out waiting for a Cloudflare Quick Tunnel URL. See ${logFile}`);
-}
 
 function latestMarkdown(directory) {
 	const candidates = readdirSync(directory, { withFileTypes: true })
