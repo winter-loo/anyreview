@@ -34,13 +34,19 @@ export const GET: RequestHandler = ({params,url,request}) => {
   return json(feedbackState(db,snapshot),{headers});
  } finally {db.close();}
 };
+function sameHost(origin:string,host:string|null) {
+ try {return !!host && new URL(origin).host===host.toLowerCase();} catch {return false;}
+}
 export const POST: RequestHandler = async ({params,request,url}) => {
  const origin=request.headers.get('origin');
  // Browsers set this forbidden header from the actual public URL, even when
  // adapter-node uses a fixed ORIGIN behind a different tunnel. Page scripts
- // cannot forge it. Older clients retain the explicit origin comparison.
+ // cannot forge it.
  const sameOrigin=request.headers.get('sec-fetch-site')==='same-origin';
- if(!sameOrigin && origin && origin!==url.origin && origin!==liveOrigin(url,request.headers)) throw error(403,'Cross-origin feedback writes are not allowed');
+ // Browsers omit fetch metadata on plain-HTTP LAN URLs, but still send the
+ // page's Origin and the Host they connected to; a cross-site page cannot
+ // make those agree.
+ if(!sameOrigin && origin && origin!==url.origin && origin!==liveOrigin(url,request.headers) && !sameHost(origin,request.headers.get('host'))) throw error(403,'Cross-origin feedback writes are not allowed');
  if(!request.headers.get('content-type')?.startsWith('application/json')) throw error(415,'JSON body required');
  const reader=request.body?.getReader();if(!reader) throw error(400,'Missing body');
  let size=0;const chunks:Uint8Array[]=[];
