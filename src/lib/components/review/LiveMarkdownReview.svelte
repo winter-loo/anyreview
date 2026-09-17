@@ -152,7 +152,7 @@
 	}
 
 	function saveDraft() {
-		if (!draft || !draftBody.trim()) return null;
+		if (!draft || !draftBody.trim()) return;
 		const next: TextAnnotation = {
 			id: randomId(),
 			...draft,
@@ -162,7 +162,6 @@
 		persist([...annotations, next]);
 		closeComposer();
 		showNotice('已保存批注');
-		return next;
 	}
 
 	function removeAnnotation(id: string) {
@@ -250,11 +249,6 @@
 		} catch (cause) {
 			if (!(cause instanceof DOMException && cause.name === 'AbortError')) showNotice('分享失败，请重试');
 		}
-	}
-
-	async function saveAndShare() {
-		const annotation = saveDraft();
-		if (annotation) await share([...annotations]);
 	}
 
 	function annotationsForBlock(blockId: string) {
@@ -406,8 +400,7 @@
 		<textarea bind:value={draftBody} rows="3" maxlength="4000" placeholder="写下你的意见…" aria-label="批注内容"></textarea>
 		<div class="composer-actions">
 			<button type="button" onclick={closeComposer}>取消</button>
-			<button type="button" disabled={!draftBody.trim()} onclick={saveDraft}>保存</button>
-			<button class="primary" type="button" disabled={!draftBody.trim()} onclick={() => void saveAndShare()}>保存并分享</button>
+			<button class="primary" type="button" disabled={!draftBody.trim()} onclick={saveDraft}>保存</button>
 		</div>
 	</div>
 {/if}
@@ -507,7 +500,6 @@
 		.composer { bottom: 0; width: 100%; padding: 12px 14px calc(12px + env(safe-area-inset-bottom)); border-width: 1px 0 0; border-radius: 20px 20px 0 0; }
 		.grabber { display: block; }
 		.composer-actions { display: grid; grid-template-columns: 1fr 1fr; }
-		.composer-actions .primary { grid-column: 1 / -1; grid-row: 1; }
 		.composer-actions button { width: 100%; }
 	}
 </style>
