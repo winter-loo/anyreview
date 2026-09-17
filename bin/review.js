@@ -14,6 +14,7 @@ import { readPaste } from './paste.js';
 import { digest, freezeReview } from './live-snapshot.js';
 import { cloudflarePublicBase } from './cloudflare.js';
 import { locateFile } from './locate-file.js';
+import { ensureLocalServer } from './local-server.js';
 import { readEnvConfig, reviewUrlSecret } from './online-review-config.js';
 
 const MAX_MARKDOWN_BYTES = 5 * 1024 * 1024;
@@ -122,19 +123,14 @@ async function chooseLocalNetworkAddress(requested) {
 	}
 }
 
-async function localServicePort() {
-	const candidates = [...new Set([process.env.PORT, '5173', '8787'].filter(Boolean))];
-	for (const port of candidates) {
-		try {
-			await fetch(`http://127.0.0.1:${port}/`, { signal: AbortSignal.timeout(1500) });
-			return port;
-		} catch {}
-	}
-	throw new Error(`ReviewLoop is not running on ${candidates.map((port) => `127.0.0.1:${port}`).join(' or ')}.`);
-}
-
 function tailscalePublicBase(port) {
-	const status = spawnSync('tailscale', ['status', '--json'], { encoding: 'utf8' });
+	const command = process.env.TAILSCALE_BIN || 'tailscale';
+	let commandArgs = [];
+	if (process.env.TAILSCALE_BIN_ARGS) {
+		try { commandArgs = JSON.parse(process.env.TAILSCALE_BIN_ARGS); } catch { throw new Error('TAILSCALE_BIN_ARGS must be a JSON array.'); }
+		if (!Array.isArray(commandArgs) || commandArgs.some((value) => typeof value !== 'string')) throw new Error('TAILSCALE_BIN_ARGS must be a JSON array of strings.');
+	}
+	const status = spawnSync(command, [...commandArgs, 'status', '--json'], { encoding: 'utf8' });
 	if (status.error) throw new Error(`Cannot run Tailscale: ${status.error.message}`);
 	if (status.status !== 0) throw new Error(status.stderr.trim() || 'Cannot read Tailscale status.');
 	let details;
@@ -143,7 +139,7 @@ function tailscalePublicBase(port) {
 	const dnsName = String(details.Self.DNSName ?? '').replace(/\.$/, '');
 	if (!dnsName) throw new Error('Tailscale MagicDNS is not available for this machine.');
 
-	const funnel = spawnSync('tailscale', ['funnel', '--bg', '--yes', String(port)], { encoding: 'utf8' });
+	const funnel = spawnSync(command, [...commandArgs, 'funnel', '--bg', '--yes', String(port)], { encoding: 'utf8' });
 	if (funnel.error) throw new Error(`Cannot configure Tailscale Funnel: ${funnel.error.message}`);
 	if (funnel.status !== 0) throw new Error(funnel.stderr.trim() || funnel.stdout.trim() || 'Cannot configure Tailscale Funnel.');
 	return `https://${dnsName}/live`;
@@ -204,7 +200,11 @@ async function main(rawFiles) {
  const requestedAddress = localNetOption?.includes('=') ? localNetOption.slice(localNetOption.indexOf('=') + 1) : undefined;
  const localHost = localNetOption ? await chooseLocalNetworkAddress(requestedAddress) : '127.0.0.1';
  const port = process.env.PORT || '8787';
- const base = new URL(tailnet ? tailscalePublicBase(await localServicePort()) : cloudflare ? await cloudflarePublicBase(await localServicePort()) : local || localNetOption ? `http://${localHost}:${port}/live` : (readEnvConfig('ONLINE_REVIEW_BASE_URL') || `http://127.0.0.1:${port}/live`));
+ const configuredBase = readEnvConfig('ONLINE_REVIEW_BASE_URL');
+ if ((local || localNetOption || tailnet || cloudflare) && process.env.REVIEW_SERVER_AUTOSTART !== '0') {
+  await ensureLocalServer({bindHost:localNetOption?'0.0.0.0':'127.0.0.1',accessHost:localHost,port});
+ }
+ const base = new URL(tailnet ? tailscalePublicBase(port) : cloudflare ? await cloudflarePublicBase(port) : local || localNetOption ? `http://${localHost}:${port}/live` : (configuredBase || `http://127.0.0.1:${port}/live`));
  if (!['http:', 'https:'].includes(base.protocol) || base.pathname.replace(/\/$/, '') !== '/live' || base.search || base.hash || base.username || base.password) throw new Error('Review base URL must be an HTTP(S) URL ending in /live');
 	const files = rawFiles.map((file) => realpathSync(file));
 
