@@ -1,4 +1,5 @@
 <script lang="ts">
+ import { randomId } from '$lib/random-id';
  import { createLiveFeedback } from '$lib/feedback/client.svelte';
  import nextIcon from '$lib/assets/review-icons/next.svg?url';
  import prevIcon from '$lib/assets/review-icons/prev.svg?url';
@@ -757,7 +758,7 @@
 		if (draftStrokes.length === 0) return null;
 		const firstPoint = draftStrokes[0].points[0] ?? { x: 0.5, y: 0.5 };
 		const annotation: PptAnnotation = {
-			id: crypto.randomUUID(),
+			id: randomId(),
 			slideIndex: currentIndex,
 			strokes: draftStrokes,
 			badgePosition: {

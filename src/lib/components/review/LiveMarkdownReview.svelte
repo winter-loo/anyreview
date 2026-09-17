@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { randomId } from '$lib/random-id';
 	import MermaidPreview from '$lib/components/review/MermaidPreview.svelte';
 	import FigureAnnotator from '$lib/components/review/FigureAnnotator.svelte';
 	import FigureMarks from '$lib/components/review/FigureMarks.svelte';
@@ -153,7 +154,7 @@
 	function saveDraft() {
 		if (!draft || !draftBody.trim()) return null;
 		const next: TextAnnotation = {
-			id: crypto.randomUUID(),
+			id: randomId(),
 			...draft,
 			body: draftBody.trim(),
 			createdAt: new Date().toISOString()
@@ -198,7 +199,7 @@
 
 	function saveFigure(mark: { strokes: Stroke[]; badgePosition: Point; body: string }) {
 		if (!openFigure) return;
-		persist([...annotations, { id: crypto.randomUUID(), type: 'figure', blockId: openFigure.blockId, figureIndex: openFigure.index, ...mark, createdAt: new Date().toISOString() }]);
+		persist([...annotations, { id: randomId(), type: 'figure', blockId: openFigure.blockId, figureIndex: openFigure.index, ...mark, createdAt: new Date().toISOString() }]);
 	}
 
 	/** Server HTML cannot host Svelte markup, so drawing overlays follow each image's box within its block. */

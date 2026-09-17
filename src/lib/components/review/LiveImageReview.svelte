@@ -1,4 +1,5 @@
 <script lang="ts">
+ import { randomId } from '$lib/random-id';
  import { createLiveFeedback } from '$lib/feedback/client.svelte';
 	import { onMount, tick } from 'svelte';
  import { reviewViewport, reviewWidth } from '$lib/review/visualViewport';
@@ -662,7 +663,7 @@
 		if (draftStrokes.length === 0 || !currentImage) return null;
 		const firstPoint = draftStrokes[0].points[0] ?? { x: 0.5, y: 0.5 };
 		const annotation: ImageAnnotation = {
-			id: crypto.randomUUID(),
+			id: randomId(),
 			imageIndex: currentIndex,
 			filename: currentImage.filename,
 			strokes: draftStrokes,

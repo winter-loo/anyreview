@@ -1,4 +1,5 @@
 <script lang="ts">
+ import { randomId } from '$lib/random-id';
  import { createLiveFeedback } from '$lib/feedback/client.svelte';
 	import { onMount, tick, untrack } from 'svelte';
 	import { reviewViewport, reviewWidth } from '$lib/review/visualViewport';
@@ -329,7 +330,7 @@
 	function saveTextDraft() {
 		if (!textDraft || !textDraftBody.trim()) return;
 		const annotation: TextAnnotation = {
-			id: crypto.randomUUID(),
+			id: randomId(),
 			type: 'text',
 			selectedText: textDraft.selectedText,
    prefix: textDraft.prefix,
@@ -565,7 +566,7 @@
 		if (draftStrokes.length === 0) return;
 		const firstPoint = draftStrokes[0].points[0] ?? { x: 0.5, y: 0.5 };
 		const annotation: BrushAnnotation = {
-			id: crypto.randomUUID(),
+			id: randomId(),
 			type: 'brush',
 			strokes: draftStrokes,
 			badgePosition: {

@@ -1,4 +1,5 @@
 <script lang="ts">
+ import { randomId } from '$lib/random-id';
  import { onMount } from 'svelte';
  import { frameTicks, nearestFrame, pinchTimeline, timelineWindow, type TimelineWindow } from '$lib/video/timeline';
  import VideoReviewDrawer from './VideoReviewDrawer.svelte';
@@ -240,7 +241,7 @@
  function cancel() { drawer = null; composing = false; locations = []; body = ''; range = false; }
  function save() {
   if (!ready || !locations.length || !body.trim()) return;
-  feedback.persist([...annotations, { id: crypto.randomUUID(), createdAt: new Date().toISOString(), type: 'video', locations: [...locations], body: body.trim() }]); cancel(); pause();
+  feedback.persist([...annotations, { id: randomId(), createdAt: new Date().toISOString(), type: 'video', locations: [...locations], body: body.trim() }]); cancel(); pause();
  }
  function canLocate(p: VideoLocation) { return ready && (!index?.approximate || (p.type === 'point' ? p.time !== undefined : p.startTime !== undefined)); }
  function label(p: VideoLocation) {

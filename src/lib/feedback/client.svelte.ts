@@ -1,6 +1,7 @@
 import { setContext } from 'svelte';
 import { FEEDBACK_CONTEXT, type Annotation, type FeedbackOperation, type FeedbackState } from './types';
 import { capturePreview } from './preview';
+import { randomId } from '../random-id';
 import { MAX_PREVIEW_BYTES, pngPreviewBytes } from './limits';
 
 class FeedbackRequestError extends Error {
@@ -14,7 +15,7 @@ export function createLiveFeedback<T extends {id:string;body:string;createdAt:st
  let legacy:T[]=[],jobs:Promise<void>[]=[];
  const key=()=>`reviewloop:feedback:${config.token()}`;
  const url=()=>`/live/${encodeURIComponent(config.token())}/feedback`;
- const operationId=()=>crypto.randomUUID();
+ const operationId=()=>randomId();
  function stash(){try{localStorage.setItem(key(),JSON.stringify({queue,initialized:!!state}));}catch{error='本机缓存空间不足，请保持页面打开直到同步完成';}}
  async function request(body?:object):Promise<FeedbackState>{
   const response=await fetch(url(),body?{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}:{cache:'no-store'});
