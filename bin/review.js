@@ -14,6 +14,7 @@ import { readPaste } from './paste.js';
 import { digest, freezeReview } from './live-snapshot.js';
 import { cloudflarePublicBase } from './cloudflare.js';
 import { locateFile } from './locate-file.js';
+import { readEnvConfig, reviewUrlSecret } from './online-review-config.js';
 
 const MAX_MARKDOWN_BYTES = 5 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -78,22 +79,6 @@ function createShortLink(token) {
 	} catch {
 		return token;
 	}
-}
-
-function readEnvConfig(key) {
-	if (process.env[key]) return process.env[key];
-	try {
-		const env = readFileSync(path.join(homedir(), '.config/online-review.env'), 'utf8');
-		const line = env.split(/\r?\n/).find((value) => value.startsWith(`${key}=`));
-		if (line) return line.slice(line.indexOf('=') + 1);
-	} catch {}
-	return undefined;
-}
-
-function secret() {
-	const val = readEnvConfig('ONLINE_REVIEW_URL_SECRET');
-	if (!val) throw new Error('ONLINE_REVIEW_URL_SECRET is not configured');
-	return val;
 }
 
 function localNetworkAddresses() {
@@ -264,7 +249,7 @@ async function main(rawFiles) {
 
 	const payload = files.length === 1 ? files[0] : JSON.stringify(files);
 
-	const key = createHash('sha256').update(secret()).digest();
+	const key = createHash('sha256').update(reviewUrlSecret()).digest();
 	// A nonce derived from the path keeps one document on one URL: the same plaintext reuses the nonce only
 	// with itself, so nothing else is ever encrypted under that pair.
 	const iv = createHmac('sha256', key).update(payload).digest().subarray(0, 12);

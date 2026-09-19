@@ -6,10 +6,10 @@ import { error } from '@sveltejs/kit';
 import { documentImageMediaType } from '$lib/server/publishers/document';
 import { _snapshotPaths } from '../+page.server';
 import type { RequestHandler } from './$types';
+import { reviewUrlSecret } from '../../../../../bin/online-review-config.js';
 
 export const GET: RequestHandler = ({ params, url }) => {
-	const secret = process.env.ONLINE_REVIEW_URL_SECRET;
-	if (!secret) throw error(503, 'Live review is not configured');
+	const secret = reviewUrlSecret();
 
 	let filePaths: string[];
 	try {

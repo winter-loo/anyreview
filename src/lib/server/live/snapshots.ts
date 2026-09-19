@@ -3,6 +3,7 @@ import { digest, freezeReview, readSnapshot } from '../../../../bin/live-snapsho
 export { feedbackHome, pruneVersions, readSnapshot, latestSnapshot } from '../../../../bin/live-snapshot.js';
 import { error } from '@sveltejs/kit';
 import { resolveToken } from '../shortLinks';
+import { reviewUrlSecret } from '../../../../bin/online-review-config.js';
 
 export function decodePaths(token: string, secret: string) {
  const resolved = resolveToken(token), payload = Buffer.from(resolved, 'base64url');
@@ -16,8 +17,7 @@ export function decodePaths(token: string, secret: string) {
 export type { Snapshot } from '../../../../bin/live-snapshot.js';
 /** Stable for one document path, so every version of it shares a review and a URL. */
 export function reviewId(token: string) { return digest(resolveToken(token)); }
-export function liveSnapshot(token: string, secret = process.env.ONLINE_REVIEW_URL_SECRET) {
- if (!secret) throw error(503,'Live review is not configured');
+export function liveSnapshot(token: string, secret = reviewUrlSecret()) {
  let sources:string[];
  try { sources=decodePaths(token,secret); } catch { throw error(404,'Review not found'); }
  try { return freezeReview(reviewId(token),sources); } catch { throw error(404,'Review snapshot is unavailable'); }

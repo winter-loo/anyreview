@@ -5,10 +5,10 @@ import path from 'node:path';
 import { error } from '@sveltejs/kit';
 import { _snapshotPaths, _isHtmlFile } from '../+page.server';
 import type { RequestHandler } from './$types';
+import { reviewUrlSecret } from '../../../../../bin/online-review-config.js';
 
 export const GET: RequestHandler = ({ params }) => {
-	const secret = process.env.ONLINE_REVIEW_URL_SECRET;
-	if (!secret) throw error(503, 'Live review is not configured');
+	const secret = reviewUrlSecret();
 
 	let filePaths: string[];
 	try {

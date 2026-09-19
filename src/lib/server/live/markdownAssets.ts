@@ -5,6 +5,7 @@ import { error } from '@sveltejs/kit';
 import { markdownImageSources } from '$lib/server/markdown/render';
 import { documentImageMediaType } from '$lib/server/publishers/document';
 import { decodePaths, liveSnapshot } from './snapshots';
+import { reviewUrlSecret } from '../../../../bin/online-review-config.js';
 
 export function isLocalMarkdownImage(src: string) {
 	return !!src && !src.startsWith('//') && !src.startsWith('#') && !/^[a-z][a-z\d+.-]*:/i.test(src);
@@ -29,7 +30,7 @@ export function resolveMarkdownAsset(token: string, assetId: string) {
 		.find(candidate => isLocalMarkdownImage(candidate) && markdownImageId(candidate) === assetId);
 	if (!src) throw error(404, 'Image is not referenced by this review');
 
-	const originalPaths = decodePaths(token, process.env.ONLINE_REVIEW_URL_SECRET!);
+	const originalPaths = decodePaths(token, reviewUrlSecret());
 	let root: string, resolved: string;
 	try {
 		root = realpathSync(path.dirname(originalPaths[0]));

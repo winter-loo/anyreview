@@ -9,6 +9,7 @@ import { documentImageMediaType } from '$lib/server/publishers/document';
 import { markdownImageUrl } from '$lib/server/live/markdownAssets';
 import { renderMarkdownDocument } from '$lib/server/markdown/render';
 import type { PageServerLoad } from './$types';
+import { reviewUrlSecret } from '../../../../bin/online-review-config.js';
 
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg', '.bmp', '.avif']);
 
@@ -71,8 +72,7 @@ export function _pathsFromToken(token: string, secret: string): string[] {
 export function _snapshotPaths(token: string, secret: string) { return liveSnapshot(token, secret).files.map(f=>f.snapshotPath); }
 
 export const load: PageServerLoad = ({ params, setHeaders }) => {
-	const secret = process.env.ONLINE_REVIEW_URL_SECRET;
-	if (!secret) throw error(503, 'Live review is not configured');
+	const secret = reviewUrlSecret();
 
 	let filePaths: string[];
 	try {

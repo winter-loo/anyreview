@@ -49,6 +49,20 @@ it('uses loopback when no URL mode or public base URL is configured',()=>{
  } finally {rmSync(dir,{recursive:true,force:true});}
 });
 
+it('creates and reuses a private URL secret when none is configured',()=>{
+ const dir=mkdtempSync(path.join(tmpdir(),'automatic-review-secret-'));
+ try {
+  const file=path.join(dir,'sample.md');writeFileSync(file,'# Automatic secret');
+  const env: NodeJS.ProcessEnv={...process.env,HOME:dir,PORT:'8787',ONLINE_REVIEW_FEEDBACK_HOME:path.join(dir,'feedback'),ONLINE_REVIEW_SHORT_LINKS_DB:path.join(dir,'links.db')};
+  delete env.ONLINE_REVIEW_URL_SECRET;
+  const publish=()=>execFileSync(process.execPath,['bin/review.js',file,'--local','--long'],{env,encoding:'utf8'}).trim();
+  const first=publish();
+  expect(publish()).toBe(first);
+  const secretPath=path.join(dir,'.config','online-review.secret');
+  expect(readFileSync(secretPath,'utf8').trim()).toMatch(/^[a-f0-9]{64}$/);
+ } finally {rmSync(dir,{recursive:true,force:true});}
+});
+
 it('publishes with an explicitly selected local network address',()=>{
  const lanAddress=Object.entries(networkInterfaces()).filter(([name])=>!/tun|wsl/i.test(name)).flatMap(([,entries])=>entries??[]).find((entry)=>entry.family==='IPv4'&&!entry.internal&&(/^(10\.|192\.168\.)/.test(entry.address)||/^172\.(1[6-9]|2\d|3[01])\./.test(entry.address)))?.address;
  if(!lanAddress)return;

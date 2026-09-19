@@ -6,10 +6,10 @@ import { error } from '@sveltejs/kit';
 import { _snapshotPaths, _isWordFile } from '../+page.server';
 import { convertLegacyWord, WordConversionError } from '$lib/server/documents/convertWord';
 import type { RequestHandler } from './$types';
+import { reviewUrlSecret } from '../../../../../bin/online-review-config.js';
 
 export const GET: RequestHandler = async ({ params }) => {
-	const secret = process.env.ONLINE_REVIEW_URL_SECRET;
-	if (!secret) throw error(503, 'Live review is not configured');
+	const secret = reviewUrlSecret();
 
 	let filePaths: string[];
 	try {

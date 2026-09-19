@@ -53,20 +53,11 @@ flowchart TD
 
 ---
 
-### 第 1 关：加密密钥缺失与环境配置文件
+### 第 1 关：审阅 URL 加密密钥
 
-- **遇到的现象**：
-  第一次尝试在终端运行 `node bin/review.js README.md` 时，控制台立即弹错：
-  ```text
-  ENOENT: no such file or directory, open 'C:\Users\Administrator\.config\online-review.env'
-  ```
-- **原因剖析**：
-  查阅 [`bin/review.js`](file:///D:/proj/reviewloop/bin/review.js) 中的 `secret()` 方法发现，`review` 工具需要一个名为 `ONLINE_REVIEW_URL_SECRET` 的密钥，通过 SHA-256 派生出 AES-256-GCM 密钥，用于加密审阅路径。如果环境变量没有提供，它会默认寻找 `~/.config/online-review.env`。而刚克隆下来的 Windows 新机器上并没有这个文件。
-- **解法**：
-  在用户目录创建该文件并写入随机密钥：
-  ```powershell
-  Set-Content -Path "$HOME\.config\online-review.env" -Value "ONLINE_REVIEW_URL_SECRET=demo-secret-key-for-local-reviewloop-2026" -Encoding utf8
-  ```
+- `review` 使用 AES-256-GCM 加密审阅 URL 中的本地文件路径。
+- 首次运行时，程序会自动生成强随机密钥并保存到 `~/.config/online-review.secret`，无需手工配置。
+- 已有的 `ONLINE_REVIEW_URL_SECRET` 环境变量或 `~/.config/online-review.env` 配置仍然优先，适合需要让多个实例共享同一密钥的部署。
 
 ---
 
@@ -193,18 +184,8 @@ flowchart TD
 
 如果你是一位新的 Windows 开发者，希望在本地最快速度上手使用 ReviewLoop，请直接按照以下顺序操作：
 
-### 1. 准备环境配置
-确保已经安装 Node.js 24+（自带 `node:sqlite`）。在 PowerShell 中执行：
-```powershell
-# 1. 创建 ~/.config 目录及密钥配置文件
-$cfg = @"
-ONLINE_REVIEW_URL_SECRET=my-custom-reviewloop-secret-2026
-"@
-Set-Content -Path "$HOME\.config\online-review.env" -Value $cfg -Encoding utf8
-
-# 2. 设置用户级环境变量
-[Environment]::SetEnvironmentVariable("ONLINE_REVIEW_URL_SECRET", "my-custom-reviewloop-secret-2026", "User")
-```
+### 1. 准备运行环境
+确保已经安装 Node.js 24+（自带 `node:sqlite`）。审阅 URL 密钥会在首次运行时自动生成，不需要准备环境变量或配置文件。
 
 ### 2. 安装依赖并初始化
 进入项目根目录：
