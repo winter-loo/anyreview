@@ -508,8 +508,13 @@
 
 	function handleResize() {
   if (!imageElement || !stageElement) return;
-  imageWidth = Math.min(imageElement.naturalWidth || 300, Math.max(1, stageElement.clientWidth - 32));
-  imageHeight = imageWidth * (imageElement.naturalHeight || 200) / (imageElement.naturalWidth || 300);
+  const naturalWidth = imageElement.naturalWidth || 300;
+  const naturalHeight = imageElement.naturalHeight || 200;
+  // The stage clips overflow: width-only fitting hides the bottom of tall covers.
+  // Size the image and its annotation overlays together within both stage axes.
+  imageWidth = Math.min(naturalWidth, Math.max(1, stageElement.clientWidth - 32),
+    Math.max(1, stageElement.clientHeight - 32) * naturalWidth / naturalHeight);
+  imageHeight = imageWidth * naturalHeight / naturalWidth;
   tick().then(() => { syncCanvasDimensions(); redrawDraftCanvas(); });
 		syncCanvasDimensions();
 		redrawDraftCanvas();
@@ -842,7 +847,7 @@
 <div class="live-image-container live-review" class:review-comments-open={showListModal} use:reviewViewport>
  <ReviewHeader filename={currentImage?.filename || '图片评审'} actions={[{label:'导出带标注图片',run:exportAnnotatedImage,disabled:!imageReady},{label:'分享批注',run:shareAnnotations,disabled:!totalAnnotationCount},{label:'放大',run:()=>applyZoomDelta(.5)},{label:'缩小',run:()=>applyZoomDelta(-.5)},{label:'还原缩放',run:()=>resetZoom(true)}]} hasDraft={draftStrokes.length>0} ondiscard={cancelDraft}>
   {#if totalImages>1}<div class="review-pagination"><button aria-label="上一张图片" onclick={goToPrev} disabled={currentIndex===0}><img src={prevIcon} alt="" width="20" height="20" /></button><span>{currentIndex+1} / {totalImages} 张</span><button aria-label="下一张图片" onclick={goToNext} disabled={currentIndex===totalImages-1}><img src={nextIcon} alt="" width="20" height="20" /></button></div>{/if}
-  <button class="review-fit" onclick={() => resetZoom(true)}>适合宽度</button>
+  <button class="review-fit" onclick={() => resetZoom(true)}>适合页面</button>
  </ReviewHeader>
 	<!-- Main Stage: Full-screen Image Viewport ("每一个图片独占一屏") -->
 	<main

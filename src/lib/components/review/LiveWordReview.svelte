@@ -40,7 +40,7 @@
   loadError = null;
   const frame = htmlFrame;
   const resize = () => {
-   frame.style.height = `${Math.max(600, doc.body.scrollHeight, doc.documentElement.scrollHeight)}px`;
+   if (data.kind === 'word') frame.style.height = `${Math.max(600, doc.body.scrollHeight, doc.documentElement.scrollHeight)}px`;
    syncCanvasSize();
   };
   doc.addEventListener('selectionchange', handleSelectionChange);
@@ -664,9 +664,11 @@
 				class:brush-active={brushMode}
 			>
     {#if data.kind === 'html'}
+     <!-- Keep the HTML viewport at phone width; scaling a 1024px iframe in the review shell
+          leaves responsive content and touch controls tiny and outside the visible frame. -->
      <iframe bind:this={htmlFrame} title={`${data.filename} HTML 预览`} src={data.src}
       onload={htmlLoaded}
-      style="display:block;width:1024px;height:600px;border:0;background:white"></iframe>
+      style="display:block;width:min(1024px, calc(100vw - 64px));height:min(600px, max(300px, calc(100dvh - 170px)));border:0;background:white"></iframe>
     {/if}
    </div>
 
