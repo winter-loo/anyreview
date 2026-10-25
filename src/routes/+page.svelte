@@ -14,7 +14,7 @@
 	<p class="eyebrow">{t('home.eyebrow')}</p>
 	<h1>{t('home.title')}</h1>
 	<p>{t('home.description')}</p>
-	<a href="/reviews">{t('home.openReviews')}</a>
+	<code>{t('home.command')}</code>
 </main>
 
 <style>
@@ -38,15 +38,14 @@
 		font-size: 1.2rem;
 		color: #475569;
 	}
-	a {
-		display: inline-flex;
+	code {
+		display: inline-block;
 		margin-top: 20px;
 		padding: 12px 18px;
-		border-radius: 999px;
-		background: #2563eb;
-		color: white;
-		font-weight: 700;
-		text-decoration: none;
+		border-radius: 8px;
+		background: #e8eefc;
+		color: #193782;
+		font-size: 1rem;
 	}
 	@media (max-width: 640px) {
 		.hero {
@@ -60,7 +59,7 @@
 			font-size: 1.05rem;
 			line-height: 1.55;
 		}
-		a {
+		code {
 			min-height: 44px;
 			align-items: center;
 		}

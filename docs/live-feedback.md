@@ -100,9 +100,7 @@ Default durable directory: `~/.config/online-review-feedback/`, configurable wit
 - `snapshots/<review-id>/sources-v1.json`: stat cache that avoids re-reading unchanged sources;
 - `feedback.db`: SQLite annotations, preview PNGs, tombstones, retry IDs and batches.
 
-Back up this directory along with the existing short-link DB and URL secret.
-Do not use `REVIEW_PLATFORM_HOME` to configure this live-review store: legacy
-`/reviews/` and `/document-reviews/` storage continues independently.
+Back up this directory along with the short-link DB and URL secret.
 
 ## HTTP interface
 

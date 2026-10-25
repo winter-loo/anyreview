@@ -13,12 +13,10 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"test": "vitest run",
 		"install:global": "node scripts/install-global.mjs",
-		"build:cli": "node scripts/build-cli.mjs",
-		"package:review-platform": "pnpm run check && pnpm test && pnpm run build && pnpm run build:cli && bash scripts/package-review-platform.sh"
+		"package:review-platform": "pnpm run check && pnpm test && pnpm run build && bash scripts/package-review-platform.sh"
 	},
 	"bin": {
-		"review": "./bin/review.js",
-		"reviewctl": "./bin/reviewctl.js"
+		"review": "./bin/review.js"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "^5.5.4",
@@ -26,11 +24,9 @@
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",
 		"@types/markdown-it": "^14.1.2",
 		"@types/node": "^22.20.2",
-		"esbuild": "^0.28.0",
 		"jszip": "^3.10.2",
 		"svelte": "^5.55.2",
 		"svelte-check": "^4.4.6",
-		"tsx": "^4.22.3",
 		"typescript": "^6.0.2",
 		"vite": "^8.0.7",
 		"vitest": "^4.1.7"

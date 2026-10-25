@@ -3,7 +3,7 @@ import { readFileSync, realpathSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { error } from '@sveltejs/kit';
 import { markdownImageSources } from '$lib/server/markdown/render';
-import { documentImageMediaType } from '$lib/server/publishers/document';
+import { imageMediaType } from '$lib/server/live/media';
 import { decodePaths, liveSnapshot } from './snapshots';
 import { reviewUrlSecret } from '../../../../bin/online-review-config.js';
 
@@ -44,7 +44,7 @@ export function resolveMarkdownAsset(token: string, assetId: string) {
 	if (relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
 		throw error(403, 'Image must be inside the reviewed document directory');
 	}
-	const mediaType = documentImageMediaType(resolved);
+	const mediaType = imageMediaType(resolved);
 	if (!mediaType) throw error(415, 'Unsupported image type');
 	return { path: resolved, mediaType };
 }

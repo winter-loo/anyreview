@@ -3,7 +3,7 @@ import { readFileSync, realpathSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
 import { error } from '@sveltejs/kit';
-import { documentImageMediaType } from '$lib/server/publishers/document';
+import { imageMediaType } from '$lib/server/live/media';
 import { _snapshotPaths } from '../+page.server';
 import type { RequestHandler } from './$types';
 import { reviewUrlSecret } from '../../../../../bin/online-review-config.js';
@@ -37,7 +37,7 @@ export const GET: RequestHandler = ({ params, url }) => {
 		throw error(403, 'File is not publishable');
 	}
 
-	const mediaType = documentImageMediaType(resolved);
+	const mediaType = imageMediaType(resolved);
 	if (!mediaType) throw error(415, 'Unsupported image type');
 
 	const stats = statSync(resolved);

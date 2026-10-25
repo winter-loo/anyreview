@@ -5,7 +5,7 @@ import { homedir } from 'node:os';
 import path from 'node:path';
 import { error } from '@sveltejs/kit';
 import { resolveToken } from '$lib/server/shortLinks';
-import { documentImageMediaType } from '$lib/server/publishers/document';
+import { imageMediaType } from '$lib/server/live/media';
 import { markdownImageUrl } from '$lib/server/live/markdownAssets';
 import { renderMarkdownDocument } from '$lib/server/markdown/render';
 import type { PageServerLoad } from './$types';
@@ -220,7 +220,7 @@ export const load: PageServerLoad = ({ params, setHeaders }) => {
 			size: stats.size,
 			updatedAt: stats.mtime.toISOString(),
 			src: `/live/${params.token}/image?index=${index}&v=${revision}`,
-			mediaType: documentImageMediaType(resolved) ?? 'image/png'
+			mediaType: imageMediaType(resolved) ?? 'image/png'
 		};
 	});
 

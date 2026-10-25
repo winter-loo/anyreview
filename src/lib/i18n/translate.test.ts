@@ -13,17 +13,14 @@ describe('i18n locale normalization', () => {
 });
 
 describe('createTranslator', () => {
-	it('translates stable UI chrome to Simplified Chinese', () => {
+	it('translates the live review home page to Simplified Chinese', () => {
 		const t = createTranslator('zh-CN');
 
-		expect(t('document.sections')).toBe('章节');
-		expect(t('document.openComments')).toBe('未解决评论');
-		expect(t('comment.save')).toBe('保存评论');
+		expect(t('home.title')).toBe('生成链接，评审本地文件。');
 	});
 
-	it('interpolates values and falls back to English for missing locale messages', () => {
+	it('translates the CLI prompt', () => {
 		const zh = createTranslator('zh-CN');
-		expect(zh('line.one', { line: 42 })).toBe('第 42 行');
-		expect(zh('review.meta.lines', { count: 857 })).toBe('857 行');
+		expect(zh('home.command')).toContain('review <文件>');
 	});
 });

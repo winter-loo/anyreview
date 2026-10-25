@@ -1,516 +1,76 @@
 # ReviewLoop
 
-ReviewLoop is the human-in-the-loop review layer for AI agent work.
+ReviewLoop turns local files and pasted text into browser review links. A reviewer can read the frozen version, add annotations, and submit feedback for an agent to retrieve. The `review` CLI and `/live/<token>` pages are the supported workflow.
 
-It publishes code diffs, Markdown documents, and other review artifacts as durable, read-only snapshots. Humans review the snapshot, leave structured comments, and can route those comments back to an AI agent or executor for revision. The goal is not just to display a diff; it is to preserve the one place where a human can inspect, judge, and steer AI-generated work before it moves forward.
+## Get started
 
-## Why this exists
+Requires Node.js 24+, pnpm 11+, and a writable home directory. Install dependencies and register the CLI from this checkout:
 
-AI agents can write code, update documents, produce patches, and iterate quickly. That creates a new bottleneck: the human needs a stable control point where they can review what the agent produced, comment on concrete lines or artifacts, and send the feedback back into the agent loop.
-
-ReviewLoop provides that control point:
-
-1. **Agent or developer produces work** — code changes, a commit range, a staged patch, or a design document.
-2. **ReviewLoop captures an immutable snapshot of each version** — the source repository or document is read, but not modified. A live document review keeps one URL per document path: after the agent rewrites the file, the reviewer refreshes the same link instead of opening a new one, and submitted feedback stays tied to the version it was written against.
-3. **Human reviews in a browser** — comments are anchored to diff lines or document lines.
-4. **Feedback is machine-readable** — comments are available through the Web UI, HTTP API, and CLI JSON output.
-5. **Agent can be notified to revise** — open comments can be sent through a Gateway/Discord notification payload, including the structured comment details.
-
-## Design principles
-
-- **Human-in-the-loop by default**: ReviewLoop is the review/checkpoint layer between AI-generated work and acceptance.
-- **Read-only capture**: publishing a review snapshot never writes to the source Git repository, commits, pushes, or mutates the reviewed document.
-- **Durable artifacts**: every review version stores a snapshot under the review home, including legacy files and a generic `manifest.json`.
-- **Generic review model**: code diffs and documents share the same review/comment infrastructure.
-- **Agent-readable comments**: comments are persisted once and exposed consistently through browser UI, HTTP API, and CLI JSON.
-
-## What it can review
-
-### Pasted AI responses
-
-Add `--local` to publish a loopback URL such as `http://127.0.0.1:8787/live`. Add `--localnet` to publish a LAN URL without configuring a base URL; ReviewLoop ignores TUN and WSL interfaces, then uses the only private IPv4 address or lists the remaining interfaces for selection. Scripts can select one with `--localnet=<IP>`. Both modes use `PORT` when set, otherwise port 8787. When generating a local review URL, `review` reuses a running server or starts one as a detached process, bound to `0.0.0.0` for LAN access. Logs and the process ID are saved under `~/.config/reviewloop/`. Default `review feedback` remembers the selected URL.
-
-The automatic startup uses Vite in a source checkout with installed dependencies, or `build/index.js` in a packaged installation. If `ONLINE_REVIEW_BASE_URL` points to a remote host, that remote server must be managed separately.
-
-Add `--tailnet` to configure a persistent public HTTPS [Tailscale Funnel](https://tailscale.com/docs/reference/tailscale-cli/funnel) for the local service and publish an `https://<machine>.<tailnet>.ts.net/live/...` URL. Tailscale must be installed, connected, and allowed to use Funnel. ReviewLoop reuses a server on the explicit `PORT`, 5173, or 8787, or starts one on `PORT` (default 8787). Use `tailscale funnel reset` to remove the persistent Funnel configuration.
-
-Add `--cloudflare` to start or reuse a temporary [Cloudflare Quick Tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/do-more-with-tunnels/trycloudflare/) and publish an `https://<random>.trycloudflare.com/live/...` URL. `cloudflared` must be installed and available on `PATH`. ReviewLoop reuses a server on `PORT`, 5173, or 8787, or starts one before the tunnel. ReviewLoop uses an isolated Quick Tunnel configuration, selects automatic tunnel transport and checks the public endpoint before printing or reusing a URL. An unreachable tunnel produces an error with its log path instead of a broken review link. The tunnel remains available while its background `cloudflared` process is connected and is reused for later reviews on the same local port.
-
-Run `review feedback` without a URL to read submitted comments for the most recently published local review. Use `review feedback --wait` to wait for its feedback, or supply a URL to select a different document. This default applies across working directories on the same machine; a document without submitted feedback returns an empty batch list.
-
-For a desktop clipboard, run `/copy` in the agent, then `review --clipboard` (or `!review --clipboard` in Codex). This saves a `clipboard.md` snapshot. It supports macOS `pbpaste`, Windows/WSL PowerShell, Linux `wl-paste` or `xclip`/`xsel`, and the current tmux buffer. A working desktop clipboard connection is required; no agent launcher or terminal bridge is installed. `review paste` remains available independently.
-
-Run `review paste` in a terminal shell, paste the response, press Enter and then Ctrl+D to publish. Ctrl+C cancels. You can also pipe UTF-8 text: `cat response.md | review paste`. No clipboard utilities, agent wrappers, or agent restart are required.
-
-ReviewLoop saves the text as a Markdown snapshot and prints a review URL. Select text on the page, save comments, then choose **提交给 AI**. Retrieve submitted feedback with `review feedback "<URL>" --json`. Input is limited to 5 MiB and is never executed. Terminal input records each submitted line with a newline; piped input is preserved exactly.
-
-The CLI and web server must share the configured snapshot storage, just like file-based live reviews. Temporary paste files are deleted after publication; durable snapshots remain. No agent conversation files are read, and feedback does not automatically wake an agent session.
-
-When `review <name>` receives a bare file name that does not exist in the current directory, it searches below the current directory with [`fd`](https://github.com/sharkdp/fd), which must be installed. fd's defaults apply: hidden and gitignored files are skipped, and an all-lowercase name matches case-insensitively. A single match is used directly. Several matches are listed for selection with the up/down arrow keys and Enter; Ctrl+C cancels. Without a terminal, the matches are printed and the command fails so a script can rerun with a path.
-
-Repository test fixtures and preview commands are documented in [samples/README.md](samples/README.md).
-
-### Code reviews
-
-Publish Git changes as review snapshots from:
-
-- uncommitted worktree diffs;
-- staged diffs;
-- a commit range such as `origin/main..HEAD`;
-- a single commit/ref via `--show`.
-
-For range reviews, the top-level view represents the merged/combined local patch, while individual commit rows keep their own per-commit file patches.
-
-### Document reviews
-
-Publish a Markdown document as a review artifact with stable line anchors. Document comments use the same persisted comment store and API as code review comments.
-
-### Agent feedback loops
-
-A review can include a Discord target when it is published. When humans add comments, the server can send the open comments to a configured Gateway endpoint. The payload includes:
-
-- `type: "review.open_comments"`;
-- review metadata;
-- target channel/thread metadata;
-- structured comments with generic anchors such as `diff-line` or `document-line`.
-
-## Architecture
-
-```text
-reviewctl CLI
-        │
-        ├── publish Git diff snapshots
-        ├── publish Markdown document snapshots
-        ├── add/read comments
-        │
-        ▼
-ReviewLoop storage home
-        ├── reviews.db                         # SQLite metadata and comments
-        └── artifacts/<review-id>/v<version>/  # immutable review artifacts
-            ├── manifest.json                  # generic code/document artifact model
-            ├── metadata.json                  # compatibility metadata
-            ├── diff.patch                     # code reviews
-            ├── files.json                     # code-review file metadata
-            ├── commits.json                   # range-review commit metadata
-            └── document.md                    # document reviews
-        │
-        ▼
-SvelteKit Web UI / HTTP API
-        ├── /reviews
-        ├── /reviews/<review-id>
-        ├── /document-reviews/<review-id>      # compatibility route for document reviews
-        └── /api/reviews/...
-```
-
-## Requirements
-
-- Node.js 24+ / pnpm 11+
-- Git
-- LibreOffice Writer for legacy `.doc` previews and Impress for legacy `.ppt` previews on the server. Native `.docx` and `.pptx` previews do not require LibreOffice.
-- A writable review storage directory
-
-ReviewLoop uses Node 24's built-in `node:sqlite`, so the packaged server does not need native SQLite npm addons such as `better-sqlite3` on the deployment machine.
-
-Install dependencies:
-
-```bash
+```sh
 pnpm install
-```
-
-Register the CLI commands globally from this checkout:
-
-```bash
 pnpm run install:global
+review path/to/document.md
 ```
 
-This creates `review` and `reviewctl` in pnpm's global bin directory. Run the command again after moving the checkout to a different path.
+The command starts a local server in a detached process when needed, waits for it to become ready, and prints a review URL. It reuses a running server on later invocations. The default URL is `http://127.0.0.1:8787/live/...`; set `PORT` to choose another port. Server logs and its PID are under `~/.config/reviewloop/`. A source checkout runs Vite; a packaged installation runs its built server.
 
-Build the CLI entry points:
+`review` supports Markdown, HTML, PDF, Word, PowerPoint, Excel, images, and MP4/MOV/WebM video. You can pass a directory of images or a directory containing Markdown. A bare filename that is not in the current directory is searched below it with `fd` (install `fd` separately). Multiple matches are offered for selection in a terminal.
 
-```bash
-pnpm run build:cli
+### Paste and clipboard
+
+```sh
+review paste
+cat response.md | review paste
+review --clipboard
 ```
 
-This creates:
+For interactive paste, press Enter and Ctrl+D when finished. Clipboard mode uses the desktop clipboard or current tmux buffer. Pasted text is stored as a Markdown snapshot; input is limited to 5 MiB and is never executed.
 
-```text
-dist-cli/reviewctl.js
+### Share on a LAN or through a tunnel
+
+```sh
+review document.pdf --localnet
+PORT=5173 review document.pdf --localnet=192.168.1.10
+review document.pdf --tailnet
+review document.pdf --cloudflare
 ```
 
-### Legacy Word and PowerPoint previews
+`--localnet` selects a private IPv4 interface and starts the server bound to all interfaces when needed. `--tailnet` configures Tailscale Funnel; `--cloudflare` starts or reuses a Cloudflare Quick Tunnel. Both require their respective tools installed. The CLI reuses a healthy local server on `PORT`, 5173, or 8787 before starting one for a tunnel. `--local` explicitly selects loopback. When `ONLINE_REVIEW_BASE_URL` points to a remote host, manage that server separately.
 
-Live reviews accept both `.doc` / `.docx` and `.ppt` / `.pptx`. For legacy `.doc`
-and `.ppt`, the server converts a private copy to `.docx` or `.pptx` with
-LibreOffice, then uses the existing viewer and annotation controls. Original
-files are never modified. Conversion can change layout slightly depending on
-fonts and features used in the document.
+## Review and retrieve feedback
 
-Install LibreOffice Writer and Impress on the server. For Debian/Ubuntu:
+Reviewers save annotations in the browser and choose **提交给 AI** to submit a batch. Saving alone does not submit it. The agent reads submitted feedback with:
 
-```bash
-sudo apt-get install libreoffice-writer libreoffice-impress
+```sh
+review feedback --json
+review feedback --wait --json
+review feedback 'http://127.0.0.1:8787/live/<token>' --json
+review feedback '<review-url>' --json --out ./feedback-files
 ```
 
-The portable application tarball does not bundle LibreOffice. If its executable
-is not on PATH, set `REVIEW_PLATFORM_LIBREOFFICE_BIN=/absolute/path/to/soffice`.
-The [LibreOffice conversion filters](https://help.libreoffice.org/latest/en-US/text/shared/guide/convertfilters.html)
-provide the Word and PowerPoint output formats.
+Without a URL, `review feedback` uses the most recently published local review. `--wait` waits for a submitted batch; `--out` downloads the frozen original and available annotation previews into a new directory. See [Live review feedback](docs/live-feedback.md) for versioning, storage, and the HTTP interface.
 
-The server needs writable `~/.cache/reviewloop/word-conversions` and
-`~/.cache/reviewloop/ppt-conversions` directories. Each conversion uses an isolated
-profile and is removed after success or failure; conversion times out after 60
-seconds. Missing LibreOffice produces an explicit setup error in the viewer
-instead of passing legacy binary bytes to an incompatible parser.
+The CLI and server must share `ONLINE_REVIEW_FEEDBACK_HOME` and the URL secret. By default, ReviewLoop stores frozen versions and feedback in `~/.config/online-review-feedback/`, short links in `~/.config/online-review-links.db`, and a generated URL secret in `~/.config/online-review.secret`.
 
-## Storage and environment
+## Viewers
 
-By default, ReviewLoop stores data in:
+- Markdown supports text annotations, local referenced images, and rendered Mermaid diagrams. Referenced images stay in their original directory and remain live dependencies.
+- HTML is shown in an iframe with text and brush annotations. Only use trusted HTML; scripts in the file run normally. Relative assets are not bundled.
+- PDF, Word, PowerPoint, Excel, and images support visual annotations. Legacy `.doc` and `.ppt` files need LibreOffice Writer or Impress on the server for conversion.
+- Video requires `ffprobe` on the server. MP4, MOV, and WebM are supported up to 500 MiB, subject to browser codec support. See [video review design](docs/video-review-design.md) for annotation controls.
 
-```text
-~/.review-platform
-```
+Files under [samples](samples/README.md) can be used to check the viewers.
 
-The storage directory contains the SQLite DB and immutable artifacts:
+## Development and packaging
 
-```text
-reviews.db
-artifacts/<review-id>/v1/
-```
-
-Recommended generic environment variables:
-
-```bash
-export REVIEW_PLATFORM_HOME="$HOME/.review-platform"
-export REVIEW_PLATFORM_BASE_URL="http://localhost:5173"
-```
-
-For deployed/public links and agent notifications:
-
-```bash
-export REVIEW_PLATFORM_PUBLIC_URL="https://reviewloop.example.com"
-export REVIEW_PLATFORM_DISCORD_CHANNEL_ID="..."
-export REVIEW_PLATFORM_DISCORD_THREAD_ID="..."
-export REVIEW_PLATFORM_EXECUTOR_MENTION="..."
-export REVIEW_PLATFORM_GATEWAY_NOTIFY_URL="..."
-export REVIEW_PLATFORM_GATEWAY_TOKEN="..."
-```
-
-Gateway aliases are also supported:
-
-```bash
-export REVIEW_PLATFORM_HERMES_GATEWAY_NOTIFY_URL="..."
-export REVIEW_PLATFORM_HERMES_GATEWAY_TOKEN="..."
-```
-
-## Start the Web UI
-
-Development mode:
-
-```bash
+```sh
 pnpm run dev -- --host 127.0.0.1 --port 5173
-```
-
-Then open:
-
-```text
-http://localhost:5173/reviews
-```
-
-For LAN access, bind the service to all interfaces and publish with the matching port:
-
-```bash
-pnpm run dev -- --host 0.0.0.0 --port 5173
-PORT=5173 review document.pdf --localnet
-```
-
-For a production build:
-
-```bash
-pnpm run build
-node build/index.js
-```
-
-## CLI usage
-
-Show help:
-
-```bash
-node dist-cli/reviewctl.js --help
-```
-
-### Publish a worktree review
-
-Use this for uncommitted changes:
-
-```bash
-node dist-cli/reviewctl.js publish \
-  --repo /path/to/repo \
-  --type worktree \
-  --title "Review local agent changes"
-```
-
-### Publish a staged review
-
-Use this for changes already added with `git add`:
-
-```bash
-node dist-cli/reviewctl.js publish \
-  --repo /path/to/repo \
-  --type staged \
-  --title "Review staged patch"
-```
-
-### Publish a commit range
-
-Use this for a stack of local commits:
-
-```bash
-node dist-cli/reviewctl.js publish \
-  --repo /path/to/repo \
-  --range "origin/main..HEAD" \
-  --title "Review agent commit range"
-```
-
-### Publish a single commit/ref
-
-Use this for a specific commit or ref:
-
-```bash
-node dist-cli/reviewctl.js publish \
-  --repo /path/to/repo \
-  --show HEAD \
-  --title "Review latest agent commit"
-```
-
-### Publish a Markdown document review
-
-```bash
-node dist-cli/reviewctl.js publish-doc \
-  --file /path/to/design.md \
-  --title "Review design document"
-```
-
-### Attach an executor notification target
-
-```bash
-node dist-cli/reviewctl.js publish \
-  --repo /path/to/repo \
-  --show HEAD \
-  --title "Review latest agent commit" \
-  --discord-channel "<channel-id>" \
-  --discord-thread "<thread-id>" \
-  --executor-mention "<agent-mention>"
-```
-
-The notification target is stored with the review metadata. Later, the Web UI or API can notify the Gateway with the open comments.
-
-### List reviews
-
-```bash
-node dist-cli/reviewctl.js list
-```
-
-Output format:
-
-```text
-<review-id>    <status>    <title>    <repo-root-or-document-path>
-```
-
-### Read comments as JSON
-
-```bash
-node dist-cli/reviewctl.js comments --review CR-20260615-0324 --json
-```
-
-The JSON response includes the review, latest version, and comments. API responses and Gateway payloads also include generic comment anchors.
-
-### Add an inline comment from CLI
-
-```bash
-node dist-cli/reviewctl.js add-comment \
-  --review CR-20260615-0324 \
-  --file src/example.ts \
-  --line 42 \
-  --side new \
-  --author reviewer \
-  --body "Please simplify this before handing it back to the agent."
-```
-
-## HTTP API
-
-Common endpoints:
-
-```text
-GET  /api/reviews
-GET  /api/reviews/<review-id>
-GET  /api/reviews/<review-id>/files
-GET  /api/reviews/<review-id>/versions/<version>/diff
-GET  /api/reviews/<review-id>/versions/<version>/files/<file-id>/diff
-GET  /api/reviews/<review-id>/comments
-POST /api/reviews/<review-id>/comments
-POST /api/reviews/<review-id>/agent/trigger-comments
-```
-
-Create a line comment:
-
-```bash
-curl -sS -X POST "http://localhost:5173/api/reviews/CR-20260615-0324/comments" \
-  -H 'content-type: application/json' \
-  --data '{
-    "author": "reviewer",
-    "body": "This needs another agent pass.",
-    "filePath": "src/example.ts",
-    "lineStart": 42,
-    "side": "new"
-  }'
-```
-
-Notify the configured Gateway about currently open comments:
-
-```bash
-curl -sS -X POST "http://localhost:5173/api/reviews/CR-20260615-0324/agent/trigger-comments"
-```
-
-Expected notification behavior:
-
-- no open comments: `200` with `No open comments to notify.`;
-- open comments but no Discord target: `409`;
-- Gateway configuration/call failure: sanitized `502`;
-- successful Gateway call: `200`, with the number of comments sent.
-
-## Build, test, and package
-
-Type and Svelte checks:
-
-```bash
 pnpm run check
-```
-
-Tests:
-
-```bash
 pnpm test
-```
-
-Production build:
-
-```bash
 pnpm run build
-```
-
-Build CLI:
-
-```bash
-pnpm run build:cli
-```
-
-Full package gate:
-
-```bash
 pnpm run package:review-platform
 ```
 
-The current portable tarball path is:
+`package:review-platform` writes `dist/review-platform.tar.gz` with the built server and `review` CLI. The packaged `start-review-platform.sh` can start the server explicitly, though the CLI starts it on demand for local review URLs.
 
-```text
-dist/review-platform.tar.gz
-```
-
-## Deployment notes
-
-Example portable deployment:
-
-```bash
-tar -xzf review-platform.tar.gz
-cd review-platform
-export REVIEW_PLATFORM_HOME="$HOME/.review-platform"
-export REVIEW_PLATFORM_BASE_URL=http://127.0.0.1:2067
-export HOST=0.0.0.0
-export PORT=2067
-nohup ./start-review-platform.sh > review-platform.log 2>&1 &
-```
-
-## Recommended human/agent workflow
-
-1. An AI agent or developer changes code or a document.
-2. Publish a ReviewLoop snapshot with `reviewctl publish` or `reviewctl publish-doc`.
-3. Human opens the review URL and leaves anchored comments.
-4. Inspect comments through the UI, API, or `reviewctl comments --json`.
-5. Trigger the configured agent/executor notification, or feed the JSON comments into an agent manually.
-6. Agent revises the source work.
-7. Publish a new review snapshot for the revised work.
-
-## Security boundaries
-
-- ReviewLoop does not write to the source Git repository or document being reviewed.
-- Review snapshots may contain sensitive diff/document content. Do not publish secrets, credentials, tokens, or private customer data to shared environments.
-- Gateway tokens and API keys must come from environment/configuration, not source code.
-- Server errors returned from Gateway notification paths are sanitized before they are exposed to the client.
-- This project is still a local/private review tool; the Web/API layer does not yet provide full multi-tenant production authentication or authorization.
-
-### Live document and image feedback
-
-The `/live/` PDF, Word, PowerPoint, Excel and image viewers now synchronize comments
-with server storage. Reviewers explicitly submit a batch from the comments panel;
-agents can read it with `review feedback <url> --json`, wait for it with `--wait`,
-or download original snapshots and annotated PNG previews with `--out <directory>`.
-See [Live review feedback](docs/live-feedback.md) for the workflow, storage,
-migration behavior and CLI options.
-
-### Local images in Markdown live reviews
-
-`review document.md` serves referenced local images directly from their original
-files through `/live/<token>/assets/<image-id>`. Images are not uploaded or copied;
-existing review links also use this route after the server is updated.
-
-Relative image paths resolve from the original Markdown file's directory, even
-though the Markdown itself is snapshotted. Absolute paths are supported when they
-point inside that directory. Subdirectories, reference-style Markdown images,
-spaces and Unicode filenames are supported; URL-encode literal `#` and `?` in
-filenames. HTTP(S), protocol-relative and inline data image URLs remain unchanged.
-
-Only images referenced by the review's Markdown snapshot are accessible. The
-resolved path, including symlink targets, must stay inside the original document
-directory. Supported image types match image reviews, with a 5 MiB limit per image.
-SVG responses are sandboxed. Raw HTML image tags remain disabled with other HTML.
-
-Images are live dependencies: replacing an original image changes what the next
-request displays, and deleting it makes it unavailable. Responses use `no-store`;
-no historical image copy is retained. Keep the original directory available while
-sharing the review. Neither the Markdown source nor its image files are modified.
-
-Markdown live reviews render top-level `mermaid` fenced blocks as SVG diagrams in the browser, with collapsible source and an enlarged preview. No browser extension or external rendering service is required. Invalid diagrams retain their source and show an error. Source text remains available for annotations.
-
-### HTML live reviews
-
-Run `review page.html` (or `.htm`) to preview an immutable HTML snapshot, select
-text for comments, or draw annotations. Use `--local` for loopback access or `--localnet` for LAN access.
-Comments support the same **提交给 AI** and `review feedback --json` workflow.
-HTML files are limited to 5 MiB; publish one file per review.
-
-HTML reviews are intended for your own trusted files. The iframe runs JavaScript
-normally, including interactive controls and script-generated content. Text and
-brush annotations remain available. Relative local assets are not bundled; use a
-self-contained HTML file or absolute resource URLs. External resources remain live
-dependencies.
-
-### Video live reviews
-
-The video page’s **?** button opens the built-in video annotation help page, with a quick start, timeline diagram, gesture guide, and keyboard shortcuts.
-
-Run `review video.mp4` (or add `--local` / `--localnet`) to review one local video up to 500 MiB. MP4 is the primary format; MOV and WebM work when their codecs are supported by the browser. The server requires `ffprobe` on PATH. Playback and time annotations are available as soon as the video metadata loads. Frame numbers initially use an estimated frame rate (temporarily 30 fps until the server returns the reported rate), clearly marked as estimated. A cached index of actual frames builds in the background and replaces the estimate without interrupting playback. Captured annotation times remain stable across that switch; the video is not transcoded.
-
-Click the timeline track to add a point and open the comment panel. Click or drag above the track to move the playhead without adding a point. Further clicks add points to the same comment. Select **范围**, then click again to turn the last point and the new point into an ordered range; the option resets after one use. Points and ranges can share one comment. Drag the playhead to seek without adding a point, or use the frame buttons and **＋ 当前帧** for precise selection. Hold a −10 / −1 / +1 / +10 frame button to repeat after 350 ms; release or move outside to stop.
-
-Pinch outward on the timeline to zoom into a shorter interval; pinch inward to zoom back out. Drag the zoomed timeline to pan, or choose **完整时间轴** to reset. Ticks and annotation positions follow the visible interval, down to a 0.25-second window; pinching and panning never add comments.
-
-Click the time readout to switch between time and frame display. Left/right move one second or one frame; Shift moves ten. Space plays/pauses. In time mode, hold up/down while playing for temporary speed changes, then release to restore the selected speed. Keyboard shortcuts do not interfere with comment input. The play/pause button sits in the bottom-left corner of the video, with fullscreen in the bottom-right corner; playback speed stays beside the time readout below the video. Hold the right half of the video to temporarily speed up, or the left half to slow down, using the same baseline-relative rules as the keyboard. Release or cancel the gesture to restore the selected rate. Mobile comments open in an overlay drawer without resizing the video or shifting the page; its height is capped by the space below the video, preserving timeline access when space permits; the **标注列表** button opens a separate scrollable drawer. Close or swipe down to dismiss the composer without losing its draft.
-
-Save comments, then choose **提交给 AI**. `review feedback --json` returns the immutable video's identity, comments, zero-based frame indices and timestamps. Ranges include both endpoint frames and supply a start-inclusive/end-exclusive time interval. No screenshots are generated and no editing or AI execution starts automatically. See [video review design](docs/video-review-design.md) for the agreed interaction rules.
-
-### Planned Markdown rendering improvements
-
-See the [Markdown rendering roadmap](docs/markdown-rendering-roadmap.md) for
-reported TOC navigation, math, diagram and reading UI gaps, with
-[markdown-viewer-extension](https://github.com/markdown-viewer/markdown-viewer-extension)
-as the reference for future work. These improvements are not yet implemented.
+A review URL is a bearer capability: anyone holding it can read and submit feedback. Share it only with intended reviewers. ReviewLoop reads source files to create snapshots; it does not edit them or run submitted comments as commands.
