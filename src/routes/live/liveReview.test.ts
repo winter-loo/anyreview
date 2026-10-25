@@ -34,14 +34,14 @@ const MINIMAL_PDF = Buffer.from(
 
 describe('standalone live review URL', () => {
 	it('accepts legacy Word documents in the CLI and page', () => {
-		const filePath = fileURLToPath(new URL('../../../samples/documents/reviewloop-prd.doc', import.meta.url));
+		const filePath = fileURLToPath(new URL('../../../samples/documents/anyreview-prd.doc', import.meta.url));
 		const secret = 'legacy-doc-test';
 		const originalSecret = process.env.ONLINE_REVIEW_URL_SECRET;
 		process.env.ONLINE_REVIEW_URL_SECRET = secret;
 		try {
 			const url = execFileSync(cli, [filePath], { env: { ...process.env }, encoding: 'utf8' }).trim();
 			const token = url.split('/').at(-1)!;
-			expect(load({ params: { token }, setHeaders: () => {} } as any)).toMatchObject({ kind: 'word', filename: 'reviewloop-prd.doc' });
+			expect(load({ params: { token }, setHeaders: () => {} } as any)).toMatchObject({ kind: 'word', filename: 'anyreview-prd.doc' });
 		} finally {
 			if (originalSecret === undefined) delete process.env.ONLINE_REVIEW_URL_SECRET;
 			else process.env.ONLINE_REVIEW_URL_SECRET = originalSecret;
@@ -49,14 +49,14 @@ describe('standalone live review URL', () => {
 	});
 
 	it('accepts legacy PowerPoint presentations in the CLI and page', () => {
-		const filePath = fileURLToPath(new URL('../../../samples/documents/reviewloop-quarterly.ppt', import.meta.url));
+		const filePath = fileURLToPath(new URL('../../../samples/documents/anyreview-quarterly.ppt', import.meta.url));
 		const secret = 'legacy-ppt-test';
 		const originalSecret = process.env.ONLINE_REVIEW_URL_SECRET;
 		process.env.ONLINE_REVIEW_URL_SECRET = secret;
 		try {
 			const url = execFileSync(cli, [filePath], { env: { ...process.env }, encoding: 'utf8' }).trim();
 			const token = url.split('/').at(-1)!;
-			expect(load({ params: { token }, setHeaders: () => {} } as any)).toMatchObject({ kind: 'ppt', filename: 'reviewloop-quarterly.ppt' });
+			expect(load({ params: { token }, setHeaders: () => {} } as any)).toMatchObject({ kind: 'ppt', filename: 'anyreview-quarterly.ppt' });
 		} finally {
 			if (originalSecret === undefined) delete process.env.ONLINE_REVIEW_URL_SECRET;
 			else process.env.ONLINE_REVIEW_URL_SECRET = originalSecret;
@@ -270,7 +270,7 @@ describe('standalone live review URL', () => {
 		const zip = new JSZip();
 		zip.file('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
 		zip.file('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
-		zip.file('word/document.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Hello ReviewLoop Word Test</w:t></w:r></w:p></w:body></w:document>');
+		zip.file('word/document.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Hello AnyReview Word Test</w:t></w:r></w:p></w:body></w:document>');
 		const minimalDocx = await zip.generateAsync({ type: 'nodebuffer' });
 		writeFileSync(docxPath, minimalDocx);
 

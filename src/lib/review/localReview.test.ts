@@ -8,7 +8,7 @@ import path from 'node:path';
 async function withReviewServer(run: (port: number) => Promise<void>) {
  const server = createServer((request, response) => {
   response.setHeader('content-type', 'application/json');
-  response.end(JSON.stringify({ service: 'reviewloop' }));
+  response.end(JSON.stringify({ service: 'anyreview' }));
  });
  await new Promise<void>((resolve) => server.listen(0, '0.0.0.0', resolve));
  try { await run((server.address() as { port: number }).port); }

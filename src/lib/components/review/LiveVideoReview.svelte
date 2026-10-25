@@ -40,7 +40,7 @@
  const feedback = createLiveFeedback<VideoAnnotation>({ token: () => data.token, kind: 'video', read: () => annotations, replace: next => { annotations = next; } });
  // On phones the draft takes over the page: video, timeline and composer fill the visible viewport above the keyboard.
  const composeMode = $derived(mobile && composing);
- const draftKey = () => `reviewloop:video-draft:${data.token}`;
+ const draftKey = () => `anyreview:video-draft:${data.token}`;
  $effect(() => {
   if (!composeMode) return;
   const viewport = window.visualViewport;
@@ -63,7 +63,7 @@
  });
  onMount(() => {
   const abort = new AbortController(); let timer: ReturnType<typeof setTimeout>, callback = 0;
-  try { const saved = JSON.parse(localStorage.getItem(`reviewloop:live-video:${data.token}`) ?? '[]'); if (Array.isArray(saved)) annotations = saved; } catch {}
+  try { const saved = JSON.parse(localStorage.getItem(`anyreview:live-video:${data.token}`) ?? '[]'); if (Array.isArray(saved)) annotations = saved; } catch {}
   try { const saved = JSON.parse(localStorage.getItem(draftKey()) ?? 'null'); if (saved && Array.isArray(saved.locations) && typeof saved.body === 'string') { locations = saved.locations; body = saved.body; composing = !!saved.composing; } } catch {}
   loaded = video.readyState >= 1;
   if (loaded) portrait = video.videoHeight > video.videoWidth;

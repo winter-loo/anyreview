@@ -1,6 +1,6 @@
-# ReviewLoop
+# AnyReview
 
-ReviewLoop turns local files and pasted text into browser review links. A reviewer can read the frozen version, add annotations, and submit feedback for an agent to retrieve. The `review` CLI and `/live/<token>` pages are the supported workflow.
+AnyReview turns local files and pasted text into browser review links. A reviewer can read the frozen version, add annotations, and submit feedback for an agent to retrieve. The `review` CLI and `/live/<token>` pages are the supported workflow.
 
 ## Get started
 
@@ -12,7 +12,7 @@ pnpm run install:global
 review path/to/document.md
 ```
 
-The command starts a local server in a detached process when needed, waits for it to become ready, and prints a review URL. It reuses a running server on later invocations. The default URL is `http://127.0.0.1:8787/live/...`; set `PORT` to choose another port. Server logs and its PID are under `~/.config/reviewloop/`. A source checkout runs Vite; a packaged installation runs its built server.
+The command starts a local server in a detached process when needed, waits for it to become ready, and prints a review URL. It reuses a running server on later invocations. The default URL is `http://127.0.0.1:8787/live/...`; set `PORT` to choose another port. Server logs and its PID are under `~/.config/anyreview/`. A source checkout runs Vite; a packaged installation runs its built server.
 
 `review` supports Markdown, HTML, PDF, Word, PowerPoint, Excel, images, and MP4/MOV/WebM video. You can pass a directory of images or a directory containing Markdown. A bare filename that is not in the current directory is searched below it with `fd` (install `fd` separately). Multiple matches are offered for selection in a terminal.
 
@@ -50,7 +50,7 @@ review feedback '<review-url>' --json --out ./feedback-files
 
 Without a URL, `review feedback` uses the most recently published local review. `--wait` waits for a submitted batch; `--out` downloads the frozen original and available annotation previews into a new directory. See [Live review feedback](docs/live-feedback.md) for versioning, storage, and the HTTP interface.
 
-The CLI and server must share `ONLINE_REVIEW_FEEDBACK_HOME` and the URL secret. By default, ReviewLoop stores frozen versions and feedback in `~/.config/online-review-feedback/`, short links in `~/.config/online-review-links.db`, and a generated URL secret in `~/.config/online-review.secret`.
+The CLI and server must share `ONLINE_REVIEW_FEEDBACK_HOME` and the URL secret. By default, AnyReview stores frozen versions and feedback in `~/.config/online-review-feedback/`, short links in `~/.config/online-review-links.db`, and a generated URL secret in `~/.config/online-review.secret`.
 
 ## Viewers
 
@@ -77,4 +77,4 @@ pnpm run package:review-platform
 
 For multi-device development setups sharing a single public HTTPS domain (e.g., Linux workstation + macOS laptop), see the production case study in [docs/multi-machine-reverse-tunnel-case-study.md](docs/multi-machine-reverse-tunnel-case-study.md). It details how independent developer machines autonomously maintain their own reverse SSH tunnels (`systemd` / `launchd`) while a lightweight server-side live router transparently directs `/live/<token>` requests to the correct host.
 
-A review URL is a bearer capability: anyone holding it can read and submit feedback. Share it only with intended reviewers. ReviewLoop reads source files to create snapshots; it does not edit them or run submitted comments as commands.
+A review URL is a bearer capability: anyone holding it can read and submit feedback. Share it only with intended reviewers. AnyReview reads source files to create snapshots; it does not edit them or run submitted comments as commands.

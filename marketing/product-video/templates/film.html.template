@@ -114,14 +114,14 @@
         </div>
       </div>
       <div class="brand">
-        <img src="{{asset:assets-logo-svg}}">ReviewLoop</div>
+        <img src="{{asset:assets-logo-svg}}">AnyReview</div>
       <div id="source-note">参考界面生成 · 场景演示</div>
       <div id="agent-note">Claude Code · 场景演示</div>
       <div class="closing">
         <img src="{{asset:assets-logo-svg}}">
         <h1>让 AI 的产出
           <br>方便查看，直接批注。</h1>
-        <small>ReviewLoop</small>
+        <small>AnyReview</small>
       </div>
       <!-- 字幕文字与时刻来自 scenes.json。 -->
       {{include:captions.html.template}}

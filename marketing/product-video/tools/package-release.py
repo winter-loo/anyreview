@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build complete release distribution package for ReviewLoop vertical video."""
+"""Build complete release distribution package for AnyReview vertical video."""
 import hashlib
 import json
 import os
@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[3]
 PV_DIR = Path(__file__).resolve().parents[1]
 RENDERS_DIR = PV_DIR / "renders"
 RELEASE_DIR = ROOT / "output/release-vertical"
-ZIP_PATH = ROOT / "output/ReviewLoop-Vertical-Release-Pack.zip"
+ZIP_PATH = ROOT / "output/AnyReview-Vertical-Release-Pack.zip"
 
 def sha256_file(path):
     h = hashlib.sha256()
@@ -31,7 +31,7 @@ def srt_to_vtt(srt_text):
     return "\n".join(vtt) + "\n"
 
 def main():
-    print("Packaging ReviewLoop Vertical Release...")
+    print("Packaging AnyReview Vertical Release...")
     
     if RELEASE_DIR.exists():
         shutil.rmtree(RELEASE_DIR)
@@ -45,64 +45,64 @@ def main():
     for d in [vid_dir, cov_dir, proofs_dir, sb_dir, copy_dir]:
         d.mkdir(parents=True, exist_ok=True)
         
-    mp4_src = RENDERS_DIR / "ReviewLoop-Vertical.mp4"
-    srt_src = RENDERS_DIR / "ReviewLoop-Vertical.srt"
+    mp4_src = RENDERS_DIR / "AnyReview-Vertical.mp4"
+    srt_src = RENDERS_DIR / "AnyReview-Vertical.srt"
     
     if not mp4_src.exists():
         raise FileNotFoundError(f"Missing rendered video: {mp4_src}")
     
-    shutil.copy2(mp4_src, vid_dir / "ReviewLoop-Vertical.mp4")
-    shutil.copy2(srt_src, vid_dir / "ReviewLoop-Vertical.srt")
+    shutil.copy2(mp4_src, vid_dir / "AnyReview-Vertical.mp4")
+    shutil.copy2(srt_src, vid_dir / "AnyReview-Vertical.srt")
     
     vtt_content = srt_to_vtt(srt_src.read_text(encoding="utf-8"))
-    (vid_dir / "ReviewLoop-Vertical.vtt").write_text(vtt_content, encoding="utf-8")
+    (vid_dir / "AnyReview-Vertical.vtt").write_text(vtt_content, encoding="utf-8")
     print("✓ Video and subtitles copied (MP4, SRT, VTT)")
     
-    shutil.copy2(RENDERS_DIR / "proof-ReviewLoop-Vertical-51.000.png", cov_dir / "brand-9x16.png")
+    shutil.copy2(RENDERS_DIR / "proof-AnyReview-Vertical-51.000.png", cov_dir / "brand-9x16.png")
     
     subprocess.run([
         "ffmpeg", "-y", "-v", "error",
-        "-i", str(RENDERS_DIR / "proof-ReviewLoop-Vertical-51.000.png"),
+        "-i", str(RENDERS_DIR / "proof-AnyReview-Vertical-51.000.png"),
         "-vf", "crop=1080:1440:0:(in_h-1440)/2",
         str(cov_dir / "brand-3x4.png")
     ], check=True)
     subprocess.run([
         "ffmpeg", "-y", "-v", "error",
-        "-i", str(RENDERS_DIR / "proof-ReviewLoop-Vertical-51.000.png"),
+        "-i", str(RENDERS_DIR / "proof-AnyReview-Vertical-51.000.png"),
         "-vf", "crop=1080:1080:0:(in_h-1080)/2",
         str(cov_dir / "brand-1x1.png")
     ], check=True)
     
     subprocess.run([
         "ffmpeg", "-y", "-v", "error",
-        "-i", str(RENDERS_DIR / "proof-ReviewLoop-Vertical-34.000.png"),
+        "-i", str(RENDERS_DIR / "proof-AnyReview-Vertical-34.000.png"),
         "-vf", "crop=1080:1440:0:(in_h-1440)/2",
         str(cov_dir / "feature-annotation-3x4.png")
     ], check=True)
     
     subprocess.run([
         "ffmpeg", "-y", "-v", "error",
-        "-i", str(RENDERS_DIR / "proof-ReviewLoop-Vertical-18.000.png"),
+        "-i", str(RENDERS_DIR / "proof-AnyReview-Vertical-18.000.png"),
         "-vf", "crop=1080:1440:0:(in_h-1440)/2",
         str(cov_dir / "feature-diagram-3x4.png")
     ], check=True)
 
     subprocess.run([
         "ffmpeg", "-y", "-v", "error",
-        "-i", str(RENDERS_DIR / "proof-ReviewLoop-Vertical-51.000.png"),
+        "-i", str(RENDERS_DIR / "proof-AnyReview-Vertical-51.000.png"),
         "-vf", "scale=-1:1080,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=0x0c0e17",
         str(cov_dir / "banner-horizontal-16x9.png")
     ], check=True)
     
     proof_mapping = [
-        ("proof-ReviewLoop-Vertical-1.500.png", "01-scene1-mobile-terminal.png"),
-        ("proof-ReviewLoop-Vertical-6.000.png", "02-scene1-discord-document.png"),
-        ("proof-ReviewLoop-Vertical-11.000.png", "03-scene2-clean-reading.png"),
-        ("proof-ReviewLoop-Vertical-18.000.png", "04-scene3-diagram-zoom.png"),
-        ("proof-ReviewLoop-Vertical-27.000.png", "05-scene4-text-annotated.png"),
-        ("proof-ReviewLoop-Vertical-34.000.png", "06-scene4-canvas-pen.png"),
-        ("proof-ReviewLoop-Vertical-42.000.png", "07-scene5-touch-quick-tags.png"),
-        ("proof-ReviewLoop-Vertical-51.000.png", "08-scene7-brand-outro.png"),
+        ("proof-AnyReview-Vertical-1.500.png", "01-scene1-mobile-terminal.png"),
+        ("proof-AnyReview-Vertical-6.000.png", "02-scene1-discord-document.png"),
+        ("proof-AnyReview-Vertical-11.000.png", "03-scene2-clean-reading.png"),
+        ("proof-AnyReview-Vertical-18.000.png", "04-scene3-diagram-zoom.png"),
+        ("proof-AnyReview-Vertical-27.000.png", "05-scene4-text-annotated.png"),
+        ("proof-AnyReview-Vertical-34.000.png", "06-scene4-canvas-pen.png"),
+        ("proof-AnyReview-Vertical-42.000.png", "07-scene5-touch-quick-tags.png"),
+        ("proof-AnyReview-Vertical-51.000.png", "08-scene7-brand-outro.png"),
     ]
     for src_name, dst_name in proof_mapping:
         src = RENDERS_DIR / src_name
@@ -110,7 +110,7 @@ def main():
             shutil.copy2(src, proofs_dir / dst_name)
     print("✓ Covers and proof images generated")
 
-    sb_src = RENDERS_DIR / "storyboard-ReviewLoop-Vertical"
+    sb_src = RENDERS_DIR / "storyboard-AnyReview-Vertical"
     if sb_src.exists():
         for item in sb_src.iterdir():
             if item.is_file():
@@ -121,13 +121,13 @@ def main():
 
 ## 标题候选（3选1）
 1. **用手机操控 AI Agent 最爽的姿势！一行命令秒变独立审阅页**（推荐）
-2. **告别 Discord 查文档！ReviewLoop：手机端触控批注 AI 交付物**
+2. **告别 Discord 查文档！AnyReview：手机端触控批注 AI 交付物**
 3. **Claude Code / Agent 手机端协作神器：指哪提哪，AI 直接自动改**
 
 ## 动态正文配文
 在手机终端操控 AI Agent，或者在微信/Discord 里收到交付文件，长文档排版乱、架构图看不清、想提修改说不明白？
 
-其实只需要一个链接！ReviewLoop 把 AI 吐出的长文、代码与架构图，秒变手机端极简审阅页：
+其实只需要一个链接！AnyReview 把 AI 吐出的长文、代码与架构图，秒变手机端极简审阅页：
 ✨ 长回复顺畅读，Mermaid 流程图点开无损放大
 ✍️ 触控划词批注、画笔圈选，精准到字句
 ⚡ 快速标签+触控优化，躺在床上也能秒提意见
@@ -155,7 +155,7 @@ def main():
 
 ## 视频文案（简短快节奏）
 在手机终端操控 AI Agent，交付的文档和图片根本没法看？
-其实你只需要一个链接！ReviewLoop 秒变手机端独立审阅页。
+其实你只需要一个链接！AnyReview 秒变手机端独立审阅页。
 长文顺畅读，架构流程图点开无损放大！
 哪里不对划哪里，画笔圈选指着画面说清楚。
 一键保存提交，结构化意见直接喂回 AI！
@@ -180,7 +180,7 @@ def main():
 平时喜欢在手机终端跑 AI Agent，或者在 Discord、微信群里接收 AI 生成的策划案、架构图和代码？
 最大的痛点就是：手机屏幕太小，长文排版挤成一团，架构图缩成小方块看不清，想提修改还得在对话框手打半天“第几段第几行”……😭
 
-今天安利一个极度优雅的开源工具 —— **ReviewLoop**！
+今天安利一个极度优雅的开源工具 —— **AnyReview**！
 
 只需一条命令：`review output.md` 或直接管道输入，秒级生成手机端独立审阅页！
 
@@ -204,11 +204,11 @@ def main():
     (copy_dir / "BILIBILI_SHORTS.md").write_text("""# Bilibili 竖屏 / 动态 / YouTube Shorts
 
 ## 视频标题
-【开源】让手机端 AI 审阅彻底告别折磨！ReviewLoop 独立审阅页实测
+【开源】让手机端 AI 审阅彻底告别折磨！AnyReview 独立审阅页实测
 
 ## 简介文案
 在手机终端操控 AI Agent，或者在 Discord 收到交付文件，长文档和架构图不方便审阅？
-ReviewLoop 把 AI 吐出的内容秒变手机端独立审阅页：
+AnyReview 把 AI 吐出的内容秒变手机端独立审阅页：
 - 长回复顺畅读，流程图点开无损放大；
 - 选中文本直接写批注，画笔指着画面圈选；
 - 触控快速标签，反馈结构化回传终端，AI 自动执行修改。
@@ -223,7 +223,7 @@ AI Agent, Claude Code, 开源项目, 独立开发, 效率工具, 终端工具, �
 ## 即刻 / X (Twitter) 短动态
 很多时候人在外面，用手机终端连远程服务器跑 Claude Code / Agent，最痛苦的就是审阅输出的长文和 Mermaid 架构图：手机终端里排版挤在一起，画笔圈注更是妄想。
 
-我们做了 ReviewLoop：
+我们做了 AnyReview：
 👉 终端一条命令把输出转为手机独立审阅页
 👉 流程图点开双指缩放，文本/图片直接触控画笔批注
 👉 审阅一键提交，结构化数据自动回传终端，AI 接着自动改
@@ -234,7 +234,7 @@ AI Agent, Claude Code, 开源项目, 独立开发, 效率工具, 终端工具, �
 ---
 
 ## V2EX / 掘金技术分享贴草稿
-标题：做了一个让手机端审阅 AI Agent 交付物更舒服的工具：ReviewLoop
+标题：做了一个让手机端审阅 AI Agent 交付物更舒服的工具：AnyReview
 
 在手机上远程操控 AI Agent 或查阅 AI 生成的内容时，常见的交互折磨：
 1. 终端或聊天软件里 Markdown 长篇大论，阅读负担重；
@@ -242,7 +242,7 @@ AI Agent, Claude Code, 开源项目, 独立开发, 效率工具, 终端工具, �
 3. 想纠正 AI 的某句话，打字描述成本极高；
 4. 反馈无法闭环传递回本地 Agent。
 
-针对这套工作流，ReviewLoop 的设计理念是：
+针对这套工作流，AnyReview 的设计理念是：
 - 轻量：无需在手机装 App，标准浏览器独立页即开即看；
 - 触控原生：长按划词批注、画笔圈选、移动端手势缩放；
 - 闭环回传：提交后直接通过 `review feedback` 回流进 Agent 上下文，形成闭环。
@@ -256,18 +256,18 @@ AI Agent, Claude Code, 开源项目, 独立开发, 效率工具, 终端工具, �
     ffprobe_cmd = [
         "ffprobe", "-v", "error", "-show_entries",
         "format=duration,size,bit_rate:stream=codec_name,width,height,r_frame_rate,sample_rate,channels",
-        "-of", "json", str(vid_dir / "ReviewLoop-Vertical.mp4")
+        "-of", "json", str(vid_dir / "AnyReview-Vertical.mp4")
     ]
     probe_res = subprocess.run(ffprobe_cmd, capture_output=True, text=True, check=True)
     probe_data = json.loads(probe_res.stdout)
     
-    loud_file = RENDERS_DIR / "loudness-ReviewLoop-Vertical.json"
+    loud_file = RENDERS_DIR / "loudness-AnyReview-Vertical.json"
     loud_data = json.loads(loud_file.read_text()) if loud_file.exists() else {}
 
-    manifest_md = f"""# ReviewLoop 竖版成片交付清单与技术报告
+    manifest_md = f"""# AnyReview 竖版成片交付清单与技术报告
 
 ## 1. 视频核心技术参数
-- **文件名**: `ReviewLoop-Vertical.mp4`
+- **文件名**: `AnyReview-Vertical.mp4`
 - **时长**: {float(probe_data['format']['duration']):.2f} 秒
 - **文件体积**: {int(probe_data['format']['size']):,} 字节 ({int(probe_data['format']['size'])/1024/1024:.2f} MB)
 - **视频编码**: H.264 / AVC (High Profile, yuv420p)
@@ -285,9 +285,9 @@ AI Agent, Claude Code, 开源项目, 独立开发, 效率工具, 终端工具, �
 ## 3. 校验和清单 (SHA-256)
 | 文件路径 | 大小 (Bytes) | SHA-256 |
 |---|---:|---|
-| `01-video/ReviewLoop-Vertical.mp4` | {os.path.getsize(vid_dir / 'ReviewLoop-Vertical.mp4'):,} | `{sha256_file(vid_dir / 'ReviewLoop-Vertical.mp4')}` |
-| `01-video/ReviewLoop-Vertical.srt` | {os.path.getsize(vid_dir / 'ReviewLoop-Vertical.srt'):,} | `{sha256_file(vid_dir / 'ReviewLoop-Vertical.srt')}` |
-| `01-video/ReviewLoop-Vertical.vtt` | {os.path.getsize(vid_dir / 'ReviewLoop-Vertical.vtt'):,} | `{sha256_file(vid_dir / 'ReviewLoop-Vertical.vtt')}` |
+| `01-video/AnyReview-Vertical.mp4` | {os.path.getsize(vid_dir / 'AnyReview-Vertical.mp4'):,} | `{sha256_file(vid_dir / 'AnyReview-Vertical.mp4')}` |
+| `01-video/AnyReview-Vertical.srt` | {os.path.getsize(vid_dir / 'AnyReview-Vertical.srt'):,} | `{sha256_file(vid_dir / 'AnyReview-Vertical.srt')}` |
+| `01-video/AnyReview-Vertical.vtt` | {os.path.getsize(vid_dir / 'AnyReview-Vertical.vtt'):,} | `{sha256_file(vid_dir / 'AnyReview-Vertical.vtt')}` |
 | `02-covers/brand-9x16.png` | {os.path.getsize(cov_dir / 'brand-9x16.png'):,} | `{sha256_file(cov_dir / 'brand-9x16.png')}` |
 | `02-covers/brand-3x4.png` | {os.path.getsize(cov_dir / 'brand-3x4.png'):,} | `{sha256_file(cov_dir / 'brand-3x4.png')}` |
 | `02-covers/brand-1x1.png` | {os.path.getsize(cov_dir / 'brand-1x1.png'):,} | `{sha256_file(cov_dir / 'brand-1x1.png')}` |
@@ -302,13 +302,13 @@ AI Agent, Claude Code, 开源项目, 独立开发, 效率工具, 终端工具, �
 4. **00:20.5 - 00:27.3**：触控划词批注（长按划词，直接写意见）
 5. **00:27.3 - 00:35.8**：画笔标注与触控优化（圈选设计图、快速预设标签）
 6. **00:35.8 - 00:44.6**：闭环回传（保存提交，回流 AI 自动修改）
-7. **00:44.6 - 00:53.2**：尾声与行动呼吁（ReviewLoop 品牌与安装引导）
+7. **00:44.6 - 00:53.2**：尾声与行动呼吁（AnyReview 品牌与安装引导）
 """
     (RELEASE_DIR / "DELIVERY_MANIFEST.md").write_text(manifest_md, encoding="utf-8")
 
-    (RELEASE_DIR / "README.md").write_text("""# ReviewLoop 竖版宣发视频正式交付包
+    (RELEASE_DIR / "README.md").write_text("""# AnyReview 竖版宣发视频正式交付包
 
-本目录包含 ReviewLoop 竖版短视频宣发全套物料，专为多渠道分发设计：
+本目录包含 AnyReview 竖版短视频宣发全套物料，专为多渠道分发设计：
 
 ## 目录结构
 - `01-video/`: 1080×1920 高清成品 MP4 与对应 SRT、VTT 双格式字幕
@@ -327,7 +327,7 @@ AI Agent, Claude Code, 开源项目, 独立开发, 效率工具, 终端工具, �
             for file in files:
                 abs_path = Path(root) / file
                 rel_path = abs_path.relative_to(RELEASE_DIR)
-                zf.write(abs_path, arcname=str(Path("reviewloop-vertical-release") / rel_path))
+                zf.write(abs_path, arcname=str(Path("anyreview-vertical-release") / rel_path))
     
     zip_size = os.path.getsize(ZIP_PATH)
     print(f"✓ Release package created successfully: {ZIP_PATH} ({zip_size / 1024 / 1024:.2f} MB)")

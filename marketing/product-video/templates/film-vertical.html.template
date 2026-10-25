@@ -1,4 +1,4 @@
-<!-- 9:16 竖屏模板：手机端 AI Agent 审阅痛点与 ReviewLoop 解决方案 -->
+<!-- 9:16 竖屏模板：手机端 AI Agent 审阅痛点与 AnyReview 解决方案 -->
 <!doctype html>
 <html lang="zh-CN">
   <head>
@@ -13,7 +13,7 @@
       <!-- 顶部状态栏与主题挂载 -->
       <div class="header-bar">
         <div class="brand">
-          <img src="{{asset:assets-logo-svg}}">ReviewLoop
+          <img src="{{asset:assets-logo-svg}}">AnyReview
         </div>
         <div class="topic-badge" id="topic-badge">人在手机 · 操控 Agent</div>
       </div>
@@ -25,7 +25,7 @@
           <img id="screen-terminal" class="screen-content clip" src="{{clip:screen-terminal:src}}" data-start="{{clip:screen-terminal:start}}" data-duration="{{clip:screen-terminal:duration}}" data-track-index="{{clip:screen-terminal:track}}">
           <img id="screen-discord" class="screen-content clip" src="{{clip:screen-discord:src}}" data-start="{{clip:screen-discord:start}}" data-duration="{{clip:screen-discord:duration}}" data-track-index="{{clip:screen-discord:track}}">
 
-          <!-- 第二幕：打开 ReviewLoop 独立审阅网页 -->
+          <!-- 第二幕：打开 AnyReview 独立审阅网页 -->
           <div id="review-entry" class="screen-transition">
             <img id="screen-read" class="screen-content clip" src="{{clip:screen-read:src}}" data-start="{{clip:screen-read:start}}" data-duration="{{clip:screen-read:duration}}" data-track-index="{{clip:screen-read:track}}">
           </div>

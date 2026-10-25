@@ -115,7 +115,7 @@
 	let lastTapPos = { x: 0, y: 0 };
 
 	let currentRenderTask: any = null;
-	const storageKey = $derived(`reviewloop:live-pdf:${data.token}`);
+	const storageKey = $derived(`anyreview:live-pdf:${data.token}`);
 
  const feedback = createLiveFeedback<PdfAnnotation>({token:()=>data.token,kind:'pdf',read:()=>annotations,replace:next=>annotations=next});
 

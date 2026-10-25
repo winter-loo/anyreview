@@ -10,7 +10,7 @@ export default defineConfig({
 		allowedHosts: ['.ts.net', '.trycloudflare.com']
 	},
 	ssr: {
-		// Bundle markdown-it into the portable ReviewLoop tarball; the remote host does not run pnpm install.
+		// Bundle markdown-it into the portable AnyReview tarball; the remote host does not run pnpm install.
 		noExternal: ['markdown-it']
 	}
 });

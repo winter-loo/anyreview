@@ -2,7 +2,7 @@
 
 * **状态**：已采纳 (Accepted)
 * **日期**：2026-09-18
-* **适用范围**：ReviewLoop 全局营销视频 (`marketing/product-video`、`marketing/shotcraft`) 及系统通用语音合成
+* **适用范围**：AnyReview 全局营销视频 (`marketing/product-video`、`marketing/shotcraft`) 及系统通用语音合成
 
 ---
 
@@ -45,8 +45,8 @@
 
 ## 工程落地与关联文件
 
-* **生成脚本**：[`marketing/shotcraft/tools/generate_voice_volcano.mjs`](file:///home/ldd/reviewloop/marketing/shotcraft/tools/generate_voice_volcano.mjs)
-* **时间轴与字幕配置**：[`marketing/shotcraft/src/PointFixFullMain.tsx`](file:///home/ldd/reviewloop/marketing/shotcraft/src/PointFixFullMain.tsx)
-* **音频输出目录**：[`marketing/shotcraft/public/audio/voice_full/`](file:///home/ldd/reviewloop/marketing/shotcraft/public/audio/voice_full/)
-* **成片交付物**：[`marketing/product-video/renders/PointFix-Full.mp4`](file:///home/ldd/reviewloop/marketing/product-video/renders/PointFix-Full.mp4)
+* **生成脚本**：[`marketing/shotcraft/tools/generate_voice_volcano.mjs`](file:///home/ldd/anyreview/marketing/shotcraft/tools/generate_voice_volcano.mjs)
+* **时间轴与字幕配置**：[`marketing/shotcraft/src/PointFixFullMain.tsx`](file:///home/ldd/anyreview/marketing/shotcraft/src/PointFixFullMain.tsx)
+* **音频输出目录**：[`marketing/shotcraft/public/audio/voice_full/`](file:///home/ldd/anyreview/marketing/shotcraft/public/audio/voice_full/)
+* **成片交付物**：[`marketing/product-video/renders/PointFix-Full.mp4`](file:///home/ldd/anyreview/marketing/product-video/renders/PointFix-Full.mp4)
 * **全局 Agent 规则**：[`/home/ldd/AGENTS.md`](file:///home/ldd/AGENTS.md) 与 [`/home/ldd/.gemini/GEMINI.md`](file:///home/ldd/.gemini/GEMINI.md)

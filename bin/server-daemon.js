@@ -5,14 +5,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const healthPath = '/api/reviewloop-health';
+const healthPath = '/api/anyreview-health';
 
 /** @param {string} port @param {string} host */
 async function healthy(port, host = '127.0.0.1') {
 	try {
 		const response = await fetch(`http://${host}:${port}${healthPath}`, { signal: AbortSignal.timeout(1000) });
 		const body = await response.json();
-		return response.ok && body?.service === 'reviewloop';
+		return response.ok && body?.service === 'anyreview';
 	} catch { return false; }
 }
 
@@ -34,7 +34,7 @@ async function occupied(port) {
 export async function ensureServer(port, host = '127.0.0.1', probeHost = '127.0.0.1') {
 	if (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535) throw new Error(`Invalid server port: ${port}`);
 	if (await healthy(port, probeHost)) return port;
-	if (await occupied(port)) throw new Error(`Port ${port} is occupied by a server without ReviewLoop's health endpoint.`);
+	if (await occupied(port)) throw new Error(`Port ${port} is occupied by a server without AnyReview's health endpoint.`);
 
 	const build = process.env.REVIEW_SERVER_ENTRY || path.join(root, 'build', 'index.js');
 	const vite = path.join(root, 'node_modules', 'vite', 'bin', 'vite.js');
@@ -42,10 +42,10 @@ export async function ensureServer(port, host = '127.0.0.1', probeHost = '127.0.
 	const args = process.env.REVIEW_SERVER_ENTRY ? [build] : existsSync(vite)
 		? [vite, '--host', host, '--port', port, '--strictPort']
 		: existsSync(build) ? [build] : null;
-	if (process.env.REVIEW_SERVER_ENTRY && !existsSync(build)) throw new Error(`ReviewLoop server entry was not found: ${build}`);
-	if (!args) throw new Error(`Cannot start ReviewLoop: no Vite installation or server build in ${root}. Run pnpm install or pnpm run build.`);
+	if (process.env.REVIEW_SERVER_ENTRY && !existsSync(build)) throw new Error(`AnyReview server entry was not found: ${build}`);
+	if (!args) throw new Error(`Cannot start AnyReview: no Vite installation or server build in ${root}. Run pnpm install or pnpm run build.`);
 
-	const stateDirectory = path.join(homedir(), '.config', 'reviewloop');
+	const stateDirectory = path.join(homedir(), '.config', 'anyreview');
 	mkdirSync(stateDirectory, { recursive: true, mode: 0o700 });
 	const logFile = path.join(stateDirectory, `server-${port}.log`);
 	const log = openSync(logFile, 'a', 0o600);
@@ -75,7 +75,7 @@ export async function ensureServer(port, host = '127.0.0.1', probeHost = '127.0.
 	try { child.kill(); } catch {}
 	let detail = '';
 	try { detail = readFileSync(logFile, 'utf8').trim().split('\n').slice(-5).join(' | '); } catch {}
-	throw new Error(`ReviewLoop failed to start on ${host}:${port}. See ${logFile}${detail ? ` (${detail})` : ''}`);
+	throw new Error(`AnyReview failed to start on ${host}:${port}. See ${logFile}${detail ? ` (${detail})` : ''}`);
 }
 
 /** Reuse a running server on the historical tunnel ports, starting one if needed. */

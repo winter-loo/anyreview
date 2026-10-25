@@ -13,7 +13,7 @@ export function createLiveFeedback<T extends {id:string;body:string;createdAt:st
  let state=$state<FeedbackState|null>(null);
  let queue:FeedbackOperation[]=[],running:Promise<void>|null=null,stopped=false;
  let legacy:T[]=[],jobs:Promise<void>[]=[];
- const key=()=>`reviewloop:feedback:${config.token()}`;
+ const key=()=>`anyreview:feedback:${config.token()}`;
  const url=()=>`/live/${encodeURIComponent(config.token())}/feedback`;
  const operationId=()=>randomId();
  function stash(){try{localStorage.setItem(key(),JSON.stringify({queue,initialized:!!state}));}catch{error='本机缓存空间不足，请保持页面打开直到同步完成';}}
@@ -35,7 +35,7 @@ export function createLiveFeedback<T extends {id:string;body:string;createdAt:st
   const entries=new Map(next.annotations.map(a=>[a.id,a]));
   for(const op of queue){if(op.type==='add'&&op.annotation)entries.set(op.annotation.id,op.annotation);if(op.type==='delete')entries.delete(op.id!);}
   config.replace([...entries.values()] as unknown as T[]);
-  try{localStorage.setItem(`reviewloop:live-${config.kind}:${config.token()}`,JSON.stringify([...entries.values()]));}catch{}
+  try{localStorage.setItem(`anyreview:live-${config.kind}:${config.token()}`,JSON.stringify([...entries.values()]));}catch{}
  }
  async function flush(){
   if(stopped)return;
@@ -86,7 +86,7 @@ export function createLiveFeedback<T extends {id:string;body:string;createdAt:st
     jobs.push(job);void job.finally(()=>jobs=jobs.filter(j=>j!==job));
    }
   }
-  config.replace(next);try{localStorage.setItem(`reviewloop:live-${config.kind}:${config.token()}`,JSON.stringify(next));}catch{}stash();void flush();
+  config.replace(next);try{localStorage.setItem(`anyreview:live-${config.kind}:${config.token()}`,JSON.stringify(next));}catch{}stash();void flush();
  }
  function start(local:T[]){
   try{const saved=JSON.parse(localStorage.getItem(key())||'null');queue=Array.isArray(saved?.queue)?saved.queue:[];if(!saved?.initialized)legacy=local;}catch{legacy=local;}

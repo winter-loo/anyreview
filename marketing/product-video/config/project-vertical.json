@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "name": "ReviewLoop-Vertical",
+  "name": "AnyReview-Vertical",
   "width": 1080,
   "height": 1920,
   "fps": 30,
@@ -8,7 +8,7 @@
   "template": "templates/film-vertical.html.template",
   "scenes": "config/scenes-vertical.json",
   "assets": "config/assets-vertical.json",
-  "output_name": "ReviewLoop-Vertical",
+  "output_name": "AnyReview-Vertical",
   "loudness": {
     "integrated": -16,
     "true_peak": -1.5,

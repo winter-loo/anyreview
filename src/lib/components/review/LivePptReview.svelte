@@ -115,7 +115,7 @@
 	let lastTapTime = 0;
 	let lastTapPos = { x: 0, y: 0 };
 
-	const storageKey = $derived(`reviewloop:live-ppt:${data.token}`);
+	const storageKey = $derived(`anyreview:live-ppt:${data.token}`);
 
  const feedback = createLiveFeedback<PptAnnotation>({token:()=>data.token,kind:'ppt',read:()=>annotations,replace:next=>annotations=next});
 

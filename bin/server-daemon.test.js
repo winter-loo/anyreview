@@ -14,15 +14,15 @@ async function listen(handler) {
 	return String(server.address().port);
 }
 
-test('reuses a healthy ReviewLoop server', async () => {
+test('reuses a healthy AnyReview server', async () => {
 	const port = await listen((request, response) => {
 		response.setHeader('Content-Type', 'application/json');
-		response.end(JSON.stringify({ service: 'reviewloop' }));
+		response.end(JSON.stringify({ service: 'anyreview' }));
 	});
 	expect(await ensureServer(port)).toBe(port);
 });
 
 test('refuses to publish through an unrelated server', async () => {
 	const port = await listen((request, response) => response.end('another app'));
-	await expect(ensureServer(port)).rejects.toThrow(/occupied by a server without ReviewLoop/);
+	await expect(ensureServer(port)).rejects.toThrow(/occupied by a server without AnyReview/);
 });

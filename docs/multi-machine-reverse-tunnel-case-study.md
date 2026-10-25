@@ -1,6 +1,6 @@
 # 案例：多开发机共享单一域名的反向隧道路由（Multi-Tunnel Live Routing）
 
-本文记录了 ReviewLoop 在多开发机环境下的生产部署落地案例：**多台异构开发机（如 Linux 工作站、macOS 笔记本）共享同一个公共公网域名（如 `https://deeloo.cn/live`），各机器自主保活反向隧道，服务端通过智能轻量路由器透明分发。**
+本文记录了 AnyReview 在多开发机环境下的生产部署落地案例：**多台异构开发机（如 Linux 工作站、macOS 笔记本）共享同一个公共公网域名（如 `https://deeloo.cn/live`），各机器自主保活反向隧道，服务端通过智能轻量路由器透明分发。**
 
 ---
 
@@ -12,11 +12,11 @@
 - **公共出口**：拥有公网域名与证书的云服务器（如 `deeloo.cn`）。
 
 ### 核心痛点
-ReviewLoop 的 Live Review 机制采用 AES-256-GCM 加密 Token 与本地快照文件（`~/.config/online-review-feedback/snapshots/`）。
+AnyReview 的 Live Review 机制采用 AES-256-GCM 加密 Token 与本地快照文件（`~/.config/online-review-feedback/snapshots/`）。
 如果云端服务器仅配置单一的反向代理端口（例如 `18787`）：
 1. **端口冲突与抢占**：两台机器同时连接时，后连者会抢占或因端口占用失败；
 2. **跨机 404**：在 Mac 上执行 `review doc.md` 生成了 URL，但外网 HTTP 请求若被打到 Linux 工作站，由于工作站本地没有 Mac 的快照与解密凭据，会直接返回 404 Not Found；
-3. **不同机器前端资源版本差异**：两台机器本地 reviewloop 的 build 产物 hash 可能不同（如 `start.C7U3VyD5.js` 与 `start.BUY851KK.js`），单一切换会导致前端静态资源 404。
+3. **不同机器前端资源版本差异**：两台机器本地 anyreview 的 build 产物 hash 可能不同（如 `start.C7U3VyD5.js` 与 `start.BUY851KK.js`），单一切换会导致前端静态资源 404。
 
 ---
 
@@ -24,7 +24,7 @@ ReviewLoop 的 Live Review 机制采用 AES-256-GCM 加密 Token 与本地快照
 
 遵循两个根本原则：
 1. **隧道保活由对应机器自己完成**：服务端纯被动监听与路由，不管理任何客户端生命周期；每台机器各自使用本机的系统服务守护工具（Linux systemd、macOS launchd）自主重连自愈。
-2. **对 ReviewLoop 核心代码零侵入**：两台机器上的 reviewloop 源码无需任何 hack，基础环境配置统一为 `ONLINE_REVIEW_BASE_URL=https://deeloo.cn/live`。
+2. **对 AnyReview 核心代码零侵入**：两台机器上的 anyreview 源码无需任何 hack，基础环境配置统一为 `ONLINE_REVIEW_BASE_URL=https://deeloo.cn/live`。
 
 ### 架构拓扑图
 
@@ -43,13 +43,13 @@ flowchart TD
 
     subgraph LinuxBox["开发机 1 (192.168.10.104 - Linux)"]
         SystemdSSH["systemd: online-review-tunnel.service"]
-        LocalLoop104["ReviewLoop (:8787)"]
+        LocalLoop104["AnyReview (:8787)"]
         SystemdSSH ===|"SSH -R 18787:127.0.0.1:8787\n(自主保活)"| Tunnel104
     end
 
     subgraph MacBox["开发机 2 (MacBook - macOS)"]
-        LaunchdSSH["launchd: cn.deeloo.reviewloop-tunnel"]
-        LocalLoopMac["ReviewLoop (:8787)"]
+        LaunchdSSH["launchd: cn.deeloo.anyreview-tunnel"]
+        LocalLoopMac["AnyReview (:8787)"]
         LaunchdSSH ===|"SSH -R 18786:127.0.0.1:8787\n(自主保活)"| TunnelMac
     end
 ```
@@ -70,17 +70,17 @@ flowchart TD
    - 若无 Referer 或版本更新，采用多端级联探测（Waterfall Fallback），确保不同构建版本的 JS/CSS chunk 均能正确返回。
 
 ### 云端 systemd 守护配置
-`/etc/systemd/system/reviewloop-live-router.service`：
+`/etc/systemd/system/anyreview-live-router.service`：
 ```ini
 [Unit]
-Description=ReviewLoop Live Multi-Tunnel Router
+Description=AnyReview Live Multi-Tunnel Router
 After=network.target
 
 [Service]
 Type=simple
 User=ubuntu
-WorkingDirectory=/opt/reviewloop
-ExecStart=/usr/local/bin/node /opt/reviewloop/live-router.mjs
+WorkingDirectory=/opt/anyreview
+ExecStart=/usr/local/bin/node /opt/anyreview/live-router.mjs
 Restart=always
 RestartSec=3
 
@@ -89,7 +89,7 @@ WantedBy=multi-user.target
 ```
 
 ### Nginx 反代配置
-修改 `/etc/nginx/includes/deeloo.cn/reviewloop.conf`：
+修改 `/etc/nginx/includes/deeloo.cn/anyreview.conf`：
 ```nginx
 location ^~ /live/ {
     proxy_pass http://127.0.0.1:18780;
@@ -149,14 +149,14 @@ WantedBy=default.target
 ```
 
 ### 4.2 macOS 开发机（launchd）
-在 `~/Library/LaunchAgents/cn.deeloo.reviewloop-tunnel.plist`：
+在 `~/Library/LaunchAgents/cn.deeloo.anyreview-tunnel.plist`：
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>cn.deeloo.reviewloop-tunnel</string>
+    <string>cn.deeloo.anyreview-tunnel</string>
     <key>ProgramArguments</key>
     <array>
         <string>/usr/bin/ssh</string>
@@ -186,9 +186,9 @@ WantedBy=default.target
     <key>KeepAlive</key>
     <true/>
     <key>StandardOutPath</key>
-    <string>/Users/ldd/.config/reviewloop/logs/tunnel.stdout.log</string>
+    <string>/Users/ldd/.config/anyreview/logs/tunnel.stdout.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/ldd/.config/reviewloop/logs/tunnel.stderr.log</string>
+    <string>/Users/ldd/.config/anyreview/logs/tunnel.stderr.log</string>
 </dict>
 </plist>
 ```

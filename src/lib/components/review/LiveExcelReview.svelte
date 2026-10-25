@@ -165,7 +165,7 @@
 
 	// Annotations state
 	let annotations = $state<ExcelAnnotation[]>([]);
-	const storageKey = $derived(`reviewloop:live-excel:${data.token}`);
+	const storageKey = $derived(`anyreview:live-excel:${data.token}`);
 
 	let currentSheetAnnotations = $derived(
 		annotations.filter((ann) => ann.sheetName === activeSheetName)

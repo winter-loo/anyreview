@@ -118,7 +118,7 @@
 	let lastTapTime = 0;
 	let lastTapPos = { x: 0, y: 0 };
 
-	const storageKey = $derived(`reviewloop:live-image:${data.token}`);
+	const storageKey = $derived(`anyreview:live-image:${data.token}`);
 
  const feedback = createLiveFeedback<ImageAnnotation>({token:()=>data.token,kind:'image',read:()=>annotations,replace:next=>annotations=next});
 

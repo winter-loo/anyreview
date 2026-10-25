@@ -11,7 +11,7 @@ const run=promisify(execFile);
 describe('default feedback target',()=>{
  it('uses the latest publication for short and long URLs, supports flags and explicit overrides',async()=>{
   const dir=mkdtempSync(path.join(tmpdir(),'latest-feedback-'));
-  const server=createServer((req,res)=>{res.setHeader('content-type','application/json');res.end(JSON.stringify(req.url==='/api/reviewloop-health'?{service:'reviewloop'}:{files:[],batches:[],requested:req.url}));});
+  const server=createServer((req,res)=>{res.setHeader('content-type','application/json');res.end(JSON.stringify(req.url==='/api/anyreview-health'?{service:'anyreview'}:{files:[],batches:[],requested:req.url}));});
   await new Promise<void>(resolve=>server.listen(0,'127.0.0.1',resolve));
   const address=server.address() as {port:number};
   const base=`http://127.0.0.1:${address.port}/live`;

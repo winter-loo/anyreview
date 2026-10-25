@@ -11,7 +11,7 @@ vi.mock('node:child_process', () => ({
 }));
 import { convertLegacyPpt } from './convertPpt';
 
-const pptx = readFileSync('samples/documents/reviewloop-quarterly.pptx');
+const pptx = readFileSync('samples/documents/anyreview-quarterly.pptx');
 let outputDirectory: string;
 const rememberDirectory = (_binary: string, args: string[]) => {
 	outputDirectory = args[args.indexOf('--outdir') + 1];

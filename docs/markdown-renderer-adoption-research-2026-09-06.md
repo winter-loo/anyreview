@@ -1,4 +1,4 @@
-# ReviewLoop 开源 Markdown 渲染器选型
+# AnyReview 开源 Markdown 渲染器选型
 
 **日期：2026-09-06**
 
@@ -8,7 +8,7 @@
 
 **方案方向只对一半：可以借用成熟 npm 包，但不应整体替换 `markdown-it`，更不能复制或 fork 上游源码。**
 
-ReviewLoop 当前依赖 `markdown-it` token 的源码行范围，把文档拆成稳定 block；字符选区、服务端校验和恢复高亮依赖“服务端规范化文本 offset = 浏览器 DOM 文本 offset”。完整 Viewer 接管 DOM、图形把源码替换成 SVG 后，这个不变量会失效。
+AnyReview 当前依赖 `markdown-it` token 的源码行范围，把文档拆成稳定 block；字符选区、服务端校验和恢复高亮依赖“服务端规范化文本 offset = 浏览器 DOM 文本 offset”。完整 Viewer 接管 DOM、图形把源码替换成 SVG 后，这个不变量会失效。
 
 **当前最小正确方案：保留 `markdown-it`；眼下只缺 Mermaid，就引入 Mermaid 正式包并显式使用 `securityLevel: 'strict'`。** Mermaid 官方说明 `strict` 会编码 HTML 并禁用点击，`loose` 则允许 HTML 和点击行为。[13] 等 Graphviz/ECharts 等成为真实需求，再评估 Vditor 的 method bundle 对 fenced code 做局部后处理。
 
@@ -61,7 +61,7 @@ Vditor 是仍在维护的完整 Markdown 编辑/预览项目。[1] 它最接近�
 - 文本标注状态机不回退：选区调整期间无 backdrop，确认后才打开 composer。
 - 图形前后正文的字符锚点 round-trip 通过。
 - 恶意 HTML、`javascript:` 链接、事件属性和 Mermaid payload 不能执行脚本。
-- 浏览器不从第三方 CDN 动态加载脚本；依赖资产由 ReviewLoop 自己提供。
+- 浏览器不从第三方 CDN 动态加载脚本；依赖资产由 AnyReview 自己提供。
 - 本地 Markdown 仍不上传、不复制、不进入文档数据库。
 
 ## Sources

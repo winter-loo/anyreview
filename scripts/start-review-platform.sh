@@ -7,7 +7,7 @@ export HOST="${HOST:-0.0.0.0}"
 export PORT="${PORT:-2067}"
 
 cat <<INFO
-Starting ReviewLoop
+Starting AnyReview
   app:  $script_dir
   bind: $HOST:$PORT
 INFO

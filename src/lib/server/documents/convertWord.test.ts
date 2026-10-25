@@ -11,7 +11,7 @@ vi.mock('node:child_process', () => ({
 }));
 import { convertLegacyWord } from './convertWord';
 
-const docx = readFileSync('samples/documents/reviewloop-prd.docx');
+const docx = readFileSync('samples/documents/anyreview-prd.docx');
 let outputDirectory: string;
 const rememberDirectory = (_binary: string, args: string[]) => {
 	outputDirectory = args[args.indexOf('--outdir') + 1];

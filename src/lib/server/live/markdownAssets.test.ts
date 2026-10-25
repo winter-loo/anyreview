@@ -25,7 +25,7 @@ function get(src: string, reviewToken = token) {
  return GET({ params: { token: reviewToken, assetId: markdownImageId(src) } } as any);
 }
 beforeEach(() => {
- directory = mkdtempSync(path.join(homedir(), '.reviewloop-images-test-'));
+ directory = mkdtempSync(path.join(homedir(), '.anyreview-images-test-'));
  source = path.join(directory, 'source'); mkdirSync(source);
  document = path.join(source, 'review.md');
  vi.stubEnv('ONLINE_REVIEW_URL_SECRET', secret);

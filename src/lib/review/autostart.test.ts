@@ -16,7 +16,7 @@ async function unusedPort() {
 
 function stopServer(home: string, port: string) {
  try {
-  const pid = Number(readFileSync(path.join(home, '.config/reviewloop', `server-${port}.pid`), 'utf8'));
+  const pid = Number(readFileSync(path.join(home, '.config/anyreview', `server-${port}.pid`), 'utf8'));
   if (Number.isSafeInteger(pid)) process.kill(pid);
  } catch {}
 }
@@ -39,7 +39,7 @@ it('starts a loopback server for a local URL', async () => {
   const file = path.join(home, 'sample.md'); writeFileSync(file, '# Autostart');
   const url = execFileSync(process.execPath, ['bin/review.js', file, '--local'], { env: fixtureEnv(home, port), encoding: 'utf8' }).trim();
   expect(url).toMatch(new RegExp(`^http://127\\.0\\.0\\.1:${port}/live/`));
-  await expect(fetch(url).then((response) => response.text())).resolves.toBe('ReviewLoop test server');
+  await expect(fetch(url).then((response) => response.text())).resolves.toBe('AnyReview test server');
  } finally { stopServer(home, port); rmSync(home, { recursive: true, force: true }); }
 }, 15000);
 
@@ -52,7 +52,7 @@ it('starts a LAN-bound server for a local network URL', async () => {
   const file = path.join(home, 'sample.md'); writeFileSync(file, '# LAN');
   const url = execFileSync(process.execPath, ['bin/review.js', file, `--localnet=${address}`], { env: fixtureEnv(home, port), encoding: 'utf8' }).trim();
   expect(url).toContain(`http://${address}:${port}/live/`);
-  await expect(fetch(url).then((response) => response.text())).resolves.toBe('ReviewLoop test server');
+  await expect(fetch(url).then((response) => response.text())).resolves.toBe('AnyReview test server');
  } finally { stopServer(home, port); rmSync(home, { recursive: true, force: true }); }
 }, 15000);
 
@@ -67,6 +67,6 @@ it('starts the server before configuring a tailnet tunnel', async () => {
   const env = { ...fixtureEnv(home, port), TAILSCALE_BIN: process.execPath, TAILSCALE_BIN_ARGS: JSON.stringify([tailscale]) };
   const url = execFileSync(process.execPath, ['bin/review.js', file, '--tailnet'], { env, encoding: 'utf8' }).trim();
   expect(url).toMatch(/^https:\/\/review\.test\.ts\.net\/live\//);
-  await expect(fetch(`http://127.0.0.1:${port}/`).then((response) => response.text())).resolves.toBe('ReviewLoop test server');
+  await expect(fetch(`http://127.0.0.1:${port}/`).then((response) => response.text())).resolves.toBe('AnyReview test server');
  } finally { stopServer(home, port); rmSync(home, { recursive: true, force: true }); }
 }, 15000);

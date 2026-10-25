@@ -9,9 +9,9 @@ const homeSource = readFileSync(resolve('src/routes/+page.svelte'), 'utf8');
 describe('SvelteKit i18n wiring', () => {
 	it('resolves locale server-side from query/cookie/accept-language and exposes it to page data', () => {
 		expect(hooksSource).toContain("event.url.searchParams.get('lang')");
-		expect(hooksSource).toContain("event.cookies.get('reviewloop_locale')");
+		expect(hooksSource).toContain("event.cookies.get('anyreview_locale')");
 		expect(hooksSource).toContain("event.request.headers.get('accept-language')");
-		expect(hooksSource).toContain("reviewloop_locale");
+		expect(hooksSource).toContain("anyreview_locale");
 		expect(hooksSource).toContain('transformPageChunk');
 		expect(layoutServerSource).toContain('locals.locale');
 	});

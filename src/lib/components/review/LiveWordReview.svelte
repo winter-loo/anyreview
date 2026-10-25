@@ -158,7 +158,7 @@
 	let composingBrush = $state(false);
 	let brushDraftComment = $state('');
 
-	const storageKey = $derived(`reviewloop:live-${data.kind}:${data.token}`);
+	const storageKey = $derived(`anyreview:live-${data.kind}:${data.token}`);
 
 	// The drawing canvas is mounted lazily by {#if brushMode}, so the
 	// syncCanvasSize() call at load time runs while drawingCanvas is still null

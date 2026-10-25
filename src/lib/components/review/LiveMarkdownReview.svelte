@@ -40,9 +40,9 @@
 
 	const feedback = createLiveFeedback<Annotation>({token:()=>data.token,kind:'markdown',read:()=>annotations,replace:entries=>{annotations=entries;}});
 	onMount(() => {
-		storageKey = `reviewloop:live-markdown:${data.token}`;
+		storageKey = `anyreview:live-markdown:${data.token}`;
 		try {
-			const stored = JSON.parse(localStorage.getItem(storageKey) ?? localStorage.getItem(`reviewloop:${location.pathname}`) ?? '[]');
+			const stored = JSON.parse(localStorage.getItem(storageKey) ?? localStorage.getItem(`anyreview:${location.pathname}`) ?? '[]');
 			annotations = Array.isArray(stored) ? stored : [];
 		} catch { annotations = []; }
 		const stop = feedback.start(annotations);

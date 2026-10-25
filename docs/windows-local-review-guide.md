@@ -1,13 +1,13 @@
-# ReviewLoop 在 Windows 上的本地审阅探索与避坑指南
+# AnyReview 在 Windows 上的本地审阅探索与避坑指南
 
-> **导读**：本文记录了在 Windows 环境（尤其是在通过 SSH 远程登录、局域网协同的开发机场景下）跑通 ReviewLoop `review` 命令的全过程“心路历程”。其中包含了对底层设计逻辑的剖析、旧版路径限制、pnpm 脚本、防火墙与局域网绑定、依赖缺失排查以及应对方案。
+> **导读**：本文记录了在 Windows 环境（尤其是在通过 SSH 远程登录、局域网协同的开发机场景下）跑通 AnyReview `review` 命令的全过程“心路历程”。其中包含了对底层设计逻辑的剖析、旧版路径限制、pnpm 脚本、防火墙与局域网绑定、依赖缺失排查以及应对方案。
 >
 > 如果你是刚接触这个项目的新用户，无论是想在自己的 Windows PC 上体验，还是在团队内部局域网搭建私有审阅节点，本文都可以作为完整的实战参考。
 
 ---
 
 ## 目录
-- [一、背景认知：ReviewLoop 是什么？](#一背景认知reviewloop-是什么)
+- [一、背景认知：AnyReview 是什么？](#一背景认知anyreview-是什么)
 - [二、初次上手与心路历程（踩坑全记录）](#二初次上手与心路历程踩坑全记录)
   - [第 1 关：加密密钥缺失与环境配置文件](#第-1-关加密密钥缺失与环境配置文件)
   - [第 2 关：旧版 Windows 路径限制](#第-2-关旧版-windows-路径限制)
@@ -20,11 +20,11 @@
 
 ---
 
-## 一、背景认知：ReviewLoop 是什么？
+## 一、背景认知：AnyReview 是什么？
 
 在传统的人工与 AI 协作过程中，AI 生成的代码或长文档往往存在一个痛点：**人类很难在一个稳定、精确定位的地方留下修改意见**。如果直接在聊天框里粘贴文本，AI 很难获知“你到底指的是第几行、哪个段落、哪个视频帧”。
 
-ReviewLoop 正是为此而设计的 **Human-in-the-Loop 审阅中枢**：
+AnyReview 正是为此而设计的 **Human-in-the-Loop 审阅中枢**：
 1. **只读快照（Read-only Snapshot）**：发布审阅时，不会修改原始文件，而是把当前文件内容冻结并哈希存储，保证审阅过程的不可篡改。
 2. **轻量鉴权（Encrypted Capability Token）**：通过 AES-256-GCM 将文件原始路径和随机 IV 加密，生成可访问的短链接。
 3. **富媒体与交互批注**：支持 Markdown、HTML、PDF、Word、PPT、Excel、图片以及带时间轴和帧级控制的视频。
@@ -73,7 +73,7 @@ flowchart TD
 - **遇到的现象**：
   为了启动 Web 服务来渲染前端，我执行了 `pnpm install`，结果进程持续十几分钟挂起，无任何输出，CPU 仅占用了少量时间后停滞。
 - **原因剖析**：
-  查看 [`package.json`](file:///D:/proj/reviewloop/package.json) 发现在 `scripts` 中定义了：
+  查看 [`package.json`](file:///D:/proj/anyreview/package.json) 发现在 `scripts` 中定义了：
   ```json
   "prepare": "svelte-kit sync || echo ''"
   ```
@@ -99,7 +99,7 @@ flowchart TD
   1. **服务监听全网卡**：启动 Vite 时显式传入 `--host 0.0.0.0 --port 5173`。
   2. **开放入站端口**：使用管理员权限执行一条 netsh 命令，放行 5173 端口：
      ```powershell
-     netsh advfirewall firewall add rule name="ReviewLoop 5173" dir=in action=allow protocol=TCP localport=5173
+     netsh advfirewall firewall add rule name="AnyReview 5173" dir=in action=allow protocol=TCP localport=5173
      ```
   3. **使用局域网选项**：
      执行 `review <file> --localnet`。只有一个私有 IPv4 时直接使用；存在多个时命令会列出网卡和地址供选择。服务运行在 5173 时可先设置 `PORT=5173`，脚本也可使用 `--localnet=<IP>` 明确选择。
@@ -116,7 +116,7 @@ flowchart TD
   [plugin:vite:import-analysis] Failed to resolve import "mermaid" from "src/lib/markdown/mermaid.ts". Does the file exist?
   ```
 - **原因剖析**：
-  排查发现，[`src/lib/markdown/mermaid.ts`](file:///D:/proj/reviewloop/src/lib/markdown/mermaid.ts) 中存在动态引入 `import('mermaid')`。
+  排查发现，[`src/lib/markdown/mermaid.ts`](file:///D:/proj/anyreview/src/lib/markdown/mermaid.ts) 中存在动态引入 `import('mermaid')`。
   而使用 `Test-Path node_modules/mermaid` 检查确实返回 `True`，但在仔细检查其 `dist/` 目录时惊奇地发现：
   > 里面只有 `mermaid.core.mjs.map`，却没有 `mermaid.core.mjs` 主文件！
   原来是第 3 关中最初被强行终止的安装进程，导致 `mermaid` 包解压到一半就中断了。后续 pnpm 检查文件夹已存在，就略过了它。
@@ -143,7 +143,7 @@ flowchart TD
    ```
 2. **页面评审交互**：
    在客户端浏览器中打开网页，页面不仅完整渲染了标题、正文、代码高亮，而且每一段都有对应的块标记（如 `L1`, `L3`, `L5`）。
-   用鼠标选中第一行正文 `"ReviewLoop"`，右侧弹出意见面板，输入评语并点击 **“提交给 AI”**。
+   用鼠标选中第一行正文 `"AnyReview"`，右侧弹出意见面板，输入评语并点击 **“提交给 AI”**。
 3. **CLI 拉取反馈**：
    回到 SSH 终端，执行：
    ```powershell
@@ -169,7 +169,7 @@ flowchart TD
           "anchor": {
             "type": "document-text",
             "blockId": "L1",
-            "selectedText": "ReviewLoop",
+            "selectedText": "AnyReview",
             "suffix": " 本地快速体验文档"
           }
         }
@@ -184,7 +184,7 @@ flowchart TD
 
 ## 三、新用户 5 分钟快速上手指南 (Quick Start)
 
-如果你是一位新的 Windows 开发者，希望在本地最快速度上手使用 ReviewLoop，请直接按照以下顺序操作：
+如果你是一位新的 Windows 开发者，希望在本地最快速度上手使用 AnyReview，请直接按照以下顺序操作：
 
 ### 1. 准备运行环境
 确保已经安装 Node.js 24+（自带 `node:sqlite`）。审阅 URL 密钥会在首次运行时自动生成，不需要准备环境变量或配置文件。
@@ -202,7 +202,7 @@ pnpm exec svelte-kit sync
 ### 3. 放行防火墙并启动 Web 服务
 ```powershell
 # 管理员身份放行 5173 端口（局域网协作必选，仅本机可忽略）
-netsh advfirewall firewall add rule name="ReviewLoop 5173" dir=in action=allow protocol=TCP localport=5173
+netsh advfirewall firewall add rule name="AnyReview 5173" dir=in action=allow protocol=TCP localport=5173
 
 # 启动 Web 页面服务（监听全网卡）
 pnpm exec vite dev --host 0.0.0.0 --port 5173

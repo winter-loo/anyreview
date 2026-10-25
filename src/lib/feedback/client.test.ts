@@ -66,10 +66,10 @@ describe('preview upload fallback', () => {
   expect(feedback.context.error).toBe('');
   expect(submittedComment()).toMatchObject({ body: annotation.body, preview: false, previewError: expect.stringContaining('2 MiB') });
   expect(requests.flatMap(r => r.operations ?? []).every(op => !op.preview)).toBe(true);
-  expect(JSON.parse(stored.get('reviewloop:feedback:token')!).queue).toEqual([]);
+  expect(JSON.parse(stored.get('anyreview:feedback:token')!).queue).toEqual([]);
  });
  it('repairs oversized previews restored from the old local queue', async () => {
-  stored.set('reviewloop:feedback:token', JSON.stringify({ initialized: true, queue: [
+  stored.set('anyreview:feedback:token', JSON.stringify({ initialized: true, queue: [
    { operationId: 'add', type: 'add', annotation },
    { operationId: 'preview', type: 'preview', id: annotation.id, preview: 'data:image/png;base64,' + Buffer.alloc(MAX_PREVIEW_BYTES + 1).toString('base64') }
   ] }));
@@ -92,7 +92,7 @@ describe('preview upload fallback', () => {
   previewRejection = 503;
   await start(); feedback.persist([annotation]); await feedback.context.submit();
   expect(feedback.context.error).toBe('Upload rejected');
-  expect(JSON.parse(stored.get('reviewloop:feedback:token')!).queue[0].preview).toBe(png);
+  expect(JSON.parse(stored.get('anyreview:feedback:token')!).queue[0].preview).toBe(png);
   expect(agentFeedback(db, snapshot, '/feedback').batches).toHaveLength(0);
   previewRejection = 0; await feedback.context.submit();
   expect(feedback.context.error).toBe('');

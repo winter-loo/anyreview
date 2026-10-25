@@ -1,10 +1,10 @@
 <svelte:head>
- <title>视频标注使用帮助 · ReviewLoop</title>
+ <title>视频标注使用帮助 · AnyReview</title>
  <meta name="description" content="了解如何观看视频、定位到帧、添加时间点和范围评论，再将修改意见提交给 AI。" />
  <meta name="viewport" content="width=device-width, initial-scale=1" />
 </svelte:head>
 <div class="page">
- <header><a href="#top" class="brand">ReviewLoop <span>使用帮助</span></a><span class="return-hint">切回原标签页，继续评审</span></header>
+ <header><a href="#top" class="brand">AnyReview <span>使用帮助</span></a><span class="return-hint">切回原标签页，继续评审</span></header>
  <main id="top">
   <div class="intro"><p class="eyebrow">视频评审指南</p><h1>看到问题，<br />留下修改意见。</h1><p class="lead">先选视频里的位置，再写修改建议。一条评论可以关联多个时间点，也可以包含一段时间范围。</p></div>
   <nav aria-label="帮助目录"><a href="#start">快速开始</a><a href="#timeline">定位与缩放</a><a href="#comments">时间点与范围</a><a href="#playback">播放控制</a><a href="#list">查看标注</a><a href="#submit">提交给 AI</a><a href="#questions">常见问题</a></nav>

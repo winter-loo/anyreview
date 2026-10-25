@@ -19,7 +19,7 @@ export async function convertLegacyOffice(source: Uint8Array, format: 'doc' | 'p
 	const settings = format === 'doc'
 		? { label: 'Word document', application: 'Word', component: 'Writer', output: 'docx', filter: 'Office Open XML Text', cache: 'word-conversions' }
 		: { label: 'PowerPoint presentation', application: 'PowerPoint', component: 'Impress', output: 'pptx', filter: 'Impress MS PowerPoint 2007 XML', cache: 'ppt-conversions' };
-	const root = path.join(homedir(), '.cache', 'reviewloop', settings.cache);
+	const root = path.join(homedir(), '.cache', 'anyreview', settings.cache);
 	await mkdir(root, { recursive: true, mode: 0o700 });
 	const directory = await mkdtemp(path.join(root, `${format}-`));
 	try {

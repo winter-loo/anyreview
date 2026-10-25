@@ -1,6 +1,6 @@
-# ReviewLoop
+# AnyReview
 
-ReviewLoop 让用户审阅 AI 生成的内容，在具体位置留下意见，再将反馈交给 AI 继续修改。
+AnyReview 让用户审阅 AI 生成的内容，在具体位置留下意见，再将反馈交给 AI 继续修改。
 
 ## Language
 

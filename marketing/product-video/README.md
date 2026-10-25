@@ -1,4 +1,4 @@
-# ReviewLoop 视频工程
+# AnyReview 视频工程
 
 包含横版（桌面/官网）与竖版（手机/短视频）两套可复现、配置驱动的宣发视频工程。构建完全由配置生成，不再调用历史临时脚本或依赖外部网络。
 
@@ -59,12 +59,12 @@ pnpm run pack:vertical     # 竖版全渠道发布物料一键打包（成片、
 默认使用 `pnpm dlx hyperframes@0.8.33`；版本固定在 project 配置文件中。首次使用 pnpm dlx 需要网络。可通过 `HYPERFRAMES_BIN` 指定已安装的 CLI，通过 `HYPERFRAMES_BROWSER_PATH` 指定浏览器。
 
 输出：
-- 横版：`renders/ReviewLoop.mp4`、`renders/captions.srt`、`renders/storyboard/index.html`
-- 竖版：`renders/ReviewLoop-Vertical.mp4`、`renders/ReviewLoop-Vertical.srt`、`renders/storyboard-ReviewLoop-Vertical/index.html`
+- 横版：`renders/AnyReview.mp4`、`renders/captions.srt`、`renders/storyboard/index.html`
+- 竖版：`renders/AnyReview-Vertical.mp4`、`renders/AnyReview-Vertical.srt`、`renders/storyboard-AnyReview-Vertical/index.html`
 
 审阅命令：
-- `review renders/ReviewLoop.mp4 --local`
-- `review renders/ReviewLoop-Vertical.mp4 --local`
+- `review renders/AnyReview.mp4 --local`
+- `review renders/AnyReview-Vertical.mp4 --local`
 
 ## 如何编辑
 

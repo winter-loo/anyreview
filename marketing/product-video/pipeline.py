@@ -112,7 +112,7 @@ def check(p):
  if not report['ok']:raise ValueError('HyperFrames check failed')
  print('HyperFrames check passed; report: renders/check.json')
 def storyboard(p,final):
- sb_dir = 'storyboard' if p['output_name'] == 'ReviewLoop' else f"storyboard-{p['output_name']}"
+ sb_dir = 'storyboard' if p['output_name'] == 'AnyReview' else f"storyboard-{p['output_name']}"
  out=ROOT/'renders'/sb_dir;out.mkdir(exist_ok=True);cards=[];start=0
  for i,scene in enumerate(load()[1]):
   at=start+scene['poster_offset'];name=f'{i+1:02}-{scene["id"]}.png'
@@ -128,21 +128,21 @@ def render_signature(p,assets):
 def finish(p):
  out=ROOT/'renders';src=out/(p['output_name']+'-render.mp4');final=out/(p['output_name']+'.mp4')
  if not src.is_file():raise ValueError('Render first')
- receipt_name = 'render-receipt.json' if p['output_name'] == 'ReviewLoop' else f"{p['output_name']}-receipt.json"
+ receipt_name = 'render-receipt.json' if p['output_name'] == 'AnyReview' else f"{p['output_name']}-receipt.json"
  receipt=read(out/receipt_name)
  current,_,_,_=compile_film(*load())
  if receipt['composition_sha256']!=hashlib.sha256(current.encode()).hexdigest() or receipt['render_sha256']!=digest(src) or receipt['render_signature']!=render_signature(p,load()[2]):raise ValueError('Render is stale; run render again before finish')
  loud=p['loudness'];base=f"loudnorm=I={loud['integrated']}:TP={loud['true_peak']}:LRA={loud['range']}"
  result=ff('-hide_banner','-i',src,'-vn','-af',base+':print_format=json','-f','null','-',capture=True)
  m=json.JSONDecoder().raw_decode(result.stderr[result.stderr.rindex('{'):])[0]
- loud_name = 'loudness.json' if p['output_name'] == 'ReviewLoop' else f"loudness-{p['output_name']}.json"
+ loud_name = 'loudness.json' if p['output_name'] == 'AnyReview' else f"loudness-{p['output_name']}.json"
  (out/loud_name).write_text(json.dumps(m,indent=2))
  flt=base+f":measured_I={m['input_i']}:measured_TP={m['input_tp']}:measured_LRA={m['input_lra']}:measured_thresh={m['input_thresh']}:offset={m['target_offset']}:linear=true"
  ff('-y','-v','error','-i',src,'-map','0:v','-map','0:a','-c:v','copy','-af',flt,'-c:a','aac','-b:a','192k','-ar','48000','-movflags','+faststart',final)
  ff('-v','error','-i',final,'-f','null','-')
- proof_prefix = 'proof' if p['output_name'] == 'ReviewLoop' else f"proof-{p['output_name']}"
+ proof_prefix = 'proof' if p['output_name'] == 'AnyReview' else f"proof-{p['output_name']}"
  for t in p['proof_times']:ff('-y','-v','error','-ss',t,'-i',final,'-frames:v','1',out/f'{proof_prefix}-{t:.3f}.png')
- srt_name = 'captions.srt' if p['output_name'] == 'ReviewLoop' else f"{p['output_name']}.srt"
+ srt_name = 'captions.srt' if p['output_name'] == 'AnyReview' else f"{p['output_name']}.srt"
  (out/srt_name).write_bytes((ROOT/'captions.srt').read_bytes());storyboard(p,final);print('Verified delivery:',final)
 
 def main():
@@ -162,7 +162,7 @@ def main():
   out=ROOT/'renders';out.mkdir(exist_ok=True);src=out/(p['output_name']+'-render.mp4')
   composition_hash=digest(ROOT/'index.html');signature=render_signature(p,load()[2])
   hf(p,'render','--quality','high','--fps',str(p['fps']),'--output',str(src))
-  receipt_name = 'render-receipt.json' if p['output_name'] == 'ReviewLoop' else f"{p['output_name']}-receipt.json"
+  receipt_name = 'render-receipt.json' if p['output_name'] == 'AnyReview' else f"{p['output_name']}-receipt.json"
   (out/receipt_name).write_text(json.dumps({'composition_sha256':composition_hash,'render_sha256':digest(src),'render_signature':signature,'hyperframes_version':p['hyperframes_version']},indent=2))
  if args.command=='release':finish(p)
 
