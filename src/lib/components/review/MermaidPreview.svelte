@@ -99,7 +99,7 @@
 <div class="diagram-preview">
 	{#if imageUrl}
 		<div class="diagram-scroll">
-			<div class="diagram-figure">
+			<div class="diagram-figure" style:width={`${diagramWidth}px`}>
 				<img src={imageUrl} alt="Mermaid 图表" data-review-figure={figure} />
 				{@render overlay?.()}
 			</div>
@@ -153,7 +153,7 @@
 	.diagram-preview { position: relative; margin: 1em 0; padding: 12px; border: 1px solid #deded8; border-radius: 9px; background: white; min-width: 0; }
 	.diagram-scroll { overflow: auto; }
 	/* Drawing overlays share this box, so they stay aligned while the diagram scrolls. */
-	.diagram-figure { position: relative; min-width: 600px; }
+	.diagram-figure { position: relative; max-width: 100%; }
 	.expand-button { position: absolute; z-index: 1; top: 8px; right: 8px; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; margin: 0; background: white; }
 	.expand-button:hover, .close-button:hover { background: #f0f0ed; }
 	.expand-button:focus-visible, .close-button:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
