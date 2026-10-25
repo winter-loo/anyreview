@@ -438,7 +438,7 @@
 	.annotation-hint { position: sticky; z-index: 9; top: calc(65px + env(safe-area-inset-top)); width: 100%; padding: 8px 13px; background: #1d4ed8; color: white; font-size: 13px; text-align: center; }
 	.notice { position: fixed; z-index: 9; bottom: calc(18px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100% - 24px); border-radius: 999px; padding: 8px 13px; background: #242424; color: white; box-shadow: 0 6px 24px rgba(0,0,0,.12); font-size: 13px; }
 	.selection-action { position: fixed; z-index: 18; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); left: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(37, 99, 235, .28); text-overflow: ellipsis; white-space: nowrap; }
-	main { width: min(860px, calc(100% - 32px)); margin: 28px auto 80px; padding: 44px 52px; border: 1px solid #e1e1dc; border-radius: 12px; background: white; box-shadow: 0 10px 35px rgba(0, 0, 0, .04); }
+	main { width: 100%; margin: 0 auto 80px; padding: 44px 52px; border: 1px solid #e1e1dc; border-radius: 0; background: white; box-shadow: 0 10px 35px rgba(0, 0, 0, .04); }
 	main.annotating .md-content { cursor: text; user-select: text; -webkit-user-select: text; }
 	.review-block { position: relative; }
 	.figure-layer { position: absolute; z-index: 1; pointer-events: none; }
