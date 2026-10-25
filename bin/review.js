@@ -15,6 +15,7 @@ import { digest, freezeReview } from './live-snapshot.js';
 import { cloudflarePublicBase } from './cloudflare.js';
 import { locateFile } from './locate-file.js';
 import { readEnvConfig, reviewUrlSecret } from './online-review-config.js';
+import { ensureServer, ensureTunnelServer } from './server-daemon.js';
 
 const MAX_MARKDOWN_BYTES = 5 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -122,17 +123,6 @@ async function chooseLocalNetworkAddress(requested) {
 	}
 }
 
-async function localServicePort() {
-	const candidates = [...new Set([process.env.PORT, '5173', '8787'].filter(Boolean))];
-	for (const port of candidates) {
-		try {
-			await fetch(`http://127.0.0.1:${port}/`, { signal: AbortSignal.timeout(1500) });
-			return port;
-		} catch {}
-	}
-	throw new Error(`ReviewLoop is not running on ${candidates.map((port) => `127.0.0.1:${port}`).join(' or ')}.`);
-}
-
 function tailscalePublicBase(port) {
 	const status = spawnSync('tailscale', ['status', '--json'], { encoding: 'utf8' });
 	if (status.error) throw new Error(`Cannot run Tailscale: ${status.error.message}`);
@@ -204,8 +194,6 @@ async function main(rawFiles) {
  const requestedAddress = localNetOption?.includes('=') ? localNetOption.slice(localNetOption.indexOf('=') + 1) : undefined;
  const localHost = localNetOption ? await chooseLocalNetworkAddress(requestedAddress) : '127.0.0.1';
  const port = process.env.PORT || '8787';
- const base = new URL(tailnet ? tailscalePublicBase(await localServicePort()) : cloudflare ? await cloudflarePublicBase(await localServicePort()) : local || localNetOption ? `http://${localHost}:${port}/live` : (readEnvConfig('ONLINE_REVIEW_BASE_URL') || `http://127.0.0.1:${port}/live`));
- if (!['http:', 'https:'].includes(base.protocol) || base.pathname.replace(/\/$/, '') !== '/live' || base.search || base.hash || base.username || base.password) throw new Error('Review base URL must be an HTTP(S) URL ending in /live');
 	const files = rawFiles.map((file) => realpathSync(file));
 
 	for (const file of files) {
@@ -245,6 +233,12 @@ async function main(rawFiles) {
 
 	if (!isVideoMode && !allImagesMode && !isHtmlMode && !isMarkdownMode && !isPdfMode && !isWordMode && !isPptMode && !isExcelMode) {
 		throw new Error('Only video (MP4/MOV/WebM), HTML, Markdown, PDF, Word, PowerPoint, Excel, or Image files are supported');
+	}
+	const tunnelPort = tailnet || cloudflare ? await ensureTunnelServer() : null;
+	const base = new URL(tailnet ? tailscalePublicBase(tunnelPort) : cloudflare ? await cloudflarePublicBase(tunnelPort) : local || localNetOption ? `http://${localHost}:${port}/live` : (readEnvConfig('ONLINE_REVIEW_BASE_URL') || `http://127.0.0.1:${port}/live`));
+	if (!['http:', 'https:'].includes(base.protocol) || base.pathname.replace(/\/$/, '') !== '/live' || base.search || base.hash || base.username || base.password) throw new Error('Review base URL must be an HTTP(S) URL ending in /live');
+	if (!tunnelPort && (base.hostname === '127.0.0.1' || base.hostname === 'localhost' || localNetOption)) {
+		await ensureServer(base.port || (base.protocol === 'https:' ? '443' : '80'), localNetOption ? '0.0.0.0' : '127.0.0.1', localNetOption ? localHost : '127.0.0.1');
 	}
 
 	const payload = files.length === 1 ? files[0] : JSON.stringify(files);
