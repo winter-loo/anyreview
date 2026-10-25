@@ -1,0 +1,483 @@
+/* 9:16 竖屏自媒体宣传片样式 (1080x1920) */
+
+@font-face {
+  font-family: Film;
+  src: url('{{asset:assets-font-otf}}');
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #0b0c15;
+  color: #fff;
+  font-family: Film, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow: hidden;
+}
+
+#root {
+  width: {{width}}px;
+  height: {{height}}px;
+  position: relative;
+  overflow: hidden;
+}
+
+#glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 35%, #2a2550 0%, #0c0e18 70%);
+}
+
+/* 顶部挂载卡与品牌标 */
+.header-bar {
+  position: absolute;
+  left: 60px;
+  top: 50px;
+  right: 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 20;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 32px;
+  font-weight: 600;
+  color: #f1f0f8;
+}
+
+.brand img {
+  width: 44px;
+  height: 44px;
+}
+
+.topic-badge {
+  background: rgba(15, 17, 30, 0.85); backdrop-filter: blur(8px);
+  border: 1px solid rgba(142, 126, 255, 0.35);
+  color: #e5e2ff;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 20px;
+  letter-spacing: 0.5px;
+}
+
+/* 主手机模型 (居中，高占比) */
+#phone {
+  position: absolute;
+  left: 190px;
+  top: 140px;
+  width: 700px;
+  height: 1450px;
+  border: 3px solid #6b697d;
+  border-radius: 64px;
+  padding: 14px;
+  background: linear-gradient(135deg, #7a7888, #1a1b24 25%, #080910 75%, #5e606e);
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8), 0 0 50px rgba(80, 70, 160, 0.25);
+  transform-origin: 50% 40%;
+}
+
+#screen {
+  position: relative;
+  isolation: isolate;
+  width: 666px;
+  height: 1416px;
+  overflow: hidden;
+  border: 4px solid #080910;
+  border-radius: 50px;
+  background: #080910;
+}
+
+.screen-content {
+  position: absolute;
+  inset: 0;
+  width: 658px;
+  height: 1408px;
+  object-fit: fill;
+  clip-path: inset(0 round 46px);
+}
+
+#screen-terminal {
+  position: absolute;
+  inset: 0;
+  width: 658px;
+  height: 1408px;
+  object-fit: contain;
+  background: #000;
+}
+
+#screen-discord {
+  position: absolute;
+  inset: 0;
+  width: 658px;
+  height: 1408px;
+  object-fit: fill;
+}
+
+.tap-ring {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 3.5px solid #3b82f6;
+  background: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 28px rgba(59, 130, 246, 0.8);
+  opacity: 0;
+  z-index: 12;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.mouse-pointer {
+  position: absolute;
+  left: 460px;
+  top: 1346px;
+  width: 42px;
+  height: 42px;
+  opacity: 0;
+  z-index: 15;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+  transform-origin: 16px 4px;
+}
+
+.pointer-tap-ring {
+  position: absolute;
+  left: 16px;
+  top: 4px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2.5px solid #3b82f6;
+  background: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.7);
+  opacity: 0;
+  transform: translate(-50%, -50%);
+}
+
+/* 真实流程图放大预览弹窗 (Scene 3) */
+#flowchart-modal {
+  position: absolute;
+  inset: 0;
+  width: 658px;
+  height: 1408px;
+  background: #ffffff;
+  color: #18181b;
+  display: flex;
+  flex-direction: column;
+  z-index: 9;
+  opacity: 0;
+  overflow: hidden;
+  clip-path: inset(0 round 46px);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30px 28px 18px;
+  border-bottom: 1px solid #e4e4e7;
+  background: #ffffff;
+  flex: none;
+}
+
+.modal-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #09090b;
+  letter-spacing: 0.5px;
+}
+
+.modal-close {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #71717a;
+  background: #f4f4f5;
+  border-radius: 50%;
+}
+
+.modal-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e4e4e7;
+  background: #fafafa;
+  flex: none;
+}
+
+.tool-btn {
+  height: 46px;
+  padding: 0 16px;
+  border: 1px solid #d4d4d8;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #18181b;
+  font-size: 18px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tool-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+}
+
+.tool-zoom {
+  min-width: 64px;
+  text-align: center;
+  font-size: 19px;
+  font-weight: 700;
+  color: #27272a;
+  font-variant-numeric: tabular-nums;
+}
+
+.modal-viewport {
+  flex: 1;
+  background: #f4f5f7;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: hidden;
+  position: relative;
+}
+
+.modal-canvas {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding-left: 40px;
+  will-change: transform;
+}
+
+.modal-canvas img {
+  height: 140px;
+  width: auto;
+  max-width: none;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.08));
+}
+
+.modal-hint {
+  flex: none;
+  padding: 20px 20px 30px;
+  font-size: 17px;
+  text-align: center;
+  color: #71717a;
+  background: #ffffff;
+  border-top: 1px solid #e4e4e7;
+}
+
+.screen-transition {
+  position: absolute;
+  inset: 0;
+  width: 658px;
+  height: 1408px;
+  box-shadow: -18px 0 40px rgba(0, 0, 0, 0.45);
+}
+
+#review-entry {
+  background: #ffffff;
+}
+
+#screen-bezel {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 658px;
+  height: 1408px;
+  z-index: 8;
+  pointer-events: none;
+}
+
+/* 终端命令模拟 (Scene 6) */
+#agent-return {
+  background: #000;
+}
+
+#agent-return > img {
+  width: 658px;
+  height: 1408px;
+  object-fit: contain;
+}
+
+.agent-input {
+  position: absolute;
+  left: 18px;
+  top: 1180px;
+  width: 620px;
+  height: 48px;
+  background: #000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font: 22px/1.4 Film, monospace;
+  white-space: nowrap;
+  z-index: 5;
+}
+
+.chevron {
+  font-size: 26px;
+  color: #8e7eff;
+}
+
+.prompt-char {
+  display: none;
+}
+
+.cursor {
+  display: inline-block;
+  width: 10px;
+  height: 26px;
+  background: #aaa;
+  vertical-align: middle;
+  margin-left: 3px;
+}
+
+/* 多手机堆叠 (Scene 7) */
+.stack-phone {
+  position: absolute;
+  left: 190px;
+  top: 140px;
+  width: 700px;
+  height: 1450px;
+  border: 3px solid #6b697d;
+  border-radius: 64px;
+  padding: 14px;
+  background: linear-gradient(135deg, #7a7888, #1a1b24 25%, #080910 75%, #5e606e);
+  box-shadow: -25px 35px 80px rgba(0, 0, 0, 0.7);
+  transform-origin: 50% 40%;
+  opacity: 0;
+}
+
+.stack-screen {
+  position: relative;
+  width: 666px;
+  height: 1416px;
+  overflow: hidden;
+  border: 4px solid #080910;
+  border-radius: 50px;
+  background: #080910;
+}
+
+.stack-screen > img,
+.stack-screen > video {
+  position: absolute;
+  inset: 0;
+  width: 658px;
+  height: 1408px;
+  object-fit: fill;
+  clip-path: inset(0 round 46px);
+}
+
+.stack-screen > svg {
+  position: absolute;
+  inset: 0;
+  width: 658px;
+  height: 1408px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* 底部字幕 (大号居中，醒目易读) */
+#subtitle {
+  position: absolute;
+  left: 40px;
+  right: 40px;
+  bottom: 60px;
+  height: 150px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  z-index: 35;
+}
+
+.caption {
+  position: absolute;
+  white-space: normal;
+  max-width: 1000px;
+  text-align: center;
+  font-size: 38px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: #ffffff;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.9), 0 1px 3px rgba(0, 0, 0, 0.8);
+  padding: 10px 24px;
+  background: rgba(10, 12, 22, 0.75);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* 终幕优雅卡片 (Scene 7 CTA) */
+.closing {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 36px;
+  opacity: 0;
+  z-index: 30;
+  background: radial-gradient(circle at 50% 45%, #231f45 0%, #0b0c15 70%);
+}
+
+.closing img {
+  width: 130px;
+  height: 130px;
+  filter: drop-shadow(0 15px 30px rgba(120, 100, 255, 0.4));
+}
+
+.closing h1 {
+  font-size: 56px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 1px;
+  text-align: center;
+  margin: 0;
+  color: #ffffff;
+}
+
+.closing .subtitle-text {
+  font-size: 32px;
+  color: #b8b1db;
+  text-align: center;
+}
+
+.closing .action-box {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.closing .cmd-badge {
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid #5b5299;
+  color: #7ef5a0;
+  font-family: monospace;
+  font-size: 28px;
+  padding: 14px 32px;
+  border-radius: 14px;
+  letter-spacing: 1px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.closing .footer-note {
+  font-size: 24px;
+  color: #8c88a8;
+}

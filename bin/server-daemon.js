@@ -36,12 +36,13 @@ export async function ensureServer(port, host = '127.0.0.1', probeHost = '127.0.
 	if (await healthy(port, probeHost)) return port;
 	if (await occupied(port)) throw new Error(`Port ${port} is occupied by a server without ReviewLoop's health endpoint.`);
 
-	const build = path.join(root, 'build', 'index.js');
+	const build = process.env.REVIEW_SERVER_ENTRY || path.join(root, 'build', 'index.js');
 	const vite = path.join(root, 'node_modules', 'vite', 'bin', 'vite.js');
 	// A source checkout uses its current sources; a packaged installation uses its build.
-	const args = existsSync(vite)
+	const args = process.env.REVIEW_SERVER_ENTRY ? [build] : existsSync(vite)
 		? [vite, '--host', host, '--port', port, '--strictPort']
 		: existsSync(build) ? [build] : null;
+	if (process.env.REVIEW_SERVER_ENTRY && !existsSync(build)) throw new Error(`ReviewLoop server entry was not found: ${build}`);
 	if (!args) throw new Error(`Cannot start ReviewLoop: no Vite installation or server build in ${root}. Run pnpm install or pnpm run build.`);
 
 	const stateDirectory = path.join(homedir(), '.config', 'reviewloop');
@@ -79,7 +80,8 @@ export async function ensureServer(port, host = '127.0.0.1', probeHost = '127.0.
 
 /** Reuse a running server on the historical tunnel ports, starting one if needed. */
 export async function ensureTunnelServer() {
-	const candidates = [...new Set([process.env.PORT, '5173', '8787'].filter(Boolean))];
+	if (process.env.PORT) return ensureServer(process.env.PORT);
+	const candidates = ['5173', '8787'];
 	for (const port of candidates) if (await healthy(port)) return port;
-	return ensureServer(process.env.PORT || '8787');
+	return ensureServer('8787');
 }

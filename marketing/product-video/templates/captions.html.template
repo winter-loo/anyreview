@@ -1,0 +1,33 @@
+<!-- 字幕轨：每个 ID 对应 scenes.json 中同名 clip。 -->
+<div id="subtitle">
+        <span id="caption-0" class="caption clip" data-start="{{clip:caption-0:start}}" data-duration="{{clip:caption-0:duration}}" data-track-index="{{clip:caption-0:track}}">{{clip:caption-0:text}}</span>
+        <span id="caption-1" class="caption clip" data-start="{{clip:caption-1:start}}" data-duration="{{clip:caption-1:duration}}" data-track-index="{{clip:caption-1:track}}">{{clip:caption-1:text}}</span>
+        <span id="caption-2" class="caption clip" data-start="{{clip:caption-2:start}}" data-duration="{{clip:caption-2:duration}}" data-track-index="{{clip:caption-2:track}}">{{clip:caption-2:text}}</span>
+        <span id="caption-3" class="caption clip" data-start="{{clip:caption-3:start}}" data-duration="{{clip:caption-3:duration}}" data-track-index="{{clip:caption-3:track}}">{{clip:caption-3:text}}</span>
+        <span id="caption-4" class="caption clip" data-start="{{clip:caption-4:start}}" data-duration="{{clip:caption-4:duration}}" data-track-index="{{clip:caption-4:track}}">{{clip:caption-4:text}}</span>
+        <span id="caption-5" class="caption clip" data-start="{{clip:caption-5:start}}" data-duration="{{clip:caption-5:duration}}" data-track-index="{{clip:caption-5:track}}">{{clip:caption-5:text}}</span>
+        <span id="caption-6" class="caption clip" data-start="{{clip:caption-6:start}}" data-duration="{{clip:caption-6:duration}}" data-track-index="{{clip:caption-6:track}}">{{clip:caption-6:text}}</span>
+        <span id="caption-7" class="caption clip" data-start="{{clip:caption-7:start}}" data-duration="{{clip:caption-7:duration}}" data-track-index="{{clip:caption-7:track}}">{{clip:caption-7:text}}</span>
+        <span id="caption-8" class="caption clip" data-start="{{clip:caption-8:start}}" data-duration="{{clip:caption-8:duration}}" data-track-index="{{clip:caption-8:track}}">{{clip:caption-8:text}}</span>
+        <span id="caption-9" class="caption clip" data-start="{{clip:caption-9:start}}" data-duration="{{clip:caption-9:duration}}" data-track-index="{{clip:caption-9:track}}">{{clip:caption-9:text}}</span>
+        <span id="caption-10" class="caption clip" data-start="{{clip:caption-10:start}}" data-duration="{{clip:caption-10:duration}}" data-track-index="{{clip:caption-10:track}}">{{clip:caption-10:text}}</span>
+        <span id="caption-11" class="caption clip" data-start="{{clip:caption-11:start}}" data-duration="{{clip:caption-11:duration}}" data-track-index="{{clip:caption-11:track}}">{{clip:caption-11:text}}</span>
+        <span id="caption-12" class="caption clip" data-start="{{clip:caption-12:start}}" data-duration="{{clip:caption-12:duration}}" data-track-index="{{clip:caption-12:track}}">{{clip:caption-12:text}}</span>
+        <span id="caption-13" class="caption clip" data-start="{{clip:caption-13:start}}" data-duration="{{clip:caption-13:duration}}" data-track-index="{{clip:caption-13:track}}">{{clip:caption-13:text}}</span>
+        <span id="caption-14" class="caption clip" data-start="{{clip:caption-14:start}}" data-duration="{{clip:caption-14:duration}}" data-track-index="{{clip:caption-14:track}}">{{clip:caption-14:text}}</span>
+        <span id="caption-15" class="caption clip" data-start="{{clip:caption-15:start}}" data-duration="{{clip:caption-15:duration}}" data-track-index="{{clip:caption-15:track}}">{{clip:caption-15:text}}</span>
+        <span id="caption-16" class="caption clip" data-start="{{clip:caption-16:start}}" data-duration="{{clip:caption-16:duration}}" data-track-index="{{clip:caption-16:track}}">{{clip:caption-16:text}}</span>
+        <span id="caption-17" class="caption clip" data-start="{{clip:caption-17:start}}" data-duration="{{clip:caption-17:duration}}" data-track-index="{{clip:caption-17:track}}">{{clip:caption-17:text}}</span>
+        <span id="caption-18" class="caption clip" data-start="{{clip:caption-18:start}}" data-duration="{{clip:caption-18:duration}}" data-track-index="{{clip:caption-18:track}}">{{clip:caption-18:text}}</span>
+        <span id="caption-19" class="caption clip" data-start="{{clip:caption-19:start}}" data-duration="{{clip:caption-19:duration}}" data-track-index="{{clip:caption-19:track}}">{{clip:caption-19:text}}</span>
+        <span id="caption-20" class="caption clip" data-start="{{clip:caption-20:start}}" data-duration="{{clip:caption-20:duration}}" data-track-index="{{clip:caption-20:track}}">{{clip:caption-20:text}}</span>
+        <span id="caption-21" class="caption clip" data-start="{{clip:caption-21:start}}" data-duration="{{clip:caption-21:duration}}" data-track-index="{{clip:caption-21:track}}">{{clip:caption-21:text}}</span>
+        <span id="caption-22" class="caption clip" data-start="{{clip:caption-22:start}}" data-duration="{{clip:caption-22:duration}}" data-track-index="{{clip:caption-22:track}}">{{clip:caption-22:text}}</span>
+        <span id="caption-23" class="caption clip" data-start="{{clip:caption-23:start}}" data-duration="{{clip:caption-23:duration}}" data-track-index="{{clip:caption-23:track}}">{{clip:caption-23:text}}</span>
+        <span id="caption-24" class="caption clip" data-start="{{clip:caption-24:start}}" data-duration="{{clip:caption-24:duration}}" data-track-index="{{clip:caption-24:track}}">{{clip:caption-24:text}}</span>
+        <span id="caption-25" class="caption clip" data-start="{{clip:caption-25:start}}" data-duration="{{clip:caption-25:duration}}" data-track-index="{{clip:caption-25:track}}">{{clip:caption-25:text}}</span>
+        <span id="caption-26" class="caption clip" data-start="{{clip:caption-26:start}}" data-duration="{{clip:caption-26:duration}}" data-track-index="{{clip:caption-26:track}}">{{clip:caption-26:text}}</span>
+        <span id="caption-27" class="caption clip" data-start="{{clip:caption-27:start}}" data-duration="{{clip:caption-27:duration}}" data-track-index="{{clip:caption-27:track}}">{{clip:caption-27:text}}</span>
+        <span id="caption-28" class="caption clip" data-start="{{clip:caption-28:start}}" data-duration="{{clip:caption-28:duration}}" data-track-index="{{clip:caption-28:track}}">{{clip:caption-28:text}}</span>
+        <span id="caption-29" class="caption clip" data-start="{{clip:caption-29:start}}" data-duration="{{clip:caption-29:duration}}" data-track-index="{{clip:caption-29:track}}">{{clip:caption-29:text}}</span>
+      </div>

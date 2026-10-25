@@ -19,6 +19,13 @@ const runPnpm = (args, options = {}) =>
 		...options
 	});
 
+const build = runPnpm(['run', 'build'], { stdio: 'inherit' });
+if (build.error) {
+	console.error(build.error.message);
+	process.exit(1);
+}
+if (build.status !== 0) process.exit(build.status ?? 1);
+
 const install = runPnpm(['add', '--global', repoRoot], { stdio: 'inherit' });
 if (install.error) {
 	console.error(install.error.message);
