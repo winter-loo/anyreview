@@ -108,6 +108,8 @@ flowchart TD
 
 ### 第 5 关：前端转译报错与幽灵缺失的 `mermaid`
 
+以下记录的是旧版 Mermaid.js 依赖的故障排查过程。当前版本已改用 [Pele](https://pele.run/) 渲染 Mermaid 语法；新安装请以根目录 README 和 `pnpm install` 为准，不要执行本节的 `pnpm add mermaid` 命令。
+
 - **遇到的现象**：
   配置好局域网 IP 后，在客户端浏览器打开链接，页面白屏，控制台与后台报错：
   ```text

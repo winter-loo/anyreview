@@ -54,7 +54,7 @@ The CLI and server must share `ONLINE_REVIEW_FEEDBACK_HOME` and the URL secret. 
 
 ## Viewers
 
-- Markdown supports text annotations, local referenced images, and rendered Mermaid diagrams. Referenced images stay in their original directory and remain live dependencies.
+- Markdown supports text annotations, local referenced images, and Mermaid diagrams rendered with [Pele](https://pele.run/). Referenced images stay in their original directory and remain live dependencies.
 - HTML is shown in an iframe with text and brush annotations. Only use trusted HTML; scripts in the file run normally. Relative assets are not bundled.
 - PDF, Word, PowerPoint, Excel, and images support visual annotations. Legacy `.doc` and `.ppt` files need LibreOffice Writer or Impress on the server for conversion.
 - Video requires `ffprobe` on the server. MP4, MOV, and WebM are supported up to 500 MiB, subject to browser codec support. See [video review design](docs/video-review-design.md) for annotation controls.

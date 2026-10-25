@@ -1,15 +1,15 @@
 import { randomId } from '../random-id';
 
-// Loaded only by diagram previews, shared across all diagrams on the page.
-const library = () => import('mermaid').then(({ default: mermaid }) => {
-	mermaid.initialize({ startOnLoad: false, securityLevel: 'strict',
-		suppressErrorRendering: true, theme: 'default', htmlLabels: false,
-		fontFamily: 'sans-serif', maxTextSize: 50000 });
-	return mermaid;
-});
-let ready: ReturnType<typeof library> | undefined;
+// Load diagram code only when a Markdown review contains a Mermaid preview.
+let library: Promise<typeof import('pele')> | undefined;
+
 export async function renderMermaid(source: string): Promise<string> {
-	const mermaid = await (ready ??= library());
-	const { svg } = await mermaid.render(`review-diagram-${randomId()}`, source);
+	const { render } = await (library ??= import('pele'));
+	const { svg } = render(source, {
+		idPrefix: `review-diagram-${randomId()}`,
+		limit: 50_000,
+		links: false,
+		images: false
+	});
 	return svg;
 }
