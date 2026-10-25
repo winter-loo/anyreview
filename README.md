@@ -73,4 +73,8 @@ pnpm run package:review-platform
 
 `package:review-platform` writes `dist/review-platform.tar.gz` with the built server and `review` CLI. The packaged `start-review-platform.sh` can start the server explicitly, though the CLI starts it on demand for local review URLs.
 
+### Multi-machine reverse tunnel deployment case study
+
+For multi-device development setups sharing a single public HTTPS domain (e.g., Linux workstation + macOS laptop), see the production case study in [docs/multi-machine-reverse-tunnel-case-study.md](docs/multi-machine-reverse-tunnel-case-study.md). It details how independent developer machines autonomously maintain their own reverse SSH tunnels (`systemd` / `launchd`) while a lightweight server-side live router transparently directs `/live/<token>` requests to the correct host.
+
 A review URL is a bearer capability: anyone holding it can read and submit feedback. Share it only with intended reviewers. ReviewLoop reads source files to create snapshots; it does not edit them or run submitted comments as commands.
